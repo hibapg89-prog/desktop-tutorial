@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import LandingScreen from "@/components/LandingScreen";
 import ConciergeScreen from "@/components/ConciergeScreen";
+import BeautyProfileScreen from "@/components/BeautyProfileScreen";
 import InputSelectorScreen from "@/components/InputSelectorScreen";
 import GalleryPickerScreen from "@/components/GalleryPickerScreen";
 import AnalysisLoadingScreen from "@/components/AnalysisLoadingScreen";
 import ProductCardScreen from "@/components/ProductCardScreen";
+import ProductGridScreen from "@/components/ProductGridScreen";
 import DupeScreen from "@/components/DupeScreen";
 import PasteLinkScreen from "@/components/PasteLinkScreen";
 import CategoryHomeScreen from "@/components/CategoryHomeScreen";
@@ -17,8 +19,6 @@ import EditorialScreen from "@/components/EditorialScreen";
 import ReviewsScreen from "@/components/ReviewsScreen";
 import AccessibilityScreen from "@/components/AccessibilityScreen";
 import BrowserExtensionScreen from "@/components/BrowserExtensionScreen";
-import BeautyProfileScreen from "@/components/BeautyProfileScreen";
-import ProductGridScreen from "@/components/ProductGridScreen";
 
 type Screen =
   | "landing"
@@ -43,94 +43,116 @@ type Screen =
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
 export default function Home() {
-  const [screen, setScreen] = useState<Screen>("landing");
-  const idx = mainDots.indexOf(screen);
+  const [history, setHistory] = useState<Screen[]>(["landing"]);
+  const [navKey, setNavKey]   = useState(0);
+  const direction             = useRef<"fwd" | "back">("fwd");
+
+  const screen = history[history.length - 1];
+  const idx    = mainDots.indexOf(screen);
+
+  const go = (s: Screen) => {
+    direction.current = "fwd";
+    setNavKey(k => k + 1);
+    setHistory(h => [...h, s]);
+  };
+
+  const goBack = () => {
+    if (history.length <= 1) return;
+    direction.current = "back";
+    setNavKey(k => k + 1);
+    setHistory(h => h.slice(0, -1));
+  };
+
+  const transitionClass = direction.current === "fwd" ? "screen-enter-fwd" : "screen-enter-back";
 
   return (
     <main className="relative min-h-screen overflow-hidden">
-      {screen === "landing" && (
-        <LandingScreen onNext={() => setScreen("concierge")} />
-      )}
-      {screen === "concierge" && (
-        <ConciergeScreen onNext={() => setScreen("beauty-profile")} />
-      )}
-      {screen === "beauty-profile" && (
-        <BeautyProfileScreen
-          onNext={() => setScreen("home")}
-          onBack={() => setScreen("concierge")}
-        />
-      )}
-      {screen === "input-selector" && (
-        <InputSelectorScreen
-          onCamera={() => setScreen("loading")}
-          onGallery={() => setScreen("gallery")}
-          onLink={() => setScreen("paste-link")}
-          onVoice={() => setScreen("voice")}
-          onBack={() => setScreen("home")}
-        />
-      )}
-      {screen === "gallery" && (
-        <GalleryPickerScreen
-          onNext={() => setScreen("loading")}
-          onCancel={() => setScreen("input-selector")}
-        />
-      )}
-      {screen === "loading" && (
-        <AnalysisLoadingScreen onDone={() => setScreen("product-card")} />
-      )}
-      {screen === "product-card" && (
-        <ProductCardScreen
-          onDupe={() => setScreen("dupe")}
-          onBack={() => setScreen("home")}
-        />
-      )}
-      {screen === "dupe" && (
-        <DupeScreen onBack={() => setScreen("product-card")} />
-      )}
-      {screen === "paste-link" && (
-        <PasteLinkScreen
-          onPaste={() => setScreen("loading")}
-          onBack={() => setScreen("input-selector")}
-        />
-      )}
-      {screen === "home" && (
-        <CategoryHomeScreen
-          onVanity={() => setScreen("vanity")}
-          onProducts={() => setScreen("product-grid")}
-          onScan={() => setScreen("scan")}
-          onVoice={() => setScreen("voice")}
-          onBack={() => setScreen("concierge")}
-          onInput={() => setScreen("input-selector")}
-          onEditorial={() => setScreen("editorial")}
-          onReviews={() => setScreen("reviews")}
-          onAccessibility={() => setScreen("accessibility")}
-          onExtension={() => setScreen("extension")}
-        />
-      )}
-      {screen === "vanity" && (
-        <VanityScreen onBack={() => setScreen("home")} />
-      )}
-      {screen === "scan" && (
-        <ScanScreen onBack={() => setScreen("home")} />
-      )}
-      {screen === "voice" && (
-        <VoiceScreen onBack={() => setScreen("home")} />
-      )}
-      {screen === "editorial" && (
-        <EditorialScreen onBack={() => setScreen("home")} />
-      )}
-      {screen === "reviews" && (
-        <ReviewsScreen onBack={() => setScreen("home")} />
-      )}
-      {screen === "accessibility" && (
-        <AccessibilityScreen onBack={() => setScreen("home")} />
-      )}
-      {screen === "extension" && (
-        <BrowserExtensionScreen onBack={() => setScreen("home")} />
-      )}
-      {screen === "product-grid" && (
-        <ProductGridScreen onBack={() => setScreen("home")} />
-      )}
+
+      <div key={navKey} className={transitionClass}>
+        {screen === "landing" && (
+          <LandingScreen onNext={() => go("concierge")} />
+        )}
+        {screen === "concierge" && (
+          <ConciergeScreen onNext={() => go("beauty-profile")} />
+        )}
+        {screen === "beauty-profile" && (
+          <BeautyProfileScreen
+            onNext={() => go("home")}
+            onBack={goBack}
+          />
+        )}
+        {screen === "input-selector" && (
+          <InputSelectorScreen
+            onCamera={() => go("loading")}
+            onGallery={() => go("gallery")}
+            onLink={() => go("paste-link")}
+            onVoice={() => go("voice")}
+            onBack={goBack}
+          />
+        )}
+        {screen === "gallery" && (
+          <GalleryPickerScreen
+            onNext={() => go("loading")}
+            onCancel={goBack}
+          />
+        )}
+        {screen === "loading" && (
+          <AnalysisLoadingScreen onDone={() => go("product-card")} />
+        )}
+        {screen === "product-card" && (
+          <ProductCardScreen
+            onDupe={() => go("dupe")}
+            onBack={goBack}
+          />
+        )}
+        {screen === "product-grid" && (
+          <ProductGridScreen onBack={goBack} />
+        )}
+        {screen === "dupe" && (
+          <DupeScreen onBack={goBack} />
+        )}
+        {screen === "paste-link" && (
+          <PasteLinkScreen
+            onPaste={() => go("loading")}
+            onBack={goBack}
+          />
+        )}
+        {screen === "home" && (
+          <CategoryHomeScreen
+            onVanity={() => go("vanity")}
+            onProducts={() => go("product-grid")}
+            onScan={() => go("scan")}
+            onVoice={() => go("voice")}
+            onBack={goBack}
+            onInput={() => go("input-selector")}
+            onEditorial={() => go("editorial")}
+            onReviews={() => go("reviews")}
+            onAccessibility={() => go("accessibility")}
+            onExtension={() => go("extension")}
+          />
+        )}
+        {screen === "vanity" && (
+          <VanityScreen onBack={goBack} />
+        )}
+        {screen === "scan" && (
+          <ScanScreen onBack={goBack} />
+        )}
+        {screen === "voice" && (
+          <VoiceScreen onBack={goBack} />
+        )}
+        {screen === "editorial" && (
+          <EditorialScreen onBack={goBack} />
+        )}
+        {screen === "reviews" && (
+          <ReviewsScreen onBack={goBack} />
+        )}
+        {screen === "accessibility" && (
+          <AccessibilityScreen onBack={goBack} />
+        )}
+        {screen === "extension" && (
+          <BrowserExtensionScreen onBack={goBack} />
+        )}
+      </div>
 
       {/* Progress dots — only on main screens */}
       {idx >= 0 && (

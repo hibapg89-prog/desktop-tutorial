@@ -289,3 +289,15 @@ body {
 .dot { height: 6px; border-radius: 3px; transition: all 0.3s ease; }
 .dot.on  { background: var(--emerald); width: 18px; }
 .dot.off { background: rgba(11,60,38,0.2); width: 6px; }
+
+/* ── Screen transitions ──────────────── */
+@keyframes screenSlideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes screenSlideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.screen-enter-fwd  { animation: screenSlideInRight 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+.screen-enter-back { animation: screenSlideInLeft  0.3s cubic-bezier(0.25,0.46,0.45,0.94) both; }
