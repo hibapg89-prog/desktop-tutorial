@@ -17,14 +17,18 @@ import EditorialScreen from "@/components/EditorialScreen";
 import ReviewsScreen from "@/components/ReviewsScreen";
 import AccessibilityScreen from "@/components/AccessibilityScreen";
 import BrowserExtensionScreen from "@/components/BrowserExtensionScreen";
+import BeautyProfileScreen from "@/components/BeautyProfileScreen";
+import ProductGridScreen from "@/components/ProductGridScreen";
 
 type Screen =
   | "landing"
   | "concierge"
+  | "beauty-profile"
   | "input-selector"
   | "gallery"
   | "loading"
   | "product-card"
+  | "product-grid"
   | "dupe"
   | "paste-link"
   | "home"
@@ -36,7 +40,7 @@ type Screen =
   | "accessibility"
   | "extension";
 
-const mainDots: Screen[] = ["landing", "home", "vanity", "scan", "editorial"];
+const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("landing");
@@ -48,7 +52,13 @@ export default function Home() {
         <LandingScreen onNext={() => setScreen("concierge")} />
       )}
       {screen === "concierge" && (
-        <ConciergeScreen onNext={() => setScreen("home")} />
+        <ConciergeScreen onNext={() => setScreen("beauty-profile")} />
+      )}
+      {screen === "beauty-profile" && (
+        <BeautyProfileScreen
+          onNext={() => setScreen("home")}
+          onBack={() => setScreen("concierge")}
+        />
       )}
       {screen === "input-selector" && (
         <InputSelectorScreen
@@ -86,7 +96,7 @@ export default function Home() {
       {screen === "home" && (
         <CategoryHomeScreen
           onVanity={() => setScreen("vanity")}
-          onProducts={() => setScreen("product-card")}
+          onProducts={() => setScreen("product-grid")}
           onScan={() => setScreen("scan")}
           onVoice={() => setScreen("voice")}
           onBack={() => setScreen("concierge")}
@@ -117,6 +127,9 @@ export default function Home() {
       )}
       {screen === "extension" && (
         <BrowserExtensionScreen onBack={() => setScreen("home")} />
+      )}
+      {screen === "product-grid" && (
+        <ProductGridScreen onBack={() => setScreen("home")} />
       )}
 
       {/* Progress dots — only on main screens */}
