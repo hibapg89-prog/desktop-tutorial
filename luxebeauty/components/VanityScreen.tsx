@@ -1,191 +1,186 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { SwanLogo } from "./LandingScreen";
 
 interface Props { onBack: () => void; }
 
-const INITIAL_ITEMS = [
-  { id: "1", type: "lipstick", color: "#C47070", label: "Rose Nude", brand: "Charlotte Tilbury" },
-  { id: "2", type: "lipstick", color: "#8B3A3A", label: "Velvet Red", brand: "MAC" },
-  { id: "3", type: "lipstick", color: "#D4956A", label: "Peach Glam", brand: "NARS" },
-  { id: "4", type: "lipstick", color: "#9E6060", label: "Mauve Dream", brand: "Dior Beauty" },
-  { id: "5", type: "lipstick", color: "#C49090", label: "Blush Kiss", brand: "Chanel" },
-  { id: "6", type: "lipstick", color: "#7A3F3F", label: "Berry Wine", brand: "YSL" },
-  { id: "7", type: "palette", label: "Nude Shimmer", brand: "Too Faced", shades: ["#E8C9A0", "#C4A882", "#8B6B4A", "#3C2820"] },
-  { id: "8", type: "palette", label: "Rose Gold", brand: "Urban Decay", shades: ["#F0D4C0", "#D4A890", "#B07860", "#6C3020"] },
-  { id: "9", type: "palette", label: "Soft Glam", brand: "ABH", shades: ["#F5E8D8", "#DEC4A8", "#A07858", "#5A3828"] },
-  { id: "10", type: "compact", label: "Shimmer Highlight", brand: "BECCA", color: "#F0D89A" },
-  { id: "11", type: "compact", label: "Warm Blush", brand: "Charlotte Tilbury", color: "#E8C0B0" },
-  { id: "12", type: "perfume", label: "Lumière Noire", brand: "YSL" },
-  { id: "13", type: "perfume", label: "Mon Paris", brand: "YSL" },
+const ITEMS = [
+  { id: "1", type: "lipstick", name: "Rouge Allure", brand: "Chanel",    hex: "#C47070" },
+  { id: "2", type: "lipstick", name: "Velvet Red",   brand: "MAC",       hex: "#8B3A3A" },
+  { id: "3", type: "lipstick", name: "Peach Glam",   brand: "NARS",      hex: "#D4956A" },
+  { id: "4", type: "lipstick", name: "Mauve Dream",  brand: "Dior",      hex: "#9E6060" },
+  { id: "5", type: "lipstick", name: "Blush Kiss",   brand: "Chanel",    hex: "#C49090" },
+  { id: "6", type: "lipstick", name: "Berry Wine",   brand: "YSL",       hex: "#7A3F3F" },
+  { id: "7", type: "palette",  name: "Nude Shimmer", brand: "Too Faced", shades: ["#E8C9A0","#C4A882","#8B6B4A","#3C2820"] },
+  { id: "8", type: "palette",  name: "Rose Gold",    brand: "Urban Decay",shades: ["#F0D4C0","#D4A890","#B07860","#6C3020"] },
+  { id: "9", type: "palette",  name: "Soft Glam",    brand: "ABH",       shades: ["#F5E8D8","#DEC4A8","#A07858","#5A3828"] },
+  { id: "10",type: "compact",  name: "Shimmer HL",   brand: "BECCA",     hex: "#F0D89A" },
+  { id: "11",type: "compact",  name: "Warm Blush",   brand: "CT",        hex: "#E8C0B0" },
+  { id: "12",type: "perfume",  name: "Lumière Noire",brand: "YSL" },
+  { id: "13",type: "perfume",  name: "Mon Paris",    brand: "YSL" },
 ];
 
-type VanityItem = typeof INITIAL_ITEMS[number];
-
-function LipstickSVG({ color }: { color: string }) {
-  return (
-    <svg width="32" height="72" viewBox="0 0 32 72" fill="none">
-      <rect x="8" y="32" width="16" height="36" rx="2" fill="#D4AF70" />
-      <rect x="10" y="34" width="12" height="20" fill={color} />
-      <path d="M10 34 Q16 24 22 34" fill={color} />
-      <rect x="6" y="60" width="20" height="10" rx="2" fill="#B89050" />
-    </svg>
-  );
-}
-
-function PaletteSVG({ shades }: { shades: string[] }) {
-  return (
-    <svg width="72" height="56" viewBox="0 0 72 56" fill="none">
-      <rect x="1" y="1" width="70" height="54" rx="4" fill="#E8E0D0" stroke="#C9A96E" strokeWidth="0.5" />
-      <rect x="3" y="3" width="66" height="22" rx="3" fill="white" opacity="0.8" />
-      {shades.map((c, i) => (
-        <rect key={i} x={5 + i * 16} y={5} width="13" height="18" rx="1.5" fill={c} />
-      ))}
-      <rect x="3" y="28" width="66" height="24" rx="3" fill="white" opacity="0.6" />
-      <rect x="5" y="30" width="62" height="20" rx="2" fill={shades[1]} opacity="0.4" />
-      <line x1="3" y1="27" x2="69" y2="27" stroke="#C9A96E" strokeWidth="0.5" opacity="0.5" />
-    </svg>
-  );
-}
-
-function CompactSVG({ color }: { color: string }) {
-  return (
-    <svg width="60" height="48" viewBox="0 0 60 48" fill="none">
-      <rect x="1" y="1" width="58" height="46" rx="5" fill="#E8E0D0" stroke="#C9A96E" strokeWidth="0.8" />
-      <rect x="2" y="2" width="56" height="22" rx="4" fill="white" opacity="0.9" />
-      <circle cx="30" cy="13" r="10" fill={color} opacity="0.85" />
-      <circle cx="30" cy="13" r="6" fill={color} />
-      <ellipse cx="26" cy="10" rx="2" ry="1.5" fill="white" opacity="0.4" />
-      <rect x="2" y="26" width="56" height="20" rx="4" fill="#F0E8D8" />
-    </svg>
-  );
-}
-
-function PerfumeSVG() {
-  return (
-    <svg width="44" height="68" viewBox="0 0 44 68" fill="none">
-      <rect x="8" y="20" width="28" height="44" rx="4" fill="rgba(201,180,140,0.35)" stroke="#C9A96E" strokeWidth="0.8" />
-      <rect x="10" y="22" width="24" height="40" rx="3" fill="rgba(232,213,163,0.25)" />
-      <rect x="14" y="14" width="16" height="8" rx="2" fill="#C9A96E" opacity="0.8" />
-      <rect x="18" y="10" width="8" height="6" rx="1" fill="#B89050" />
-      <circle cx="22" cy="9" r="3" fill="#D4AF70" />
-      <text x="22" y="46" textAnchor="middle" fill="#8A7050" fontSize="6" fontFamily="serif" opacity="0.7">YSL</text>
-    </svg>
-  );
-}
+type Item = typeof ITEMS[number];
 
 export default function VanityScreen({ onBack }: Props) {
-  const [items, setItems] = useState<VanityItem[]>(INITIAL_ITEMS);
+  const [items, setItems] = useState<Item[]>(ITEMS);
   const [dragging, setDragging] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
-  const handleDragStart = (id: string) => setDragging(id);
-  const handleDragEnd = () => setDragging(null);
-
-  const handleDragOver = (e: React.DragEvent, targetId: string) => {
+  const handleDragOver = (e: React.DragEvent, toId: string) => {
     e.preventDefault();
-    if (!dragging || dragging === targetId) return;
+    if (!dragging || dragging === toId) return;
     setItems(prev => {
-      const from = prev.findIndex(x => x.id === dragging);
-      const to = prev.findIndex(x => x.id === targetId);
-      const next = [...prev];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
+      const fi = prev.findIndex(x => x.id === dragging);
+      const ti = prev.findIndex(x => x.id === toId);
+      const n = [...prev];
+      const [m] = n.splice(fi, 1);
+      n.splice(ti, 0, m);
+      return n;
     });
   };
 
   const sel = items.find(x => x.id === selected);
 
   return (
-    <div className="marble-deep min-h-screen overflow-hidden flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-hidden"
+      style={{ background: "linear-gradient(180deg, #EDE5D5, #E5DCCA)" }}>
+
       {/* Header */}
-      <div className="px-6 pt-10 pb-4 flex items-center justify-between flex-shrink-0">
+      <div className="px-6 pt-10 pb-3 flex items-center justify-between flex-shrink-0"
+        style={{ background: "rgba(237,229,213,0.9)", backdropFilter: "blur(12px)" }}>
         <button onClick={onBack}
-          className="font-jost text-[10px] tracking-[0.15em] uppercase text-[#8A7F74] hover:text-[#C9A96E] transition-colors flex items-center gap-1.5 cursor-pointer">
+          className="font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
           ← Back
         </button>
         <div className="text-center">
-          <p className="font-jost text-[9px] tracking-[0.2em] uppercase text-[#C9A96E]">Drag to Rearrange</p>
-          <p className="font-display text-lg font-normal text-[#2C2C2C]">My Vanity</p>
+          <p className="font-sans text-[8px] tracking-[0.3em] uppercase text-[#C8B06A] mb-0.5">Drag to Rearrange</p>
+          <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">My Vanity</h2>
         </div>
-        <button className="btn-outline-gold px-3 py-1.5 rounded-full text-[9px] cursor-pointer">
-          + Add
-        </button>
+        <button className="btn-ghost px-3 py-1.5 rounded-full text-[9px] cursor-pointer">+ Add</button>
       </div>
 
-      {/* Drawer rim */}
-      <div className="mx-4 rounded-t-2xl flex-shrink-0" style={{
-        height: "12px",
-        background: "linear-gradient(180deg, #C9B090, #D4BC98)",
-        boxShadow: "0 -2px 8px rgba(100,80,40,0.15)",
+      {/* Marble drawer rim */}
+      <div className="mx-5 rounded-t-2xl" style={{
+        height: "10px",
+        background: "linear-gradient(180deg, #D4C0A0, #C0AA88)",
+        boxShadow: "0 -2px 8px rgba(80,60,30,0.12)",
       }} />
 
-      {/* Drawer */}
-      <div className="mx-4 flex-1 overflow-auto relative"
+      {/* Drawer interior */}
+      <div className="mx-5 flex-1 overflow-auto relative"
         style={{
-          background: "linear-gradient(180deg, #F5EFE4 0%, #EDE5D8 100%)",
-          backgroundImage: `
-            radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 50%),
-            repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(201,169,110,0.04) 80px, rgba(201,169,110,0.04) 82px),
-            repeating-linear-gradient(0deg, transparent, transparent 80px, rgba(201,169,110,0.03) 80px, rgba(201,169,110,0.03) 82px)
+          background: `
+            radial-gradient(ellipse at 30% 20%, rgba(255,248,235,0.6) 0%, transparent 50%),
+            linear-gradient(160deg, #F0E8D8, #E5DAC5)
           `,
-          boxShadow: "inset 0 4px 20px rgba(100,80,40,0.12), 0 8px 32px rgba(100,80,40,0.15)",
+          backgroundImage: `
+            radial-gradient(ellipse at 25% 25%, rgba(255,248,235,0.7) 0%, transparent 45%),
+            repeating-linear-gradient(88deg, transparent, transparent 90px, rgba(200,176,106,0.04) 90px, rgba(200,176,106,0.04) 92px),
+            repeating-linear-gradient(0deg, transparent, transparent 90px, rgba(200,176,106,0.03) 90px, rgba(200,176,106,0.03) 92px)
+          `,
+          boxShadow: "inset 0 4px 24px rgba(80,60,30,0.1)",
         }}>
-
-        <div className="p-6 flex flex-wrap gap-5 justify-center min-h-full">
-          {items.map((item) => (
+        <div className="p-5 flex flex-wrap gap-4 justify-center">
+          {items.map(item => (
             <div
               key={item.id}
               draggable
-              onDragStart={() => handleDragStart(item.id)}
-              onDragEnd={handleDragEnd}
-              onDragOver={(e) => handleDragOver(e, item.id)}
+              onDragStart={() => setDragging(item.id)}
+              onDragEnd={() => setDragging(null)}
+              onDragOver={e => handleDragOver(e, item.id)}
               onClick={() => setSelected(selected === item.id ? null : item.id)}
-              className={`vanity-item flex flex-col items-center gap-1 cursor-pointer select-none
-                ${dragging === item.id ? "opacity-40 scale-95" : ""}
-                ${selected === item.id ? "!translate-y-[-10px]" : ""}
+              className={`flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing select-none transition-all duration-200
+                ${dragging === item.id ? "opacity-30 scale-90" : ""}
+                ${selected === item.id ? "translate-y-[-8px]" : ""}
               `}
+              style={{ filter: "drop-shadow(0 8px 14px rgba(80,60,30,0.22))" }}
             >
-              {item.type === "lipstick" && <LipstickSVG color={item.color!} />}
+              {item.type === "lipstick" && <LipstickSVG color={item.hex!} />}
               {item.type === "palette" && <PaletteSVG shades={item.shades!} />}
-              {item.type === "compact" && <CompactSVG color={item.color!} />}
-              {item.type === "perfume" && <PerfumeSVG />}
-
-              {selected === item.id && (
-                <div className="absolute mt-1 card-luxury rounded-xl px-3 py-2 text-center z-10 pointer-events-none"
-                  style={{ minWidth: "100px", bottom: "-70px" }}>
-                  <p className="font-display text-xs text-[#2C2C2C]">{item.label}</p>
-                  <p className="font-jost text-[9px] text-[#C9A96E] mt-0.5">{item.brand}</p>
-                </div>
-              )}
+              {item.type === "compact" && <CompactSVG color={item.hex!} />}
+              {item.type === "perfume"  && <PerfumeSVG />}
             </div>
           ))}
         </div>
       </div>
 
       {/* Drawer bottom */}
-      <div className="mx-4 rounded-b-2xl flex-shrink-0" style={{
-        height: "16px",
-        background: "linear-gradient(180deg, #C0A878, #B09060)",
-        boxShadow: "0 4px 12px rgba(100,80,40,0.2)",
+      <div className="mx-5 rounded-b-2xl flex-shrink-0" style={{
+        height: "14px",
+        background: "linear-gradient(180deg, #C0AA88, #A89070)",
+        boxShadow: "0 4px 12px rgba(80,60,30,0.18)",
       }} />
 
-      {/* Selected info */}
+      {/* Selected item card */}
       {sel && (
-        <div className="fixed bottom-12 left-0 right-0 px-6 z-20">
-          <div className="card-luxury rounded-2xl p-4 max-w-sm mx-auto flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-white text-xs font-jost">
+        <div className="fixed bottom-14 left-0 right-0 px-6 z-30">
+          <div className="card-pearl rounded-2xl p-4 max-w-sm mx-auto flex items-center gap-4">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] text-white font-sans"
+              style={{ background: "linear-gradient(135deg, #0B3C26, #1A5C3A)" }}>
               {sel.brand?.charAt(0)}
             </div>
             <div className="flex-1">
-              <p className="font-display text-sm text-[#2C2C2C]">{sel.label}</p>
-              <p className="font-jost text-[10px] text-[#8A7F74]">{sel.brand}</p>
+              <p className="font-serif text-sm text-[#1C1C1C]">{sel.name}</p>
+              <p className="font-sans text-[10px] text-[#8A8070] font-light">{sel.brand}</p>
             </div>
-            <button className="btn-gold px-3 py-1.5 rounded-full text-[9px] cursor-pointer">Shop</button>
+            <button className="btn-emerald px-3 py-1.5 rounded-full text-[9px] cursor-pointer">Shop</button>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function LipstickSVG({ color }: { color: string }) {
+  return (
+    <svg width="28" height="64" viewBox="0 0 28 64">
+      <rect x="6" y="28" width="16" height="32" rx="1.5" fill="#C8B06A" />
+      <rect x="8" y="30" width="12" height="18" fill={color} />
+      <path d="M8 30 Q14 20 20 30" fill={color} />
+      <rect x="4" y="52" width="20" height="10" rx="1.5" fill="#A89050" />
+      <rect x="6" y="53" width="16" height="4" rx="0.5" fill="rgba(255,255,255,0.15)" />
+    </svg>
+  );
+}
+
+function PaletteSVG({ shades }: { shades: string[] }) {
+  return (
+    <svg width="70" height="54" viewBox="0 0 70 54">
+      <rect x="1" y="1" width="68" height="52" rx="4" fill="#EDE5D5" stroke="#C8B06A" strokeWidth="0.5" />
+      <rect x="3" y="3" width="64" height="22" rx="2.5" fill="white" opacity="0.7" />
+      {shades.map((c, i) => <rect key={i} x={5+i*16} y={5} width="13" height="17" rx="1.5" fill={c} />)}
+      <line x1="3" y1="27" x2="67" y2="27" stroke="#C8B06A" strokeWidth="0.4" opacity="0.6" />
+      <rect x="3" y="28" width="64" height="22" rx="2.5" fill="white" opacity="0.5" />
+      <rect x="5" y="30" width="60" height="18" rx="2" fill={shades[1]} opacity="0.35" />
+    </svg>
+  );
+}
+
+function CompactSVG({ color }: { color: string }) {
+  return (
+    <svg width="58" height="46" viewBox="0 0 58 46">
+      <rect x="1" y="1" width="56" height="44" rx="5" fill="#EDE5D5" stroke="#C8B06A" strokeWidth="0.6" />
+      <rect x="2" y="2" width="54" height="20" rx="4" fill="white" opacity="0.8" />
+      <circle cx="29" cy="12" r="9" fill={color} opacity="0.8" />
+      <circle cx="29" cy="12" r="5.5" fill={color} />
+      <ellipse cx="25.5" cy="9.5" rx="2" ry="1.4" fill="white" opacity="0.35" />
+      <rect x="2" y="24" width="54" height="18" rx="4" fill="#F0E8D8" opacity="0.9" />
+    </svg>
+  );
+}
+
+function PerfumeSVG() {
+  return (
+    <svg width="40" height="64" viewBox="0 0 40 64">
+      <rect x="8" y="18" width="24" height="42" rx="3.5" fill="rgba(240,232,204,0.4)" stroke="#C8B06A" strokeWidth="0.7" />
+      <rect x="10" y="20" width="20" height="38" rx="3" fill="rgba(240,232,204,0.2)" />
+      <rect x="12" y="13" width="16" height="7" rx="1.5" fill="#C8B06A" opacity="0.75" />
+      <rect x="16" y="9" width="8" height="5" rx="1" fill="#A89050" />
+      <circle cx="20" cy="8" r="2.5" fill="#C8B06A" />
+      <rect x="12" y="28" width="16" height="18" rx="2" fill="rgba(11,60,38,0.06)" />
+      <text x="20" y="40" textAnchor="middle" fill="#0B3C26" fontSize="5" fontFamily="serif" opacity="0.5" letterSpacing="0.5">THE MUSE</text>
+    </svg>
   );
 }

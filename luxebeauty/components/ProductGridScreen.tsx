@@ -5,61 +5,46 @@ import { useState } from "react";
 interface Props { onBack: () => void; }
 
 const products = [
-  { id: "1", name: "Lumière Foundation", brand: "Dior Beauty", price: "$120", rating: 4.8, hasDupe: true, category: "Makeup", color: "#E8D5C0" },
-  { id: "2", name: "Balm Essentiel", brand: "Clinique", price: "$95", rating: 4.7, hasDupe: true, category: "Skincare", color: "#D4C0A8" },
-  { id: "3", name: "Micro Sérum", brand: "Kiehl's", price: "$120", rating: 4.9, hasDupe: false, category: "Skincare", color: "#C8D8C8" },
-  { id: "4", name: "Quad Eyeshadow", brand: "Charlotte Tilbury", price: "$85", rating: 4.6, hasDupe: true, category: "Makeup", color: "#D4B8A0" },
-  { id: "5", name: "Vital Perfector", brand: "La Prairie", price: "$280", rating: 4.9, hasDupe: false, category: "Skincare", color: "#E0D0B8" },
-  { id: "6", name: "Shimmer Compact", brand: "BECCA", price: "$44", rating: 4.8, hasDupe: true, category: "Makeup", color: "#F0D890" },
-  { id: "7", name: "Mon Guerlain", brand: "Guerlain", price: "$150", rating: 4.7, hasDupe: false, category: "Fragrance", color: "#E8C8D0" },
-  { id: "8", name: "Velvet Lipstick", brand: "YSL", price: "$55", rating: 4.8, hasDupe: true, category: "Makeup", color: "#C09090" },
+  { id:"1",  name:"Lumière Foundation",  brand:"Dior Beauty",  price:"$120", rating:4.8, dupe:true,  cat:"Makeup",    shimmer: false },
+  { id:"2",  name:"Balm Essentiel",       brand:"Clinique",     price:"$95",  rating:4.7, dupe:true,  cat:"Skincare",  shimmer: false },
+  { id:"3",  name:"Micro Sérum",          brand:"Kiehl's",      price:"$120", rating:4.9, dupe:false, cat:"Skincare",  shimmer: false },
+  { id:"4",  name:"Quad Eyeshadow",       brand:"Charlotte T.", price:"$85",  rating:4.6, dupe:true,  cat:"Makeup",    shimmer: false },
+  { id:"5",  name:"Vital Perfector",      brand:"La Prairie",   price:"$280", rating:4.9, dupe:false, cat:"Skincare",  shimmer: false },
+  { id:"6",  name:"Aurora Parfum",        brand:"The Muse",     price:"$195", rating:4.8, dupe:false, cat:"Fragrance", shimmer: true  },
+  { id:"7",  name:"Lumière Parfum",       brand:"The Muse",     price:"$195", rating:4.9, dupe:false, cat:"Fragrance", shimmer: true  },
+  { id:"8",  name:"Velvet Lipstick",      brand:"YSL",          price:"$55",  rating:4.8, dupe:true,  cat:"Makeup",    shimmer: false },
 ];
 
-const filters = ["All", "Makeup", "Skincare", "Fragrance", "Haircare"];
-
-function StarIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill={filled ? "#C9A96E" : "none"} stroke="#C9A96E" strokeWidth="0.8">
-      <path d="M5 1L6.2 3.6L9 4L7 5.9L7.6 8.8L5 7.3L2.4 8.8L3 5.9L1 4L3.8 3.6L5 1Z" />
-    </svg>
-  );
-}
+const filters = ["All", "Makeup", "Skincare", "Fragrance"];
 
 export default function ProductGridScreen({ onBack }: Props) {
   const [filter, setFilter] = useState("All");
   const [added, setAdded] = useState<string[]>([]);
 
-  const filtered = filter === "All" ? products : products.filter(p => p.category === filter);
-
-  const addToVanity = (id: string) => {
-    setAdded(prev => prev.includes(id) ? prev : [...prev, id]);
-  };
+  const shown = filter === "All" ? products : products.filter(p => p.cat === filter);
 
   return (
-    <div className="marble-bg min-h-screen overflow-y-auto">
+    <div className="satin-bg min-h-screen overflow-y-auto">
+
       {/* Header */}
       <div className="sticky top-0 z-20 px-5 pt-10 pb-4"
-        style={{ background: "rgba(250,247,242,0.92)", backdropFilter: "blur(14px)" }}>
-        <div className="flex items-center justify-between mb-5">
+        style={{ background: "rgba(250,246,239,0.92)", backdropFilter: "blur(16px)" }}>
+        <div className="flex items-center justify-between mb-4">
           <button onClick={onBack}
-            className="font-jost text-[10px] tracking-[0.15em] uppercase text-[#8A7F74] hover:text-[#C9A96E] transition-colors flex items-center gap-1.5 cursor-pointer">
+            className="font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] opacity-50 hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-1">
             ← Home
           </button>
-          <h2 className="font-display text-xl font-normal text-[#2C2C2C]">Luxury Shopping</h2>
-          <span className="font-jost text-[10px] text-[#C9A96E] tracking-[0.1em]">{filtered.length} items</span>
+          <h2 className="font-serif text-xl font-normal text-[#1C1C1C]">Luxury Shopping</h2>
+          <span className="font-sans text-[9px] text-[#C8B06A] tracking-wide">{shown.length} items</span>
         </div>
-
-        {/* Filter chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {/* Filter row */}
+        <div className="flex gap-2 pb-1 overflow-x-auto">
           {filters.map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-[10px] tracking-[0.1em] uppercase transition-all duration-250 cursor-pointer font-jost
+            <button key={f} onClick={() => setFilter(f)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full font-sans text-[9px] tracking-[0.14em] uppercase transition-all duration-250 cursor-pointer
                 ${filter === f
-                  ? "bg-[#C9A96E] text-white shadow-md"
-                  : "border border-[rgba(201,169,110,0.3)] text-[#8A7F74] hover:border-[#C9A96E] hover:text-[#7A5A30]"}`}
-            >
+                  ? "bg-[#0B3C26] text-[rgba(240,232,204,0.9)]"
+                  : "border border-[rgba(11,60,38,0.15)] text-[#8A8070] hover:border-[#0B3C26] hover:text-[#0B3C26]"}`}>
               {f}
             </button>
           ))}
@@ -67,66 +52,67 @@ export default function ProductGridScreen({ onBack }: Props) {
       </div>
 
       {/* Grid */}
-      <div className="px-4 pb-20 grid grid-cols-2 gap-3 mt-4">
-        {filtered.map((product, i) => (
-          <div
-            key={product.id}
-            className="card-luxury rounded-2xl overflow-hidden relative group"
-            style={{ animationDelay: `${i * 0.06}s` }}
-          >
-            {/* Product visual */}
+      <div className="px-4 pb-20 grid grid-cols-2 gap-3 mt-2">
+        {shown.map(p => (
+          <div key={p.id}
+            className={`rounded-2xl overflow-hidden relative ${p.shimmer ? "iridescent-card" : "card-pearl"}`}>
+
+            {/* Visual zone */}
             <div className="h-36 relative flex items-center justify-center"
-              style={{ background: `linear-gradient(135deg, ${product.color}40, ${product.color}20)` }}>
+              style={p.shimmer
+                ? {}
+                : { background: "linear-gradient(145deg, rgba(240,235,220,0.7), rgba(225,218,200,0.5))" }}>
 
-              {/* Abstract product shape */}
-              <div className="w-16 h-16 rounded-full opacity-60"
-                style={{ background: `radial-gradient(circle, ${product.color}, ${product.color}80)` }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent" />
+              {/* Abstract product visual */}
+              <div className="w-14 h-14 rounded-full opacity-50"
+                style={{ background: p.shimmer
+                  ? "radial-gradient(circle, rgba(196,150,138,0.8), rgba(200,176,106,0.4))"
+                  : "radial-gradient(circle, rgba(11,60,38,0.15), rgba(200,176,106,0.2))" }} />
 
-              {/* Badges */}
-              <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-                {product.hasDupe && (
-                  <span className="badge"
-                    style={{ background: "rgba(201,169,110,0.15)", color: "#8A6030", border: "1px solid rgba(201,169,110,0.4)" }}>
-                    Dupe ✓
-                  </span>
-                )}
-              </div>
-
-              {/* Price badge */}
+              {/* Price */}
               <div className="absolute top-2.5 right-2.5">
-                <span className="badge font-semibold"
-                  style={{ background: "rgba(255,255,255,0.85)", color: "#2C2C2C" }}>
-                  {product.price}
+                <span className="font-sans text-[9px] font-medium px-2 py-1 rounded-full"
+                  style={{ background: "rgba(255,253,248,0.88)", color: "#1C1C1C", border: "1px solid rgba(200,176,106,0.2)" }}>
+                  {p.price}
                 </span>
               </div>
+
+              {/* Dupe badge */}
+              {p.dupe && (
+                <div className="absolute top-2.5 left-2.5">
+                  <span className="font-sans text-[8px] tracking-[0.06em] px-2 py-1 rounded-full"
+                    style={{ background: "rgba(11,60,38,0.08)", color: "#0B3C26", border: "1px solid rgba(11,60,38,0.2)" }}>
+                    Dupe ✓
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Info */}
-            <div className="p-3">
-              <p className="font-jost text-[9px] tracking-[0.12em] uppercase text-[#C9A96E] mb-0.5">{product.brand}</p>
-              <p className="font-display text-sm font-normal text-[#2C2C2C] leading-tight mb-2">{product.name}</p>
+            <div className="p-3.5">
+              <p className="font-sans text-[8px] tracking-[0.18em] uppercase text-[#C8B06A] mb-0.5 font-light">{p.brand}</p>
+              <p className="font-serif text-sm font-normal text-[#1C1C1C] leading-tight mb-2">{p.name}</p>
 
-              {/* Rating */}
-              <div className="flex items-center gap-1 mb-3">
+              {/* Stars */}
+              <div className="flex items-center gap-0.5 mb-3">
                 {[1,2,3,4,5].map(n => (
-                  <StarIcon key={n} filled={n <= Math.floor(product.rating)} />
+                  <div key={n} className="w-2 h-2 rounded-sm"
+                    style={{ background: n <= Math.floor(p.rating) ? "#0B3C26" : "rgba(11,60,38,0.15)" }} />
                 ))}
-                <span className="font-jost text-[9px] text-[#8A7F74] ml-1">{product.rating}</span>
+                <span className="font-sans text-[8px] text-[#8A8070] ml-1">{p.rating}</span>
               </div>
 
-              {/* Actions */}
+              {/* CTAs */}
               <div className="flex gap-1.5">
                 <button
-                  onClick={() => addToVanity(product.id)}
-                  className={`flex-1 py-2 rounded-full text-[9px] tracking-[0.1em] uppercase font-jost transition-all duration-250 cursor-pointer
-                    ${added.includes(product.id)
-                      ? "bg-[rgba(201,169,110,0.15)] text-[#8A6030] border border-[#C9A96E]"
-                      : "btn-outline-gold"}`}
-                >
-                  {added.includes(product.id) ? "✓ In Vanity" : "+ Vanity"}
+                  onClick={() => setAdded(prev => prev.includes(p.id) ? prev : [...prev, p.id])}
+                  className={`flex-1 py-2 rounded-full font-sans text-[8px] tracking-[0.12em] uppercase transition-all cursor-pointer
+                    ${added.includes(p.id)
+                      ? "bg-[rgba(11,60,38,0.06)] text-[#0B3C26] border border-[rgba(11,60,38,0.25)]"
+                      : "btn-ghost"}`}>
+                  {added.includes(p.id) ? "✓ Added" : "+ Vanity"}
                 </button>
-                <button className="btn-gold px-3 py-2 rounded-full text-[9px] tracking-[0.08em] cursor-pointer">
+                <button className="btn-emerald px-3 py-2 rounded-full text-[8px] tracking-[0.1em] cursor-pointer">
                   Shop
                 </button>
               </div>
@@ -135,13 +121,12 @@ export default function ProductGridScreen({ onBack }: Props) {
         ))}
       </div>
 
-      {/* Luxury helper CTA */}
-      <div className="fixed bottom-12 right-4 z-20">
-        <button className="btn-gold w-12 h-12 rounded-full flex items-center justify-center text-lg shadow-xl cursor-pointer"
-          title="Luxury Shopping Helper">
-          ✦
-        </button>
-      </div>
+      {/* FAB */}
+      <button className="fixed bottom-14 right-4 z-20 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-xl"
+        style={{ background: "linear-gradient(135deg, #0B3C26, #1A5C3A)", boxShadow: "0 4px 20px rgba(11,60,38,0.35)" }}
+        title="The Muse Helper">
+        <span className="text-[#C8B06A] text-lg">✦</span>
+      </button>
     </div>
   );
 }
