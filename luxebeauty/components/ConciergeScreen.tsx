@@ -1,63 +1,207 @@
 "use client";
 
+import { useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 
 interface Props { onNext: () => void; }
 
-export default function ConciergeScreen({ onNext }: Props) {
-  return (
-    <div className="satin-bg min-h-screen flex flex-col items-center justify-between relative overflow-hidden px-8 pt-14 pb-12">
+const STEPS = [
+  {
+    id: "purpose",
+    question: "What brings you to LuxeBeauty?",
+    sub: "We'll tailor your experience around what matters most to you",
+    options: [
+      { id: "discover", icon: "✦", label: "Discover", desc: "Explore new products & trends" },
+      { id: "shop",     icon: "◈", label: "Shop",     desc: "Find & buy luxury beauties" },
+      { id: "dupes",    icon: "◇", label: "Find Dupes", desc: "Luxury looks, smarter prices" },
+      { id: "routine",  icon: "○", label: "Refine My Routine", desc: "Build the perfect ritual" },
+    ],
+  },
+  {
+    id: "vibe",
+    question: "Your beauty signature?",
+    sub: "Your aesthetic shapes every recommendation we make",
+    options: [
+      { id: "minimal",  icon: "—", label: "Minimalist", desc: "Clean, effortless, refined" },
+      { id: "bold",     icon: "◆", label: "Bold",       desc: "Statement looks, fearless colour" },
+      { id: "natural",  icon: "◯", label: "Natural",    desc: "Skin-first, ingredient-led" },
+      { id: "creative", icon: "⊞", label: "Creative",   desc: "Experimental & trend-forward" },
+    ],
+  },
+  {
+    id: "cadence",
+    question: "How do you refresh your routine?",
+    sub: "So we know when to surface new launches and seasonal edits",
+    options: [
+      { id: "daily",    icon: "∞", label: "Daily ritual",        desc: "Always discovering something new" },
+      { id: "weekly",   icon: "◇", label: "Weekly treats",       desc: "A few indulgences a week" },
+      { id: "monthly",  icon: "○", label: "Monthly indulgence",  desc: "Intentional, considered picks" },
+      { id: "seasonal", icon: "✦", label: "Seasonally",          desc: "Big refreshes with the seasons" },
+    ],
+  },
+];
 
-      {/* Ambient pearlescent orbs */}
+export default function ConciergeScreen({ onNext }: Props) {
+  const [step, setStep]           = useState(0);
+  const [answers, setAnswers]     = useState<Record<string, string>>({});
+  const [exiting, setExiting]     = useState(false);
+
+  const current   = STEPS[step];
+  const selected  = answers[current.id] ?? null;
+  const isLast    = step === STEPS.length - 1;
+
+  const choose = (id: string) => setAnswers(a => ({ ...a, [current.id]: id }));
+
+  const advance = () => {
+    if (!selected) return;
+    if (isLast) { onNext(); return; }
+    setExiting(true);
+    setTimeout(() => { setStep(s => s + 1); setExiting(false); }, 260);
+  };
+
+  const goBack = () => {
+    if (step === 0) return;
+    setExiting(true);
+    setTimeout(() => { setStep(s => s - 1); setExiting(false); }, 260);
+  };
+
+  return (
+    <div className="satin-bg min-h-screen flex flex-col relative overflow-hidden">
+
+      {/* Ambient orbs */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-5%] w-[55vw] h-[55vw] rounded-full opacity-40"
+        <div className="absolute top-[-10%] left-[-5%] w-[55vw] h-[55vw] rounded-full opacity-30"
           style={{ background: "radial-gradient(circle, rgba(240,232,204,0.8), transparent 65%)" }} />
-        <div className="absolute bottom-[-5%] right-[-10%] w-[45vw] h-[45vw] rounded-full opacity-30"
+        <div className="absolute bottom-[-5%] right-[-10%] w-[45vw] h-[45vw] rounded-full opacity-25"
           style={{ background: "radial-gradient(circle, rgba(196,150,138,0.5), transparent 65%)" }} />
-        <div className="absolute top-[40%] right-[15%] w-[30vw] h-[30vw] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(200,176,106,0.6), transparent 70%)" }} />
-        <div className="absolute top-[60%] left-[8%] w-[20vw] h-[20vw] rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, rgba(200,176,106,0.4), transparent 65%)" }} />
+        <div className="absolute top-[45%] right-[10%] w-[30vw] h-[30vw] rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, rgba(200,176,106,0.5), transparent 70%)" }} />
       </div>
 
-      {/* Top label */}
-      <div className="anim-up w-full flex justify-center">
-        <p className="font-sans text-[9px] tracking-[0.35em] uppercase text-[#0B3C26] opacity-60">
+      {/* Header */}
+      <div className="relative z-10 px-6 pt-10 pb-4 flex items-center justify-between flex-shrink-0">
+        <button
+          onClick={goBack}
+          className="font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] transition-opacity cursor-pointer"
+          style={{ opacity: step === 0 ? 0 : 0.5, pointerEvents: step === 0 ? "none" : "auto" }}>
+          ← Back
+        </button>
+        <div className="opacity-20">
+          <SwanLogo size={22} />
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="relative z-10 px-6 mb-8 flex-shrink-0">
+        <div className="flex gap-1.5">
+          {STEPS.map((_, i) => (
+            <div key={i} className="flex-1 h-[2px] rounded-full overflow-hidden"
+              style={{ background: "rgba(200,176,106,0.2)" }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  background: "linear-gradient(90deg, #C8B06A, #E8D898)",
+                  width: i < step ? "100%" : i === step ? "60%" : "0%",
+                }} />
+            </div>
+          ))}
+        </div>
+        <p className="font-sans text-[8px] tracking-[0.2em] uppercase text-[#C8B06A] mt-2">
+          Step {step + 1} of {STEPS.length}
+        </p>
+      </div>
+
+      {/* Question */}
+      <div
+        className="relative z-10 px-6 mb-7 flex-shrink-0 transition-all duration-260"
+        style={{ opacity: exiting ? 0 : 1, transform: exiting ? "translateY(-8px)" : "translateY(0)" }}>
+        <p className="font-sans text-[8px] tracking-[0.3em] uppercase text-[#C8B06A] mb-3">
           Membership Concierge
         </p>
+        <h2 className="font-serif text-3xl font-normal text-[#1C1C1C] leading-tight mb-2">
+          {current.question}
+        </h2>
+        <p className="font-sans text-[11px] font-light text-[#8A8070] leading-relaxed">
+          {current.sub}
+        </p>
       </div>
 
-      {/* Swan logo — center hero with iridescent glow */}
-      <div className="anim-up-d1 flex flex-col items-center text-center relative z-10 flex-1 justify-center">
-        <div className="anim-float mb-8 relative">
-          {/* Iridescent glow behind swan */}
-          <div className="absolute inset-0 rounded-full"
-            style={{
-              background: "radial-gradient(circle, rgba(200,176,106,0.25) 0%, rgba(196,150,138,0.15) 40%, transparent 70%)",
-              transform: "scale(1.8)",
-              filter: "blur(20px)",
-            }} />
-          <SwanLogo size={120} glow />
-        </div>
+      {/* Options */}
+      <div
+        className="relative z-10 flex-1 overflow-y-auto px-5 pb-36 transition-all duration-260"
+        style={{ opacity: exiting ? 0 : 1, transform: exiting ? "translateY(10px)" : "translateY(0)" }}>
+        <div className="flex flex-col gap-2.5">
+          {current.options.map((opt) => {
+            const isSelected = selected === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => choose(opt.id)}
+                className="card-pearl rounded-2xl px-5 py-4 flex items-center gap-4 text-left cursor-pointer transition-all duration-200 group"
+                style={isSelected ? {
+                  border: "1.5px solid #0B3C26",
+                  background: "rgba(11,60,38,0.04)",
+                } : {}}>
 
-        <h1 className="font-serif text-4xl font-normal text-[#1C1C1C] leading-[1.15] mb-5 max-w-xs">
-          Your personal curator<br />
-          <em className="font-cormorant italic font-light">is preparing fresh</em><br />
-          inspirations.
-        </h1>
-        <p className="font-sans text-sm font-light text-[#C4968A] tracking-wide mb-10">
-          Please allow us a moment to tailor<br />your exclusive selections.
-        </p>
+                {/* Icon bubble */}
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200"
+                  style={{
+                    background: isSelected ? "rgba(11,60,38,0.12)" : "rgba(200,176,106,0.1)",
+                    border: isSelected ? "1px solid rgba(11,60,38,0.2)" : "1px solid rgba(200,176,106,0.2)",
+                  }}>
+                  <span className="text-base transition-colors"
+                    style={{ color: isSelected ? "#0B3C26" : "#C8B06A" }}>
+                    {opt.icon}
+                  </span>
+                </div>
 
-        <div className="flex flex-col gap-3 w-full max-w-[280px]">
-          <button onClick={onNext} className="btn-rose py-4 rounded-full cursor-pointer">
-            Explore Benefits
-          </button>
-          <button onClick={onNext}
-            className="font-sans text-[10px] tracking-[0.22em] uppercase text-[#0B3C26] py-3 cursor-pointer hover:opacity-70 transition-opacity">
-            Notify Me When Ready
-          </button>
+                {/* Text */}
+                <div className="flex-1">
+                  <p className="font-serif text-base font-normal text-[#1C1C1C] leading-tight">
+                    {opt.label}
+                  </p>
+                  <p className="font-sans text-[10px] font-light text-[#8A8070] mt-0.5">
+                    {opt.desc}
+                  </p>
+                </div>
+
+                {/* Radio indicator */}
+                <div
+                  className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all duration-200"
+                  style={{
+                    borderColor: isSelected ? "#0B3C26" : "rgba(11,60,38,0.2)",
+                    background: isSelected ? "#0B3C26" : "transparent",
+                  }}>
+                  {isSelected && (
+                    <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                      <path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
+      </div>
+
+      {/* Fixed CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 px-6 pb-12 pt-8"
+        style={{ background: "linear-gradient(to top, rgba(250,246,239,1) 55%, transparent)" }}>
+        <button
+          onClick={advance}
+          disabled={!selected}
+          className="w-full py-4 rounded-full font-sans text-sm tracking-[0.15em] uppercase transition-all duration-300 cursor-pointer"
+          style={{
+            background: selected
+              ? "linear-gradient(145deg, #D4C07A, #C8B06A, #A89050)"
+              : "rgba(200,176,106,0.2)",
+            color: selected ? "white" : "rgba(200,176,106,0.5)",
+            boxShadow: selected ? "0 4px 24px rgba(200,176,106,0.4)" : "none",
+            cursor: selected ? "pointer" : "not-allowed",
+          }}>
+          {isLast ? "Begin My Journey" : "Continue"}
+        </button>
       </div>
     </div>
   );
