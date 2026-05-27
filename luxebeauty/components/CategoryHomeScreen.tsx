@@ -13,6 +13,9 @@ interface Props {
   onReviews?: () => void;
   onAccessibility?: () => void;
   onExtension?: () => void;
+  onHaircare?: () => void;
+  onBody?: () => void;
+  onSearch?: () => void;
 }
 
 const categories = [
@@ -68,14 +71,17 @@ const navTabs = ["Home", "Scan", "Routine", "Profile"];
 export default function CategoryHomeScreen({
   onVanity, onProducts, onScan, onVoice, onBack,
   onInput, onEditorial, onReviews, onAccessibility, onExtension,
+  onHaircare, onBody, onSearch,
 }: Props) {
   const handleCatClick = (id: string) => {
-    if (id === "muse") return onVanity();
-    if (id === "skincare") return onScan();
-    if (id === "makeup") return onEditorial ? onEditorial() : onProducts();
-    if (id === "fragrance") return onReviews ? onReviews() : onProducts();
-    if (id === "devices") return onExtension ? onExtension() : onProducts();
+    if (id === "muse")        return onVanity();
+    if (id === "skincare")    return onScan();
+    if (id === "makeup")      return onEditorial    ? onEditorial()    : onProducts();
+    if (id === "fragrance")   return onReviews      ? onReviews()      : onProducts();
+    if (id === "devices")     return onExtension    ? onExtension()    : onProducts();
     if (id === "accessories") return onAccessibility ? onAccessibility() : onProducts();
+    if (id === "haircare")    return onHaircare     ? onHaircare()     : onProducts();
+    if (id === "body")        return onBody         ? onBody()         : onProducts();
     return onProducts();
   };
 
@@ -93,7 +99,7 @@ export default function CategoryHomeScreen({
           </p>
           <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">Your World</h2>
         </div>
-        <button onClick={onInput || onScan}
+        <button onClick={onSearch || onInput || onScan}
           className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all hover:bg-[rgba(11,60,38,0.06)]"
           style={{ border: "1px solid rgba(11,60,38,0.12)" }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0B3C26" strokeWidth="1.2" strokeLinecap="round">

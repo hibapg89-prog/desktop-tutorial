@@ -19,6 +19,10 @@ import EditorialScreen from "@/components/EditorialScreen";
 import ReviewsScreen from "@/components/ReviewsScreen";
 import AccessibilityScreen from "@/components/AccessibilityScreen";
 import BrowserExtensionScreen from "@/components/BrowserExtensionScreen";
+import HaircareScreen from "@/components/HaircareScreen";
+import BodyScreen from "@/components/BodyScreen";
+import SearchScreen from "@/components/SearchScreen";
+import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 
 type Screen =
   | "landing"
@@ -38,14 +42,18 @@ type Screen =
   | "editorial"
   | "reviews"
   | "accessibility"
-  | "extension";
+  | "extension"
+  | "haircare"
+  | "body"
+  | "search";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
 export default function Home() {
-  const [history, setHistory] = useState<Screen[]>(["landing"]);
-  const [navKey, setNavKey]   = useState(0);
-  const direction             = useRef<"fwd" | "back">("fwd");
+  const [history, setHistory]       = useState<Screen[]>(["landing"]);
+  const [navKey, setNavKey]         = useState(0);
+  const direction                   = useRef<"fwd" | "back">("fwd");
+  const [vanityItems, setVanityItems] = useState<VanityItem[]>(INITIAL_VANITY_ITEMS);
 
   const screen = history[history.length - 1];
   const idx    = mainDots.indexOf(screen);
@@ -129,10 +137,17 @@ export default function Home() {
             onReviews={() => go("reviews")}
             onAccessibility={() => go("accessibility")}
             onExtension={() => go("extension")}
+            onHaircare={() => go("haircare")}
+            onBody={() => go("body")}
+            onSearch={() => go("search")}
           />
         )}
         {screen === "vanity" && (
-          <VanityScreen onBack={goBack} />
+          <VanityScreen
+            onBack={goBack}
+            items={vanityItems}
+            onReorder={setVanityItems}
+          />
         )}
         {screen === "scan" && (
           <ScanScreen onBack={goBack} />
@@ -151,6 +166,15 @@ export default function Home() {
         )}
         {screen === "extension" && (
           <BrowserExtensionScreen onBack={goBack} />
+        )}
+        {screen === "haircare" && (
+          <HaircareScreen onBack={goBack} />
+        )}
+        {screen === "body" && (
+          <BodyScreen onBack={goBack} />
+        )}
+        {screen === "search" && (
+          <SearchScreen onBack={goBack} />
         )}
       </div>
 

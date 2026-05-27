@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 
-interface Props { onBack: () => void; }
+export interface VanityItem {
+  id: string;
+  type: "lipstick" | "palette" | "compact" | "brush" | "perfume";
+  name: string;
+  brand: string;
+  hex?: string;
+  shades?: string[];
+}
 
-const ITEMS = [
+export const INITIAL_VANITY_ITEMS: VanityItem[] = [
   { id: "1",  type: "lipstick", name: "Rouge Allure", brand: "Chanel",     hex: "#C47070" },
   { id: "2",  type: "lipstick", name: "Velvet Red",   brand: "MAC",        hex: "#8B3A3A" },
   { id: "3",  type: "lipstick", name: "Peach Glam",   brand: "NARS",       hex: "#D4956A" },
@@ -20,24 +27,25 @@ const ITEMS = [
   { id: "13", type: "perfume",  name: "Lumière Noire",brand: "YSL" },
 ];
 
-type Item = typeof ITEMS[number];
+interface Props {
+  onBack: () => void;
+  items: VanityItem[];
+  onReorder: (items: VanityItem[]) => void;
+}
 
-export default function VanityScreen({ onBack }: Props) {
-  const [items, setItems] = useState<Item[]>(ITEMS);
+export default function VanityScreen({ onBack, items, onReorder }: Props) {
   const [dragging, setDragging] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleDragOver = (e: React.DragEvent, toId: string) => {
     e.preventDefault();
     if (!dragging || dragging === toId) return;
-    setItems(prev => {
-      const fi = prev.findIndex(x => x.id === dragging);
-      const ti = prev.findIndex(x => x.id === toId);
-      const n = [...prev];
-      const [m] = n.splice(fi, 1);
-      n.splice(ti, 0, m);
-      return n;
-    });
+    const fi = items.findIndex(x => x.id === dragging);
+    const ti = items.findIndex(x => x.id === toId);
+    const n = [...items];
+    const [m] = n.splice(fi, 1);
+    n.splice(ti, 0, m);
+    onReorder(n);
   };
 
   const sel = items.find(x => x.id === selected);
