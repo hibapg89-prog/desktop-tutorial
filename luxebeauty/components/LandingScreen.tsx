@@ -2,48 +2,101 @@
 
 export default function LandingScreen({ onNext }: { onNext: () => void }) {
   return (
-    <div className="satin-bg min-h-screen flex flex-col items-center justify-between relative overflow-hidden px-8 pt-14 pb-12">
+    <div className="satin-bg min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-8 pt-14 pb-12">
 
       {/* Ambient pearlescent orbs */}
-      <div className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-5%] w-[55vw] h-[55vw] rounded-full opacity-40"
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-8%] left-[-5%] w-[60vw] h-[60vw] rounded-full opacity-50"
           style={{ background: "radial-gradient(circle, rgba(240,232,204,0.8), transparent 65%)" }} />
-        <div className="absolute bottom-[-5%] right-[-10%] w-[45vw] h-[45vw] rounded-full opacity-30"
+        <div className="absolute bottom-[-5%] right-[-10%] w-[50vw] h-[50vw] rounded-full opacity-30"
           style={{ background: "radial-gradient(circle, rgba(196,150,138,0.5), transparent 65%)" }} />
-        <div className="absolute top-[40%] right-[15%] w-[30vw] h-[30vw] rounded-full opacity-20"
+        <div className="absolute top-[35%] right-[12%] w-[35vw] h-[35vw] rounded-full opacity-20"
           style={{ background: "radial-gradient(circle, rgba(200,176,106,0.6), transparent 70%)" }} />
+        <div className="absolute bottom-[20%] left-[5%] w-[25vw] h-[25vw] rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, rgba(196,150,138,0.4), transparent 65%)" }} />
       </div>
 
-      {/* Top label */}
-      <div className="anim-up w-full flex justify-center">
-        <p className="font-sans text-[9px] tracking-[0.35em] uppercase text-[#0B3C26] opacity-60">
-          Membership Concierge
-        </p>
-      </div>
-
-      {/* Swan logo — center hero */}
-      <div className="anim-up-d1 flex flex-col items-center text-center relative z-10 flex-1 justify-center">
-        <div className="anim-float mb-8">
-          <SwanLogo size={120} />
+      {/* Floating product silhouettes */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Perfume bottle top-right */}
+        <div className="absolute top-[12%] right-[8%] opacity-20 anim-float" style={{ animationDelay: "0.3s" }}>
+          <svg width="36" height="60" viewBox="0 0 36 60" fill="none">
+            <rect x="6" y="16" width="24" height="40" rx="4" fill="#C8B06A" />
+            <rect x="10" y="10" width="16" height="8" rx="2" fill="#A89050" />
+            <circle cx="18" cy="8" r="4" fill="#C8B06A" />
+            <rect x="11" y="24" width="14" height="22" rx="2" fill="rgba(255,255,255,0.2)" />
+          </svg>
         </div>
-        <h1 className="font-serif text-4xl font-normal text-[#1C1C1C] leading-[1.15] mb-5 max-w-xs">
-          Your personal curator<br />
-          <em className="font-cormorant italic font-light">is preparing fresh</em><br />
-          inspirations.
-        </h1>
-        <p className="font-sans text-sm font-light text-[#C4968A] tracking-wide mb-10">
-          Please allow us a moment to tailor<br />your exclusive selections.
-        </p>
+        {/* Cream jar bottom-left */}
+        <div className="absolute bottom-[22%] left-[6%] opacity-15 anim-float" style={{ animationDelay: "1.2s" }}>
+          <svg width="48" height="36" viewBox="0 0 48 36" fill="none">
+            <ellipse cx="24" cy="30" rx="22" ry="6" fill="#C8B06A" opacity="0.6" />
+            <rect x="2" y="14" width="44" height="18" rx="3" fill="#E8D8A8" />
+            <ellipse cx="24" cy="14" rx="22" ry="6" fill="#F0E8CC" />
+            <ellipse cx="24" cy="14" rx="16" ry="4" fill="rgba(255,255,255,0.4)" />
+          </svg>
+        </div>
+        {/* Lipstick mid-left */}
+        <div className="absolute top-[45%] left-[4%] opacity-18 anim-float" style={{ animationDelay: "0.8s" }}>
+          <svg width="22" height="52" viewBox="0 0 22 52" fill="none">
+            <rect x="4" y="22" width="14" height="26" rx="2" fill="#C8B06A" />
+            <rect x="6" y="24" width="10" height="14" fill="#C4968A" />
+            <path d="M6 24 Q11 16 16 24" fill="#C4968A" />
+            <rect x="3" y="42" width="16" height="8" rx="1" fill="#A89050" />
+          </svg>
+        </div>
+        {/* Serum dropper top-left */}
+        <div className="absolute top-[18%] left-[10%] opacity-12 anim-float" style={{ animationDelay: "2s" }}>
+          <svg width="20" height="56" viewBox="0 0 20 56" fill="none">
+            <rect x="6" y="18" width="8" height="32" rx="4" fill="rgba(11,60,38,0.3)" stroke="#C8B06A" strokeWidth="0.5" />
+            <path d="M10 50 L10 56" stroke="#C8B06A" strokeWidth="1" />
+            <ellipse cx="10" cy="10" rx="7" ry="9" fill="#E8D8A8" />
+          </svg>
+        </div>
+        {/* Brush bottom-right */}
+        <div className="absolute bottom-[15%] right-[10%] opacity-15 anim-float" style={{ animationDelay: "1.6s" }}>
+          <svg width="16" height="64" viewBox="0 0 16 64" fill="none">
+            <rect x="5" y="0" width="6" height="40" rx="1" fill="#C8B06A" />
+            <ellipse cx="8" cy="52" rx="5" ry="12" fill="#8A7A5A" opacity="0.6" />
+            <rect x="6" y="38" width="4" height="6" fill="#A89050" />
+          </svg>
+        </div>
+      </div>
 
-        <div className="flex flex-col gap-3 w-full max-w-[280px]">
-          <button onClick={onNext} className="btn-rose py-4 rounded-full cursor-pointer">
-            Explore Benefits
-          </button>
+      {/* Main content */}
+      <div className="relative z-10 flex flex-col items-center text-center max-w-sm w-full">
+
+        {/* Brand mark */}
+        <div className="anim-up mb-2">
+          <p className="font-sans text-[9px] tracking-[0.45em] uppercase text-[#0B3C26] opacity-50">
+            Bienvenue · Welcome · Willkommen
+          </p>
+        </div>
+
+        {/* Swan */}
+        <div className="anim-up-d1 anim-float my-8">
+          <SwanLogo size={140} />
+        </div>
+
+        {/* Heading */}
+        <div className="anim-up-d2">
+          <h1 className="font-serif text-4xl font-normal text-[#0B3C26] leading-[1.15] mb-4">
+            Elevating Your<br />Beauty Journey
+          </h1>
+          <div className="divider-gold my-4 mx-8" />
+          <p className="font-cormorant text-lg italic font-light text-[#8A8070] tracking-wide mb-10">
+            Your world of curated luxury awaits
+          </p>
+        </div>
+
+        {/* CTA */}
+        <div className="anim-up-d3 w-full">
           <button onClick={onNext}
-            className="font-sans text-[10px] tracking-[0.22em] uppercase text-[#0B3C26] py-3 cursor-pointer hover:opacity-70 transition-opacity">
-            Notify Me When Ready
+            className="btn-rose w-full py-4 rounded-full cursor-pointer text-sm">
+            Explore Now
           </button>
         </div>
+
       </div>
     </div>
   );
