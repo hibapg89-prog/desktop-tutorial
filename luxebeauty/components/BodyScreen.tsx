@@ -42,6 +42,12 @@ const RITUALS = [
     accent: "#A09070",
     desc: "Creams, masks & cuticle treatments for perfectly groomed extremities.",
   },
+  {
+    id: "intimate", label: "Intimate Care", sub: "Every zone deserves luxury",
+    gradient: "linear-gradient(145deg, #F0D0E0, #C87898, #E8B0C8)",
+    accent: "#B06880",
+    desc: "pH-balanced washes, intimate moisturisers and gentle deodorants formulated for your most sensitive skin.",
+  },
 ];
 
 export default function BodyScreen({ onBack }: Props) {

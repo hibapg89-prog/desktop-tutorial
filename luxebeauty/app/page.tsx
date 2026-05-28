@@ -22,6 +22,7 @@ import BrowserExtensionScreen from "@/components/BrowserExtensionScreen";
 import HaircareScreen from "@/components/HaircareScreen";
 import BodyScreen from "@/components/BodyScreen";
 import SearchScreen from "@/components/SearchScreen";
+import WellnessScreen from "@/components/WellnessScreen";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 
 type Screen =
@@ -45,7 +46,8 @@ type Screen =
   | "extension"
   | "haircare"
   | "body"
-  | "search";
+  | "search"
+  | "wellness";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -140,6 +142,7 @@ export default function Home() {
             onHaircare={() => go("haircare")}
             onBody={() => go("body")}
             onSearch={() => go("search")}
+            onWellness={() => go("wellness")}
           />
         )}
         {screen === "vanity" && (
@@ -175,6 +178,9 @@ export default function Home() {
         )}
         {screen === "search" && (
           <SearchScreen onBack={goBack} />
+        )}
+        {screen === "wellness" && (
+          <WellnessScreen onBack={goBack} />
         )}
       </div>
 

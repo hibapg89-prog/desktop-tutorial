@@ -16,6 +16,7 @@ interface Props {
   onHaircare?: () => void;
   onBody?: () => void;
   onSearch?: () => void;
+  onWellness?: () => void;
 }
 
 const categories = [
@@ -64,6 +65,11 @@ const categories = [
     gradient: "linear-gradient(135deg, #E8E0C8, #C0B080, #EAE0C0)",
     accent: "#A09070", icon: "◇",
   },
+  {
+    id: "wellness", label: "Intimate Wellness", sub: "Care & pleasure",
+    gradient: "linear-gradient(135deg, #F0D0E0, #C87898, #D8A0C0)",
+    accent: "#B06880", icon: "◯",
+  },
 ];
 
 const navTabs = ["Home", "Scan", "Routine", "Profile"];
@@ -71,17 +77,18 @@ const navTabs = ["Home", "Scan", "Routine", "Profile"];
 export default function CategoryHomeScreen({
   onVanity, onProducts, onScan, onVoice, onBack,
   onInput, onEditorial, onReviews, onAccessibility, onExtension,
-  onHaircare, onBody, onSearch,
+  onHaircare, onBody, onSearch, onWellness,
 }: Props) {
   const handleCatClick = (id: string) => {
     if (id === "muse")        return onVanity();
     if (id === "skincare")    return onScan();
-    if (id === "makeup")      return onEditorial    ? onEditorial()    : onProducts();
-    if (id === "fragrance")   return onReviews      ? onReviews()      : onProducts();
-    if (id === "devices")     return onExtension    ? onExtension()    : onProducts();
+    if (id === "makeup")      return onEditorial     ? onEditorial()     : onProducts();
+    if (id === "fragrance")   return onReviews       ? onReviews()       : onProducts();
+    if (id === "devices")     return onExtension     ? onExtension()     : onProducts();
     if (id === "accessories") return onAccessibility ? onAccessibility() : onProducts();
-    if (id === "haircare")    return onHaircare     ? onHaircare()     : onProducts();
-    if (id === "body")        return onBody         ? onBody()         : onProducts();
+    if (id === "haircare")    return onHaircare      ? onHaircare()      : onProducts();
+    if (id === "body")        return onBody          ? onBody()          : onProducts();
+    if (id === "wellness")    return onWellness      ? onWellness()      : onProducts();
     return onProducts();
   };
 
