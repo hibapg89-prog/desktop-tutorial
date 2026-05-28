@@ -24,6 +24,7 @@ import BodyScreen from "@/components/BodyScreen";
 import SearchScreen from "@/components/SearchScreen";
 import WellnessScreen from "@/components/WellnessScreen";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
+import SoundscapePlayer from "@/components/SoundscapePlayer";
 
 type Screen =
   | "landing"
@@ -77,6 +78,8 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen overflow-hidden">
+
+      <SoundscapePlayer position="top" />
 
       <div key={navKey} className={transitionClass}>
         {screen === "landing" && (
