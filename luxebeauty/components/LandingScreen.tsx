@@ -67,24 +67,27 @@ export default function LandingScreen({ onNext }: { onNext: () => void }) {
       <div className="relative z-10 flex flex-col items-center text-center max-w-sm w-full">
 
         {/* Brand mark */}
-        <div className="anim-up mb-2">
-          <p className="font-sans text-[9px] tracking-[0.45em] uppercase text-[#0B3C26] opacity-50">
+        <div className="anim-up mb-1 flex flex-col items-center gap-1.5">
+          <p className="font-sans text-[7px] tracking-[0.55em] uppercase text-[#C8B06A] opacity-70">
+            The Muse
+          </p>
+          <p className="font-sans text-[8px] tracking-[0.38em] uppercase text-[#0B3C26] opacity-35">
             Bienvenue · Welcome · Willkommen
           </p>
         </div>
 
         {/* Swan */}
-        <div className="anim-up-d1 anim-float my-8">
-          <SwanLogo size={140} />
+        <div className="anim-up-d1 anim-float my-7">
+          <SwanLogo size={136} glow />
         </div>
 
         {/* Heading */}
         <div className="anim-up-d2">
-          <h1 className="font-serif text-4xl font-normal text-[#0B3C26] leading-[1.15] mb-4">
+          <h1 className="font-serif text-[2.4rem] font-normal text-[#0B3C26] leading-[1.12] mb-4">
             Elevating Your<br />Beauty Journey
           </h1>
-          <div className="divider-gold my-4 mx-8" />
-          <p className="font-cormorant text-lg italic font-light text-[#8A8070] tracking-wide mb-10">
+          <div className="divider-gold my-4 mx-6" />
+          <p className="font-cormorant text-[1.15rem] italic font-light text-[#8A8070] tracking-wide mb-9">
             Your world of curated luxury awaits
           </p>
         </div>
@@ -92,12 +95,12 @@ export default function LandingScreen({ onNext }: { onNext: () => void }) {
         {/* CTA */}
         <div className="anim-up-d3 w-full space-y-4">
           <button onClick={onNext}
-            className="btn-rose w-full py-4 rounded-full cursor-pointer text-sm">
+            className="btn-gold w-full py-4 rounded-full cursor-pointer text-sm">
             Begin Your Ritual
           </button>
           <div className="text-center">
             <button onClick={onNext}
-              className="font-sans text-[9px] tracking-[0.2em] uppercase text-[#0B3C26] opacity-30 hover:opacity-60 transition-opacity cursor-pointer">
+              className="font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] opacity-25 hover:opacity-55 transition-opacity cursor-pointer">
               Explore as Guest
             </button>
           </div>

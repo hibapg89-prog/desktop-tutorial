@@ -149,8 +149,6 @@ export default function BeautyMapScreen({ onBack, onVanity, onProfile }: Props) 
         .flip-inner.flipped { transform: rotateY(180deg); }
         .flip-front, .flip-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
         .flip-back { transform: rotateY(180deg); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
       {/* Header */}

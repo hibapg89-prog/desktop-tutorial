@@ -189,14 +189,14 @@ export default function SoundscapePlayer({ position = "top" }: SoundscapePlayerP
         style={{
           background: playing
             ? "rgba(11,60,38,0.88)"
-            : "rgba(250,246,239,0.82)",
-          backdropFilter: "blur(16px)",
+            : "rgba(250,248,242,0.86)",
+          backdropFilter: "blur(18px)",
           border: playing
-            ? "1px solid rgba(200,176,106,0.3)"
-            : "1px solid rgba(11,60,38,0.12)",
+            ? "1px solid rgba(200,176,106,0.35)"
+            : "1px solid rgba(200,176,106,0.28)",
           boxShadow: playing
             ? "0 4px 20px rgba(11,60,38,0.25)"
-            : "0 2px 12px rgba(11,60,38,0.08)",
+            : "0 2px 14px rgba(200,176,106,0.15), 0 1px 4px rgba(11,60,38,0.06)",
         }}>
 
         {playing ? (
@@ -205,7 +205,7 @@ export default function SoundscapePlayer({ position = "top" }: SoundscapePlayerP
             <div className="flex items-center gap-[2px]">
               {wave.map((h, i) => (
                 <div key={i}
-                  className="rounded-full transition-all"
+                  className="rounded-full"
                   style={{
                     width: "2px",
                     height: `${h}px`,
@@ -223,9 +223,9 @@ export default function SoundscapePlayer({ position = "top" }: SoundscapePlayerP
           </>
         ) : (
           <>
-            <span className="text-[10px] text-[#C8B06A]">✦</span>
-            <span className="font-sans text-[9px] tracking-[0.18em] uppercase text-[#0B3C26] opacity-50">
-              Soundscapes
+            <span className="text-[9px] text-[#C8B06A] opacity-80">♫</span>
+            <span className="font-sans text-[8px] tracking-[0.2em] uppercase text-[#0B3C26] opacity-40">
+              Ambiance
             </span>
           </>
         )}

@@ -27,7 +27,7 @@ export default function BeautyProfileScreen({ onNext, onBack }: Props) {
   const ready = skin && picks.length > 0 && tier;
 
   return (
-    <div className="satin-bg min-h-screen overflow-y-auto">
+    <div className="satin-bg min-h-screen overflow-y-auto no-scrollbar">
 
       {/* Sticky header */}
       <div className="sticky top-0 z-10 px-6 pt-10 pb-5"
