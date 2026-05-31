@@ -25,6 +25,7 @@ import SearchScreen from "@/components/SearchScreen";
 import WellnessScreen from "@/components/WellnessScreen";
 import NotificationPermissionScreen from "@/components/NotificationPermissionScreen";
 import FirstMuseRevealScreen from "@/components/FirstMuseRevealScreen";
+import SocialScreen from "@/components/SocialScreen";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
 
@@ -54,7 +55,8 @@ type Screen =
   | "intimate"
   | "parapharmacy"
   | "notification-permission"
-  | "first-muse-reveal";
+  | "first-muse-reveal"
+  | "social";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -163,6 +165,7 @@ export default function Home() {
             onWellness={() => go("wellness")}
             onIntimate={() => go("intimate")}
             onParapharmacy={() => go("parapharmacy")}
+            onSocial={() => go("social")}
           />
         )}
         {screen === "vanity" && (
@@ -207,6 +210,9 @@ export default function Home() {
         )}
         {screen === "parapharmacy" && (
           <WellnessScreen onBack={goBack} />
+        )}
+        {screen === "social" && (
+          <SocialScreen onBack={goBack} />
         )}
       </div>
 

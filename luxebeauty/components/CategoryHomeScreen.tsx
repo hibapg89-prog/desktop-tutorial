@@ -19,6 +19,7 @@ interface Props {
   onWellness?: () => void;
   onIntimate?: () => void;
   onParapharmacy?: () => void;
+  onSocial?: () => void;
 }
 
 const categories = [
@@ -90,6 +91,7 @@ export default function CategoryHomeScreen({
   onVanity, onProducts, onScan, onVoice, onBack,
   onInput, onEditorial, onReviews, onAccessibility, onExtension,
   onHaircare, onBody, onSearch, onWellness, onIntimate, onParapharmacy,
+  onSocial,
 }: Props) {
   const handleCatClick = (id: string) => {
     if (id === "muse")          return onVanity();
@@ -205,7 +207,7 @@ export default function CategoryHomeScreen({
         <div className="flex justify-around">
           {navTabs.map((tab, i) => (
             <button key={tab}
-              onClick={i === 0 ? () => {} : i === 1 ? onScan : i === 3 ? onBack : onProducts}
+              onClick={i === 0 ? () => {} : i === 1 ? onScan : i === 3 ? (onSocial ?? onBack) : onProducts}
               className={`nav-tab ${i === 0 ? "active" : ""}`}>
               <div className="nav-line" />
               <NavIcon idx={i} />
