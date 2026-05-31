@@ -35,6 +35,8 @@ import { ToastProvider } from "@/components/ToastContext";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
 import BeautyMapScreen from "@/components/BeautyMapScreen";
+import IntimateScreen from "@/components/IntimateScreen";
+import ParapharmacyScreen from "@/components/ParapharmacyScreen";
 
 type Screen =
   | "landing"
@@ -231,10 +233,10 @@ export default function Home() {
           <WellnessScreen onBack={goBack} />
         )}
         {screen === "intimate" && (
-          <WellnessScreen onBack={goBack} />
+          <IntimateScreen onBack={goBack} />
         )}
         {screen === "parapharmacy" && (
-          <WellnessScreen onBack={goBack} />
+          <ParapharmacyScreen onBack={goBack} />
         )}
         {screen === "social" && (
           <SocialScreen onBack={goBack} />
