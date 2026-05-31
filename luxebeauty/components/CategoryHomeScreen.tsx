@@ -20,6 +20,7 @@ interface Props {
   onIntimate?: () => void;
   onParapharmacy?: () => void;
   onSocial?: () => void;
+  onProfile?: () => void;
   onNotifications?: () => void;
 }
 
@@ -92,7 +93,7 @@ export default function CategoryHomeScreen({
   onVanity, onProducts, onScan, onVoice, onBack,
   onInput, onEditorial, onReviews, onAccessibility, onExtension,
   onHaircare, onBody, onSearch, onWellness, onIntimate, onParapharmacy,
-  onSocial, onNotifications,
+  onSocial, onProfile, onNotifications,
 }: Props) {
   const handleCatClick = (id: string) => {
     if (id === "muse")          return onVanity();
@@ -142,9 +143,9 @@ export default function CategoryHomeScreen({
             <button
               key={cat.id}
               onClick={() => handleCatClick(cat.id)}
-              className={`card-pearl rounded-2xl overflow-hidden text-left cursor-pointer group relative
+              className={`card-pearl rounded-2xl overflow-hidden text-left cursor-pointer group relative grid-item-anim
                 ${cat.id === "muse" ? "col-span-2 h-24" : "h-32"}`}
-              style={{ animationDelay: `${i * 0.04}s` }}
+              style={{ animationDelay: `${i * 0.045}s` }}
             >
               {/* Gradient background image */}
               <div className="absolute inset-0"
@@ -208,7 +209,7 @@ export default function CategoryHomeScreen({
         <div className="flex justify-around">
           {navTabs.map((tab, i) => (
             <button key={tab}
-              onClick={i === 0 ? () => {} : i === 1 ? onScan : i === 3 ? (onSocial ?? onBack) : onProducts}
+              onClick={i === 0 ? () => {} : i === 1 ? onScan : i === 3 ? (onProfile ?? onSocial ?? onBack) : onProducts}
               className={`nav-tab ${i === 0 ? "active" : ""}`}>
               <div className="nav-line" />
               <NavIcon idx={i} />
