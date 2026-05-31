@@ -48,7 +48,9 @@ type Screen =
   | "haircare"
   | "body"
   | "search"
-  | "wellness";
+  | "wellness"
+  | "intimate"
+  | "parapharmacy";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -146,6 +148,8 @@ export default function Home() {
             onBody={() => go("body")}
             onSearch={() => go("search")}
             onWellness={() => go("wellness")}
+            onIntimate={() => go("intimate")}
+            onParapharmacy={() => go("parapharmacy")}
           />
         )}
         {screen === "vanity" && (
@@ -183,6 +187,12 @@ export default function Home() {
           <SearchScreen onBack={goBack} />
         )}
         {screen === "wellness" && (
+          <WellnessScreen onBack={goBack} />
+        )}
+        {screen === "intimate" && (
+          <WellnessScreen onBack={goBack} />
+        )}
+        {screen === "parapharmacy" && (
           <WellnessScreen onBack={goBack} />
         )}
       </div>

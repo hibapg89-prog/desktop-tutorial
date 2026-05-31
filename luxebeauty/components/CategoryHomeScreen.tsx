@@ -17,6 +17,8 @@ interface Props {
   onBody?: () => void;
   onSearch?: () => void;
   onWellness?: () => void;
+  onIntimate?: () => void;
+  onParapharmacy?: () => void;
 }
 
 const categories = [
@@ -66,9 +68,19 @@ const categories = [
     accent: "#A09070", icon: "◇",
   },
   {
-    id: "wellness", label: "Intimate Wellness", sub: "Care & pleasure",
+    id: "parapharmacy", label: "Parapharmacy", sub: "Libre service",
+    gradient: "linear-gradient(135deg, #E0EEE8, #88B8A0, #C0DED0)",
+    accent: "#3A7A5A", icon: "✚",
+  },
+  {
+    id: "intimate", label: "Intimate Wellness", sub: "Care & pleasure",
     gradient: "linear-gradient(135deg, #F0D0E0, #C87898, #D8A0C0)",
     accent: "#B06880", icon: "◯",
+  },
+  {
+    id: "wellness", label: "Wellness", sub: "Health from within",
+    gradient: "linear-gradient(135deg, #D8E8D0, #70A860, #B8D8A8)",
+    accent: "#2A6A3A", icon: "◈",
   },
 ];
 
@@ -77,18 +89,20 @@ const navTabs = ["Home", "Scan", "Routine", "Profile"];
 export default function CategoryHomeScreen({
   onVanity, onProducts, onScan, onVoice, onBack,
   onInput, onEditorial, onReviews, onAccessibility, onExtension,
-  onHaircare, onBody, onSearch, onWellness,
+  onHaircare, onBody, onSearch, onWellness, onIntimate, onParapharmacy,
 }: Props) {
   const handleCatClick = (id: string) => {
-    if (id === "muse")        return onVanity();
-    if (id === "skincare")    return onScan();
-    if (id === "makeup")      return onEditorial     ? onEditorial()     : onProducts();
-    if (id === "fragrance")   return onReviews       ? onReviews()       : onProducts();
-    if (id === "devices")     return onExtension     ? onExtension()     : onProducts();
-    if (id === "accessories") return onAccessibility ? onAccessibility() : onProducts();
-    if (id === "haircare")    return onHaircare      ? onHaircare()      : onProducts();
-    if (id === "body")        return onBody          ? onBody()          : onProducts();
-    if (id === "wellness")    return onWellness      ? onWellness()      : onProducts();
+    if (id === "muse")          return onVanity();
+    if (id === "skincare")      return onScan();
+    if (id === "makeup")        return onEditorial      ? onEditorial()      : onProducts();
+    if (id === "fragrance")     return onReviews        ? onReviews()        : onProducts();
+    if (id === "devices")       return onExtension      ? onExtension()      : onProducts();
+    if (id === "accessories")   return onAccessibility  ? onAccessibility()  : onProducts();
+    if (id === "haircare")      return onHaircare       ? onHaircare()       : onProducts();
+    if (id === "body")          return onBody           ? onBody()           : onProducts();
+    if (id === "wellness")      return onWellness       ? onWellness()       : onProducts();
+    if (id === "intimate")      return onIntimate       ? onIntimate()       : onProducts();
+    if (id === "parapharmacy")  return onParapharmacy   ? onParapharmacy()   : onProducts();
     return onProducts();
   };
 

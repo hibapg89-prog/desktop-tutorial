@@ -4,35 +4,59 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const TRACKS = [
   {
-    name: "Quiet Atelier",
-    icon: "◇",
-    // Pairs of [freq, detune] — slight detuning between pairs creates natural beating
+    name: "Parisian Atelier",
+    short: "Parisian",
+    icon: "♪",
     voices: [
-      [55,  0],  [55,  3],   // deep sub drone
-      [110, 0],  [110, 5],   // fundamental
-      [165, 0],  [220, 2],   // overtones
+      [55,  0],  [55,  3],   // deep foundation
+      [110, 0],  [110, 5],   // warm fundamental
+      [165, 0],  [220, 2],   // gentle overtones
     ] as [number, number][],
-    filterFreq: 600,
+    filterFreq: 580,
   },
   {
-    name: "Spa Garden",
+    name: "Japanese Garden",
+    short: "Garden",
+    icon: "◇",
+    voices: [
+      [74,  0],  [74,  4],   // clear tonic
+      [148, 0],  [148, 6],   // chime-like register
+      [222, 1],  [296, 2],   // bright upper partials
+    ] as [number, number][],
+    filterFreq: 900,
+  },
+  {
+    name: "Montmartre Evening",
+    short: "Montmartre",
     icon: "○",
     voices: [
-      [65,  0],  [65,  4],
-      [130, 0],  [130, 6],
-      [195, 1],  [260, 3],
+      [65,  0],  [65,  4],   // warm bass
+      [130, 0],  [130, 6],   // mid warmth
+      [195, 1],  [260, 3],   // café ambience
     ] as [number, number][],
     filterFreq: 700,
   },
   {
-    name: "Golden Hour",
+    name: "The Muse's Studio",
+    short: "Muse",
     icon: "✦",
     voices: [
-      [82,  0],  [82,  5],
-      [164, 0],  [164, 4],
-      [246, 2],  [328, 1],
+      [40,  0],  [40,  2],   // sub drone
+      [80,  0],  [80,  3],   // dark fundamental
+      [120, 0],  [160, 1],   // deep focus pads
     ] as [number, number][],
-    filterFreq: 750,
+    filterFreq: 480,
+  },
+  {
+    name: "Coastal Morning",
+    short: "Coastal",
+    icon: "〜",
+    voices: [
+      [82,  0],  [82,  5],   // bright tonic
+      [164, 0],  [164, 4],   // wave motion
+      [246, 2],  [328, 1],   // sparkling highs
+    ] as [number, number][],
+    filterFreq: 850,
   },
 ];
 
@@ -259,17 +283,17 @@ export default function SoundscapePlayer({ position = "top" }: SoundscapePlayerP
           </div>
 
           {/* Track selector */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
             {TRACKS.map((t, i) => (
               <button key={t.name}
                 onClick={() => changeTrack(i)}
-                className="flex-1 py-1.5 rounded-full font-sans text-[8px] tracking-[0.08em] uppercase cursor-pointer transition-all duration-200"
+                className="flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-[7.5px] tracking-[0.06em] uppercase cursor-pointer transition-all duration-200"
                 style={{
                   background: trackIdx === i ? "rgba(200,176,106,0.25)" : "rgba(255,255,255,0.06)",
                   border: trackIdx === i ? "1px solid rgba(200,176,106,0.5)" : "1px solid rgba(255,255,255,0.08)",
                   color: trackIdx === i ? "#E8D898" : "rgba(255,255,255,0.4)",
                 }}>
-                {t.icon} {t.name.split(" ")[0]}
+                {t.icon} {t.short}
               </button>
             ))}
           </div>
