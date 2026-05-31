@@ -230,7 +230,7 @@ export default function Home() {
           <BodyScreen onBack={goBack} />
         )}
         {screen === "search" && (
-          <SearchScreen onBack={goBack} />
+          <SearchScreen onBack={goBack} onScan={() => go("scan")} />
         )}
         {screen === "wellness" && (
           <WellnessScreen onBack={goBack} />
