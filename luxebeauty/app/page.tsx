@@ -34,6 +34,7 @@ import TutorialDetailScreen from "@/components/TutorialDetailScreen";
 import { ToastProvider } from "@/components/ToastContext";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
+import BeautyMapScreen from "@/components/BeautyMapScreen";
 
 type Screen =
   | "landing"
@@ -67,7 +68,8 @@ type Screen =
   | "profile"
   | "muse-mirror"
   | "muse-box"
-  | "tutorial-detail";
+  | "tutorial-detail"
+  | "map";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -182,6 +184,7 @@ export default function Home() {
             onProfile={() => go("profile")}
             onNotifications={() => go("notifications")}
             onMuseBox={() => go("muse-box")}
+            onMap={() => go("map")}
           />
         )}
         {screen === "vanity" && (
@@ -251,6 +254,9 @@ export default function Home() {
         )}
         {screen === "muse-box" && (
           <MuseBoxScreen onBack={goBack} onSocial={() => go("social")} />
+        )}
+        {screen === "map" && (
+          <BeautyMapScreen onBack={goBack} onVanity={() => go("vanity")} onProfile={() => go("profile")} />
         )}
       </div>
 
