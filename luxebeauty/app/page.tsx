@@ -23,6 +23,8 @@ import HaircareScreen from "@/components/HaircareScreen";
 import BodyScreen from "@/components/BodyScreen";
 import SearchScreen from "@/components/SearchScreen";
 import WellnessScreen from "@/components/WellnessScreen";
+import NotificationPermissionScreen from "@/components/NotificationPermissionScreen";
+import FirstMuseRevealScreen from "@/components/FirstMuseRevealScreen";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
 
@@ -50,7 +52,9 @@ type Screen =
   | "search"
   | "wellness"
   | "intimate"
-  | "parapharmacy";
+  | "parapharmacy"
+  | "notification-permission"
+  | "first-muse-reveal";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -92,9 +96,18 @@ export default function Home() {
         )}
         {screen === "beauty-profile" && (
           <BeautyProfileScreen
-            onNext={() => go("home")}
+            onNext={() => go("notification-permission")}
             onBack={goBack}
           />
+        )}
+        {screen === "notification-permission" && (
+          <NotificationPermissionScreen
+            onAllow={() => go("first-muse-reveal")}
+            onSkip={() => go("first-muse-reveal")}
+          />
+        )}
+        {screen === "first-muse-reveal" && (
+          <FirstMuseRevealScreen onEnter={() => go("home")} />
         )}
         {screen === "input-selector" && (
           <InputSelectorScreen

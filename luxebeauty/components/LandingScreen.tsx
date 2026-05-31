@@ -90,11 +90,17 @@ export default function LandingScreen({ onNext }: { onNext: () => void }) {
         </div>
 
         {/* CTA */}
-        <div className="anim-up-d3 w-full">
+        <div className="anim-up-d3 w-full space-y-4">
           <button onClick={onNext}
             className="btn-rose w-full py-4 rounded-full cursor-pointer text-sm">
-            Explore Now
+            Begin Your Ritual
           </button>
+          <div className="text-center">
+            <button onClick={onNext}
+              className="font-sans text-[9px] tracking-[0.2em] uppercase text-[#0B3C26] opacity-30 hover:opacity-60 transition-opacity cursor-pointer">
+              Explore as Guest
+            </button>
+          </div>
         </div>
 
       </div>

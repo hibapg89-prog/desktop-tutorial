@@ -91,23 +91,22 @@ export default function ConciergeScreen({ onNext }: Props) {
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Moon phase progress */}
       <div className="relative z-10 px-6 mb-8 flex-shrink-0">
-        <div className="flex gap-1.5">
-          {STEPS.map((_, i) => (
-            <div key={i} className="flex-1 h-[2px] rounded-full overflow-hidden"
-              style={{ background: "rgba(200,176,106,0.2)" }}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  background: "linear-gradient(90deg, #C8B06A, #E8D898)",
-                  width: i < step ? "100%" : i === step ? "60%" : "0%",
-                }} />
-            </div>
+        <div className="flex items-center justify-center gap-4">
+          {(["🌑", "🌒", "🌓"] as const).map((phase, i) => (
+            <span key={i} className="text-2xl transition-all duration-500"
+              style={{
+                opacity:    i <= step ? 1 : 0.22,
+                transform:  i === step ? "scale(1.35)" : "scale(1)",
+                filter:     i < step ? "saturate(0.6) brightness(0.9)" : "none",
+              }}>
+              {phase}
+            </span>
           ))}
         </div>
-        <p className="font-sans text-[8px] tracking-[0.2em] uppercase text-[#C8B06A] mt-2">
-          Step {step + 1} of {STEPS.length}
+        <p className="font-sans text-[8px] tracking-[0.22em] uppercase text-[#C8B06A] mt-2 text-center">
+          Your Beauty Ritual · {step + 1} of {STEPS.length}
         </p>
       </div>
 

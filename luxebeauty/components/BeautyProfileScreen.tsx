@@ -33,9 +33,22 @@ export default function BeautyProfileScreen({ onNext, onBack }: Props) {
       <div className="sticky top-0 z-10 px-6 pt-10 pb-5"
         style={{ background: "rgba(250,246,239,0.9)", backdropFilter: "blur(16px)" }}>
         <button onClick={onBack}
-          className="font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] opacity-50 hover:opacity-100 transition-opacity mb-6 cursor-pointer flex items-center gap-1.5">
+          className="font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] opacity-50 hover:opacity-100 transition-opacity mb-4 cursor-pointer flex items-center gap-1.5">
           ← Back
         </button>
+        {/* Moon phase progress — step 4 */}
+        <div className="flex items-center justify-center gap-4 mb-4">
+          {(["🌑", "🌒", "🌓", "🌔"] as const).map((phase, i) => (
+            <span key={i} className="text-xl transition-all duration-500"
+              style={{
+                opacity:   i === 3 ? 1 : 0.28,
+                transform: i === 3 ? "scale(1.3)" : "scale(1)",
+                filter:    i < 3 ? "saturate(0.6)" : "none",
+              }}>
+              {phase}
+            </span>
+          ))}
+        </div>
         <p className="font-sans text-[9px] tracking-[0.28em] uppercase text-[#C8B06A] mb-2">
           Your Beauty Profile
         </p>
@@ -115,7 +128,7 @@ export default function BeautyProfileScreen({ onNext, onBack }: Props) {
           disabled={!ready}
           className={`btn-emerald w-full py-4 rounded-full max-w-lg mx-auto block cursor-pointer
             ${!ready ? "opacity-30 cursor-not-allowed" : ""}`}>
-          Continue to My Vanity
+          Continue ✦
         </button>
       </div>
     </div>
