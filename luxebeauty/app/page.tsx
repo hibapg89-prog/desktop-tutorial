@@ -30,6 +30,7 @@ import NotificationsScreen from "@/components/NotificationsScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import MuseMirrorScreen from "@/components/MuseMirrorScreen";
 import MuseBoxScreen from "@/components/MuseBoxScreen";
+import TutorialDetailScreen from "@/components/TutorialDetailScreen";
 import { ToastProvider } from "@/components/ToastContext";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
@@ -65,7 +66,8 @@ type Screen =
   | "notifications"
   | "profile"
   | "muse-mirror"
-  | "muse-box";
+  | "muse-box"
+  | "tutorial-detail";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -73,7 +75,8 @@ export default function Home() {
   const [history, setHistory]       = useState<Screen[]>(["landing"]);
   const [navKey, setNavKey]         = useState(0);
   const direction                   = useRef<"fwd" | "back">("fwd");
-  const [vanityItems, setVanityItems] = useState<VanityItem[]>(INITIAL_VANITY_ITEMS);
+  const [vanityItems,    setVanityItems]    = useState<VanityItem[]>(INITIAL_VANITY_ITEMS);
+  const [tutorialId,     setTutorialId]     = useState<string>("");
 
   const screen = history[history.length - 1];
   const idx    = mainDots.indexOf(screen);
@@ -195,7 +198,13 @@ export default function Home() {
           <VoiceScreen onBack={goBack} />
         )}
         {screen === "editorial" && (
-          <EditorialScreen onBack={goBack} />
+          <EditorialScreen
+            onBack={goBack}
+            onTutorial={(id) => { setTutorialId(id); go("tutorial-detail"); }}
+          />
+        )}
+        {screen === "tutorial-detail" && (
+          <TutorialDetailScreen tutorialId={tutorialId} onBack={goBack} />
         )}
         {screen === "reviews" && (
           <ReviewsScreen onBack={goBack} />
