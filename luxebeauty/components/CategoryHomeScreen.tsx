@@ -26,6 +26,7 @@ interface Props {
   onNotifications?: () => void;
   onMuseBox?: () => void;
   onMap?: () => void;
+  onRoutine?: () => void;
 }
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
@@ -96,6 +97,11 @@ const categories = [
     gradient: "linear-gradient(135deg, #D8E8D0, #70A860, #B8D8A8)",
     accent: "#2A6A3A", icon: "◈",
   },
+  {
+    id: "rituels", label: "Mes Rituels", sub: "Routines sacrées",
+    gradient: "linear-gradient(135deg, #1E1030, #3D2060, #C8A840)",
+    accent: "#C8B06A", icon: "◐",
+  },
 ];
 
 const TIPS = [
@@ -143,7 +149,7 @@ export default function CategoryHomeScreen({
   onVanity, onProducts, onScan, onVoice, onBack,
   onInput, onEditorial, onReviews, onAccessibility, onExtension,
   onHaircare, onBody, onSearch, onWellness, onIntimate, onParapharmacy,
-  onSocial, onProfile, onNotifications, onMuseBox, onMap,
+  onSocial, onProfile, onNotifications, onMuseBox, onMap, onRoutine,
 }: Props) {
   const { showToast } = useToast();
   const [guideOpen,  setGuideOpen]  = useState(false);
@@ -169,6 +175,7 @@ export default function CategoryHomeScreen({
     if (id === "wellness")      return onWellness       ? onWellness()       : onProducts();
     if (id === "intimate")      return onIntimate       ? onIntimate()       : onProducts();
     if (id === "parapharmacy")  return onParapharmacy   ? onParapharmacy()   : onProducts();
+    if (id === "rituels")       return onRoutine        ? onRoutine()        : onProducts();
     return onProducts();
   };
 

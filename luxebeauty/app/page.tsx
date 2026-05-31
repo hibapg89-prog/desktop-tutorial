@@ -37,6 +37,7 @@ import SoundscapePlayer from "@/components/SoundscapePlayer";
 import BeautyMapScreen from "@/components/BeautyMapScreen";
 import IntimateScreen from "@/components/IntimateScreen";
 import ParapharmacyScreen from "@/components/ParapharmacyScreen";
+import RoutineBuilderScreen from "@/components/RoutineBuilderScreen";
 
 type Screen =
   | "landing"
@@ -71,7 +72,8 @@ type Screen =
   | "muse-mirror"
   | "muse-box"
   | "tutorial-detail"
-  | "map";
+  | "map"
+  | "routine";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -187,6 +189,7 @@ export default function Home() {
             onNotifications={() => go("notifications")}
             onMuseBox={() => go("muse-box")}
             onMap={() => go("map")}
+            onRoutine={() => go("routine")}
           />
         )}
         {screen === "vanity" && (
@@ -259,6 +262,9 @@ export default function Home() {
         )}
         {screen === "map" && (
           <BeautyMapScreen onBack={goBack} onVanity={() => go("vanity")} onProfile={() => go("profile")} />
+        )}
+        {screen === "routine" && (
+          <RoutineBuilderScreen onBack={goBack} />
         )}
       </div>
 
