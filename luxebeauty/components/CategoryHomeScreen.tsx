@@ -20,6 +20,7 @@ interface Props {
   onIntimate?: () => void;
   onParapharmacy?: () => void;
   onSocial?: () => void;
+  onNotifications?: () => void;
 }
 
 const categories = [
@@ -91,7 +92,7 @@ export default function CategoryHomeScreen({
   onVanity, onProducts, onScan, onVoice, onBack,
   onInput, onEditorial, onReviews, onAccessibility, onExtension,
   onHaircare, onBody, onSearch, onWellness, onIntimate, onParapharmacy,
-  onSocial,
+  onSocial, onNotifications,
 }: Props) {
   const handleCatClick = (id: string) => {
     if (id === "muse")          return onVanity();
@@ -113,7 +114,7 @@ export default function CategoryHomeScreen({
 
       {/* Header */}
       <div className="px-5 pt-10 pb-3 flex items-center justify-between flex-shrink-0">
-        <button onClick={() => {}} className="cursor-pointer">
+        <button onClick={onNotifications ?? (() => {})} className="cursor-pointer">
           <SwanLogo size={30} />
         </button>
         <div className="text-center">
