@@ -29,6 +29,7 @@ import SocialScreen from "@/components/SocialScreen";
 import NotificationsScreen from "@/components/NotificationsScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import MuseMirrorScreen from "@/components/MuseMirrorScreen";
+import MuseBoxScreen from "@/components/MuseBoxScreen";
 import { ToastProvider } from "@/components/ToastContext";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
@@ -63,7 +64,8 @@ type Screen =
   | "social"
   | "notifications"
   | "profile"
-  | "muse-mirror";
+  | "muse-mirror"
+  | "muse-box";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -176,6 +178,7 @@ export default function Home() {
             onSocial={() => go("social")}
             onProfile={() => go("profile")}
             onNotifications={() => go("notifications")}
+            onMuseBox={() => go("muse-box")}
           />
         )}
         {screen === "vanity" && (
@@ -236,6 +239,9 @@ export default function Home() {
         )}
         {screen === "muse-mirror" && (
           <MuseMirrorScreen onBack={goBack} />
+        )}
+        {screen === "muse-box" && (
+          <MuseBoxScreen onBack={goBack} onSocial={() => go("social")} />
         )}
       </div>
 
