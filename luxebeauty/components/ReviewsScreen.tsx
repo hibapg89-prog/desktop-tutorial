@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "./ToastContext";
 
 interface Props { onBack: () => void; }
 
@@ -168,8 +169,24 @@ export default function ReviewsScreen({ onBack }: Props) {
   const [collectedIds,setCollectedIds]= useState<Set<string>>(new Set());
   const [writeOpen,   setWriteOpen]   = useState(false);
 
-  const toggleAdore   = (id: string) => setAdoredIds(s   => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const toggleCollect = (id: string) => setCollectedIds(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const { showToast } = useToast();
+
+  const toggleAdore = (id: string) => {
+    setAdoredIds(s => {
+      const n = new Set(s);
+      if (n.has(id)) { n.delete(id); }
+      else           { n.add(id); showToast("Adored ✦", "💎"); }
+      return n;
+    });
+  };
+  const toggleCollect = (id: string) => {
+    setCollectedIds(s => {
+      const n = new Set(s);
+      if (n.has(id)) { n.delete(id); }
+      else           { n.add(id); showToast("Added to Vanity ✦", "✦"); }
+      return n;
+    });
+  };
 
   const filtered = activeMST
     ? POSTS.filter(p => Math.abs(p.mst - activeMST) <= 1)

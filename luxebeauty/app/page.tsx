@@ -28,6 +28,8 @@ import FirstMuseRevealScreen from "@/components/FirstMuseRevealScreen";
 import SocialScreen from "@/components/SocialScreen";
 import NotificationsScreen from "@/components/NotificationsScreen";
 import ProfileScreen from "@/components/ProfileScreen";
+import MuseMirrorScreen from "@/components/MuseMirrorScreen";
+import { ToastProvider } from "@/components/ToastContext";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
 
@@ -60,7 +62,8 @@ type Screen =
   | "first-muse-reveal"
   | "social"
   | "notifications"
-  | "profile";
+  | "profile"
+  | "muse-mirror";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -89,6 +92,7 @@ export default function Home() {
   const transitionClass = direction.current === "fwd" ? "screen-enter-fwd" : "screen-enter-back";
 
   return (
+    <ToastProvider>
     <main className="relative min-h-screen overflow-hidden">
 
       <SoundscapePlayer position="top" />
@@ -182,7 +186,7 @@ export default function Home() {
           />
         )}
         {screen === "scan" && (
-          <ScanScreen onBack={goBack} />
+          <ScanScreen onBack={goBack} onMuseMirror={() => go("muse-mirror")} />
         )}
         {screen === "voice" && (
           <VoiceScreen onBack={goBack} />
@@ -230,6 +234,9 @@ export default function Home() {
             onSocial={() => go("social")}
           />
         )}
+        {screen === "muse-mirror" && (
+          <MuseMirrorScreen onBack={goBack} />
+        )}
       </div>
 
       {/* Progress dots — only on main screens */}
@@ -241,5 +248,6 @@ export default function Home() {
         </div>
       )}
     </main>
+    </ToastProvider>
   );
 }

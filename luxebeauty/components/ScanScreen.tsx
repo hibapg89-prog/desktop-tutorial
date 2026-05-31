@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 
-interface Props { onBack: () => void; }
+interface Props { onBack: () => void; onMuseMirror?: () => void; }
 
 const product = {
   name: "Éclat Botanique Serum",
@@ -11,7 +11,7 @@ const product = {
   desc: "Clarifying facial serum",
 };
 
-export default function ScanScreen({ onBack }: Props) {
+export default function ScanScreen({ onBack, onMuseMirror }: Props) {
   const [scanned, setScanned] = useState(false);
 
   return (
@@ -108,6 +108,13 @@ export default function ScanScreen({ onBack }: Props) {
             </button>
           )}
         </div>
+        {onMuseMirror && (
+          <button onClick={onMuseMirror}
+            className="w-full mt-3 py-3 rounded-full cursor-pointer press-scale font-sans text-[9px] tracking-[0.18em] uppercase flex items-center justify-center gap-2"
+            style={{ border: "1px solid rgba(200,176,106,0.3)", color: "#C8B06A", background: "rgba(200,176,106,0.06)" }}>
+            <span>◈</span> Try On Virtually — Muse Mirror
+          </button>
+        )}
       </div>
 
       {/* Bottom nav */}
