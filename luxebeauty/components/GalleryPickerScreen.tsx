@@ -101,7 +101,7 @@ export default function GalleryPickerScreen({ onNext, onCancel }: Props) {
       </div>
 
       {/* Bottom actions */}
-      <div className="fixed bottom-0 left-0 right-0 px-6 pb-10 pt-4 z-20"
+      <div className="panel-bottom fixed bottom-0 left-0 right-0 px-6 pb-10 pt-4 z-20"
         style={{ background: "rgba(250,246,239,0.97)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(200,176,106,0.15)" }}>
         <div className="flex gap-3">
           <button onClick={onCancel} className="btn-ghost flex-1 py-4 rounded-full cursor-pointer">

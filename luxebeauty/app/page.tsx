@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import LandingScreen from "@/components/LandingScreen";
 import ConciergeScreen from "@/components/ConciergeScreen";
 import BeautyProfileScreen from "@/components/BeautyProfileScreen";
@@ -88,6 +88,13 @@ export default function Home() {
   const [vanityItems,    setVanityItems]    = useState<VanityItem[]>(INITIAL_VANITY_ITEMS);
   const [tutorialId,     setTutorialId]     = useState<string>("");
 
+  // Skip onboarding for returning users
+  useEffect(() => {
+    if (localStorage.getItem("luxe-onboarded") === "true") {
+      setHistory(["home"]);
+    }
+  }, []);
+
   const screen = history[history.length - 1];
   const idx    = mainDots.indexOf(screen);
 
@@ -134,7 +141,10 @@ export default function Home() {
           />
         )}
         {screen === "first-muse-reveal" && (
-          <FirstMuseRevealScreen onEnter={() => go("home")} />
+          <FirstMuseRevealScreen onEnter={() => {
+            localStorage.setItem("luxe-onboarded", "true");
+            go("home");
+          }} />
         )}
         {screen === "input-selector" && (
           <InputSelectorScreen

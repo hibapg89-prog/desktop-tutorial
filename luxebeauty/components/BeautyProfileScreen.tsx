@@ -121,7 +121,7 @@ export default function BeautyProfileScreen({ onNext, onBack }: Props) {
       </div>
 
       {/* Fixed CTA */}
-      <div className="fixed bottom-0 left-0 right-0 px-6 pb-14 pt-8 z-20"
+      <div className="panel-fade fixed bottom-0 left-0 right-0 px-6 pb-14 pt-8 z-20"
         style={{ background: "linear-gradient(to top, rgba(250,246,239,1) 55%, transparent)" }}>
         <button
           onClick={() => ready && onNext({ skin, picks, tier })}

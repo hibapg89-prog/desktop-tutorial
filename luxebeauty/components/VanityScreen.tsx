@@ -203,7 +203,7 @@ export default function VanityScreen({ onBack, items, onReorder }: Props) {
 
       {/* ── Selected item card ── */}
       {sel && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-2"
+        <div className="panel-bottom fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-2"
           style={{ background: "rgba(245,240,234,0.96)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(200,176,106,0.15)" }}>
           <div className="flex items-center gap-3 max-w-sm mx-auto">
 

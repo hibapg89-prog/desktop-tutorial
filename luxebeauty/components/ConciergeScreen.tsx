@@ -185,7 +185,7 @@ export default function ConciergeScreen({ onNext }: Props) {
       </div>
 
       {/* Fixed CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-6 pb-12 pt-8"
+      <div className="panel-fade fixed bottom-0 left-0 right-0 z-20 px-6 pb-12 pt-8"
         style={{ background: "linear-gradient(to top, rgba(250,246,239,1) 55%, transparent)" }}>
         <button
           onClick={advance}

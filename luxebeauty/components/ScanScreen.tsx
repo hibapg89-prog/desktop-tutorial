@@ -277,7 +277,7 @@ export default function ScanScreen({ onBack, onMuseMirror, onAnalysis }: Props) 
       </div>
 
       {/* Bottom nav */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-2 pb-6 pt-3"
+      <div className="panel-bottom fixed bottom-0 left-0 right-0 z-20 px-2 pb-6 pt-3"
         style={{ background: "rgba(250,246,239,0.95)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(200,176,106,0.15)" }}>
         <div className="flex justify-around">
           {["Accueil", "Scanner", "Routine", "Profil"].map((t, i) => (

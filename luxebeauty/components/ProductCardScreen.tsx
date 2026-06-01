@@ -203,7 +203,7 @@ export default function ProductCardScreen({ onDupe, onBack, onSave }: Props) {
         </div>
 
         {/* Fixed bottom CTAs */}
-        <div className="fixed bottom-0 left-0 right-0 px-6 pb-10 pt-4 z-30"
+        <div className="panel-bottom fixed bottom-0 left-0 right-0 px-6 pb-10 pt-4 z-30"
           style={{
             background: "rgba(250,246,239,0.97)",
             backdropFilter: "blur(16px)",
@@ -239,13 +239,13 @@ function BoutiqueSheet({ onClose }: { onClose: () => void }) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 cursor-pointer"
+        className="sheet-backdrop fixed inset-0 z-40 cursor-pointer"
         style={{ background: "rgba(11,30,20,0.6)", backdropFilter: "blur(4px)" }}
         onClick={onClose}
       />
 
       {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-hidden sheet-enter"
+      <div className="sheet-bottom fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-hidden sheet-enter"
         style={{
           background: "rgba(250,246,239,0.98)",
           backdropFilter: "blur(20px)",

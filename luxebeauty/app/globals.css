@@ -406,6 +406,33 @@ button:focus-visible, [role="button"]:focus-visible {
   background-clip: text;
 }
 
+/* ── Fixed panel surfaces (dark mode via !important) ── */
+.panel-bottom {
+  /* light: inline styles provide background — no extra needed */
+}
+.panel-fade {
+  /* light: inline gradient — no extra needed */
+}
+.sheet-bottom {
+  /* light: inline styles provide background — no extra needed */
+}
+
+[data-theme="dark"] .panel-bottom {
+  background: rgba(10,8,6,0.97) !important;
+  border-top-color: rgba(200,176,106,0.1) !important;
+}
+[data-theme="dark"] .panel-fade {
+  background: linear-gradient(to top, rgba(10,8,6,1) 55%, transparent) !important;
+}
+[data-theme="dark"] .sheet-bottom {
+  background: rgba(16,13,9,0.98) !important;
+  border-color: rgba(200,176,106,0.12) !important;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.6) !important;
+}
+[data-theme="dark"] .sheet-backdrop {
+  background: rgba(0,0,0,0.75) !important;
+}
+
 /* ═══════════════════════════════════════
    DARK MODE — Velours de Nuit
    ═══════════════════════════════════════ */
