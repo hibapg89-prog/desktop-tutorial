@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 import { useToast } from "./ToastContext";
+import type { VanityItem } from "./VanityScreen";
 
 interface Props {
   onDupe: () => void;
   onBack: () => void;
+  onSave?: (item: VanityItem) => void;
 }
 
 const RETAILERS = [
@@ -25,7 +27,7 @@ const INGREDIENTS = [
 
 const BADGES = ["Clean Beauty", "Vegan", "12h de tenue", "Pigments haute couture"];
 
-export default function ProductCardScreen({ onDupe, onBack }: Props) {
+export default function ProductCardScreen({ onDupe, onBack, onSave }: Props) {
   const { showToast } = useToast();
   const [saved, setSaved] = useState(false);
   const [boutiqueOpen, setBoutiqueOpen] = useState(false);
@@ -33,6 +35,14 @@ export default function ProductCardScreen({ onDupe, onBack }: Props) {
   const handleSave = () => {
     setSaved(true);
     showToast("Ajoutée à ta Vanity ✦", "♡");
+    onSave?.({
+      id: `ct-matte-${Date.now()}`,
+      type: "lipstick",
+      name: "Matte Revolution",
+      brand: "Charlotte Tilbury",
+      hex: "#8B3A3A",
+      shelf: "vanity",
+    });
   };
 
   return (

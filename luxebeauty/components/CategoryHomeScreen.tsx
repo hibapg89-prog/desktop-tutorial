@@ -143,6 +143,14 @@ const TOUR_STEPS = [
 
 const navTabs = ["Home", "Scan", "Routine", "Profile"];
 
+const FEATURED = [
+  { title: "Rouge à Lèvres", sub: "Édition Automne", cat: "Makeup", gradient: "linear-gradient(135deg, #F0C0B0, #C87870, #E8A898)", accent: "#C4968A" },
+  { title: "Soin du Regard", sub: "Rituel contour", cat: "Skincare", gradient: "linear-gradient(135deg, #C0D8B0, #2D7A52, #A8C890)", accent: "#2D7A52" },
+  { title: "Eau de Parfum", sub: "Signature florale", cat: "Fragrance", gradient: "linear-gradient(135deg, #F0E0B0, #C8A040, #EAD898)", accent: "#C8B06A" },
+  { title: "Soin Corps", sub: "Éclat et nutrition", cat: "Corps", gradient: "linear-gradient(135deg, #F0ECE4, #D8CDB8, #EAE4D8)", accent: "#8A7A6A" },
+  { title: "Ritual Nocturne", sub: "Maison Verte", cat: "Ritual", gradient: "linear-gradient(135deg, #1E1030, #3D2060, #C8A840)", accent: "#C8B06A" },
+];
+
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export default function CategoryHomeScreen({
@@ -316,10 +324,10 @@ export default function CategoryHomeScreen({
           <SwanLogo size={30} />
         </button>
         <div className="text-center">
-          <p className="font-sans text-[8px] tracking-[0.3em] uppercase text-[#0B3C26] opacity-40 mb-0.5">
-            Discover
+          <p className="font-sans text-[8px] tracking-[0.28em] uppercase text-[#C8B06A] mb-0.5">
+            ✦ Bienvenue, Muse
           </p>
-          <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">Your World</h2>
+          <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">Votre Univers</h2>
         </div>
         <button onClick={onSearch || onInput || onScan}
           className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all hover:bg-[rgba(11,60,38,0.06)]"
@@ -332,6 +340,31 @@ export default function CategoryHomeScreen({
       </div>
 
       <div className="divider-gold mx-5 mb-3" />
+
+      {/* ── Featured editorial strip ── */}
+      <div className="px-3 mb-3 flex-shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <p className="font-sans text-[7px] tracking-[0.22em] uppercase text-[#C8B06A]">Éditorial du Moment</p>
+          <button onClick={onEditorial ?? onProducts}
+            className="font-sans text-[7px] tracking-[0.15em] uppercase cursor-pointer transition-opacity hover:opacity-80"
+            style={{ color: "rgba(11,60,38,0.4)" }}>
+            Tout voir →
+          </button>
+        </div>
+        <div className="flex gap-2.5 overflow-x-auto no-scrollbar">
+          {FEATURED.map((item, i) => (
+            <button key={i} onClick={onEditorial ?? onProducts}
+              className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer press-scale relative"
+              style={{ width: 128, height: 76, background: item.gradient, border: "1px solid rgba(200,176,106,0.18)" }}>
+              <div className="absolute inset-0 flex flex-col justify-end p-3">
+                <p className="font-sans text-[6px] tracking-[0.2em] uppercase mb-0.5" style={{ color: item.accent }}>{item.cat}</p>
+                <p className="font-serif text-[12px] text-[#1C1C1C] leading-tight">{item.title}</p>
+                <p className="font-sans text-[7px] text-[#5A5040] opacity-70 mt-0.5">{item.sub}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ── Category grid ── */}
       <div className="flex-1 overflow-y-auto px-3 pb-32">

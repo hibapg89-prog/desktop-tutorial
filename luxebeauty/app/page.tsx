@@ -152,6 +152,7 @@ export default function Home() {
           <ProductCardScreen
             onDupe={() => go("dupe")}
             onBack={goBack}
+            onSave={(item) => setVanityItems(prev => [item, ...prev])}
           />
         )}
         {screen === "product-grid" && (
@@ -200,7 +201,7 @@ export default function Home() {
           />
         )}
         {screen === "scan" && (
-          <ScanScreen onBack={goBack} onMuseMirror={() => go("muse-mirror")} />
+          <ScanScreen onBack={goBack} onMuseMirror={() => go("muse-mirror")} onAnalysis={() => go("loading")} />
         )}
         {screen === "voice" && (
           <VoiceScreen onBack={goBack} />
