@@ -275,7 +275,7 @@ export default function Home() {
           />
         )}
         {screen === "settings" && (
-          <SettingsScreen onBack={goBack} />
+          <SettingsScreen onBack={goBack} onAccessibility={() => go("accessibility")} />
         )}
         {screen === "muse-mirror" && (
           <MuseMirrorScreen onBack={goBack} />

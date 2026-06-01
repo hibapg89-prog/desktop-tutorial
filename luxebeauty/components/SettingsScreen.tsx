@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 import { useTheme } from "./ThemeContext";
 import { useCurrency, type Currency } from "./CurrencyContext";
 
 interface Props {
   onBack: () => void;
+  onAccessibility?: () => void;
 }
 
 const CURRENCIES: { code: Currency; label: string; symbol: string }[] = [
@@ -20,9 +22,41 @@ const LANGUAGES = [
   { code: "AR", label: "العربية",   available: false },
 ];
 
-export default function SettingsScreen({ onBack }: Props) {
+const NOTIF_DEFAULTS: Record<string, boolean> = {
+  "Muse du Matin":    true,
+  "Nouveautés":       true,
+  "Rappels de Rituel": false,
+  "Offres Privées":   false,
+};
+
+const NOTIF_DESCS: Record<string, string> = {
+  "Muse du Matin":    "Édition beauté quotidienne à 8h",
+  "Nouveautés":       "Lancements et collections exclusifs",
+  "Rappels de Rituel": "Vos soins programmés",
+  "Offres Privées":   "Accès anticipé et remises curées",
+};
+
+const STORAGE_KEY = "luxe-notifications";
+
+export default function SettingsScreen({ onBack, onAccessibility }: Props) {
   const { theme, setTheme } = useTheme();
   const { currency, setCurrency } = useCurrency();
+  const [notifs, setNotifs] = useState<Record<string, boolean>>(NOTIF_DEFAULTS);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) setNotifs(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  function toggleNotif(key: string) {
+    setNotifs(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
 
   return (
     <div className="satin-bg min-h-screen flex flex-col overflow-hidden">
@@ -31,6 +65,7 @@ export default function SettingsScreen({ onBack }: Props) {
       <div className="px-5 pt-10 pb-3 flex items-center justify-between flex-shrink-0">
         <button
           onClick={onBack}
+          aria-label="Retour à l'écran précédent"
           className="font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] opacity-50 hover:opacity-100 transition-opacity cursor-pointer press-scale">
           ← Retour
         </button>
@@ -88,6 +123,7 @@ export default function SettingsScreen({ onBack }: Props) {
                 <button
                   key={c.code}
                   onClick={() => setCurrency(c.code)}
+                  aria-pressed={currency === c.code}
                   className="flex-1 py-3 rounded-xl font-sans text-[10px] tracking-[0.12em] uppercase transition-all duration-200 cursor-pointer press-scale"
                   style={currency === c.code ? {
                     background: "linear-gradient(145deg, #D4C07A, #C8B06A, #A89050)",
@@ -150,40 +186,73 @@ export default function SettingsScreen({ onBack }: Props) {
         <section>
           <SectionLabel label="Notifications" icon="○" />
           <div className="card-pearl rounded-2xl p-5 space-y-3">
-            {[
-              { label: "Muse du Matin",       desc: "Édition beauté quotidienne à 8h",    on: true  },
-              { label: "Nouveautés",           desc: "Lancements et collections exclusifs", on: true  },
-              { label: "Rappels de Rituel",    desc: "Vos soins programmés",               on: false },
-              { label: "Offres Privées",       desc: "Accès anticipé et remises curées",   on: false },
-            ].map((notif) => (
-              <div key={notif.label} className="flex items-center justify-between py-2">
+            {Object.keys(NOTIF_DEFAULTS).map((key) => (
+              <div key={key} className="flex items-center justify-between py-2">
                 <div>
-                  <p className="font-sans text-[11px] text-[#1C1C1C] leading-tight">{notif.label}</p>
-                  <p className="font-sans text-[9px] text-[#8A8070] mt-0.5">{notif.desc}</p>
+                  <p className="font-sans text-[11px] text-[#1C1C1C] leading-tight">{key}</p>
+                  <p className="font-sans text-[9px] text-[#8A8070] mt-0.5">{NOTIF_DESCS[key]}</p>
                 </div>
-                <div
-                  className="w-10 h-5.5 rounded-full relative cursor-pointer transition-all duration-300"
-                  style={{
-                    width: "40px",
-                    height: "22px",
-                    background: notif.on ? "linear-gradient(145deg, #D4C07A, #C8B06A)" : "rgba(200,176,106,0.15)",
-                    boxShadow: notif.on ? "0 2px 8px rgba(200,176,106,0.3)" : "none",
-                  }}>
+                <button
+                  role="switch"
+                  aria-checked={notifs[key]}
+                  aria-label={key}
+                  onClick={() => toggleNotif(key)}
+                  className="cursor-pointer press-scale flex-shrink-0"
+                  style={{ outline: "none" }}>
                   <div
-                    className="absolute top-[3px] rounded-full transition-all duration-300"
+                    className="relative transition-all duration-300"
                     style={{
-                      width: "16px",
-                      height: "16px",
-                      background: "white",
-                      left: notif.on ? "21px" : "3px",
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                    }}
-                  />
-                </div>
+                      width: "40px",
+                      height: "22px",
+                      borderRadius: "11px",
+                      background: notifs[key] ? "linear-gradient(145deg, #D4C07A, #C8B06A)" : "rgba(200,176,106,0.15)",
+                      boxShadow: notifs[key] ? "0 2px 8px rgba(200,176,106,0.3)" : "none",
+                    }}>
+                    <div
+                      className="absolute top-[3px] rounded-full transition-all duration-300"
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        background: "white",
+                        left: notifs[key] ? "21px" : "3px",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                      }}
+                    />
+                  </div>
+                </button>
               </div>
             ))}
           </div>
         </section>
+
+        {/* ── Accessibilité ── */}
+        {onAccessibility && (
+          <section>
+            <SectionLabel label="Accessibilité" icon="◎" />
+            <button
+              onClick={onAccessibility}
+              aria-label="Accéder aux paramètres d'accessibilité"
+              className="card-pearl w-full rounded-2xl p-5 flex items-center justify-between cursor-pointer press-scale transition-all duration-200 hover:opacity-80">
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(11,60,38,0.07)", border: "1px solid rgba(11,60,38,0.12)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B3C26" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="4" r="2"/>
+                    <path d="M12 6v6M9 9h6M9 21l3-6 3 6"/>
+                    <path d="M6.5 11.5C5 13 4 15 4 17.5"/>
+                    <path d="M17.5 11.5C19 13 20 15 20 17.5"/>
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="font-sans text-[11px] text-[#1C1C1C] leading-tight">Paramètres d'Accessibilité</p>
+                  <p className="font-sans text-[9px] text-[#8A8070] mt-0.5">Mouvement, contraste, taille du texte</p>
+                </div>
+              </div>
+              <span className="font-sans text-[14px] text-[#C8B06A] opacity-60">›</span>
+            </button>
+          </section>
+        )}
 
         {/* ── Version ── */}
         <div className="text-center pt-4 pb-2">
@@ -218,6 +287,7 @@ function ThemeOption({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className="flex flex-col items-center gap-2 py-4 px-3 rounded-2xl cursor-pointer transition-all duration-250 press-scale"
       style={active ? {
         background: "rgba(200,176,106,0.1)",
