@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   onBack:      () => void;
@@ -10,6 +10,19 @@ interface Props {
 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
+
+interface BeautyProfile {
+  skin:  string;
+  picks: string[];
+  tier:  string;
+}
+
+const TIER_META: Record<string, { icon: string; label: string }> = {
+  luxury:   { icon: "♛", label: "Luxury"     },
+  prestige: { icon: "✦", label: "Prestige"   },
+  artisan:  { icon: "◈", label: "Artisan"    },
+  all:      { icon: "∞", label: "All Worlds" },
+};
 
 interface Distinction {
   icon:     string;
@@ -56,7 +69,16 @@ const RECENT_REVIEWS = [
 
 export default function ProfileScreen({ onBack, onVanity, onSocial, onSettings }: Props) {
   const [tab, setTab] = useState<"distinctions" | "reviews" | "circles">("distinctions");
+  const [profile, setProfile] = useState<BeautyProfile | null>(null);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("luxe-profile");
+      if (stored) setProfile(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  const tierInfo = profile ? (TIER_META[profile.tier] ?? TIER_META.prestige) : TIER_META.prestige;
   const earned = DISTINCTIONS.filter(d => d.earned).length;
 
   return (
@@ -110,7 +132,7 @@ export default function ProfileScreen({ onBack, onVanity, onSocial, onSettings }
                   boxShadow: "0 2px 8px rgba(200,176,106,0.3)",
                 }}>
                 <span className="font-sans text-[6px] tracking-[0.12em] uppercase font-semibold text-[#FAF7F2]">
-                  ✦ Prestige
+                  {tierInfo.icon} {tierInfo.label}
                 </span>
               </div>
             </div>
@@ -140,6 +162,37 @@ export default function ProfileScreen({ onBack, onVanity, onSocial, onSettings }
               </div>
             ))}
           </div>
+          {/* Beauty profile chips — only if onboarding was completed */}
+          {profile && (
+            <div className="mt-4 px-5 pb-1">
+              <p className="font-sans text-[7.5px] tracking-[0.22em] uppercase text-[#8A8070] mb-2">
+                Votre Profil Beauté
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                <span
+                  className="px-3 py-1 rounded-full font-sans text-[8px] tracking-[0.05em]"
+                  style={{
+                    background: "rgba(11,60,38,0.07)",
+                    border: "1px solid rgba(11,60,38,0.15)",
+                    color: "#0B3C26",
+                  }}>
+                  {profile.skin}
+                </span>
+                {profile.picks.map(p => (
+                  <span
+                    key={p}
+                    className="px-3 py-1 rounded-full font-sans text-[8px] tracking-[0.05em]"
+                    style={{
+                      background: "rgba(200,176,106,0.1)",
+                      border: "1px solid rgba(200,176,106,0.25)",
+                      color: "#8A7048",
+                    }}>
+                    {p}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="divider-gold mx-5" />

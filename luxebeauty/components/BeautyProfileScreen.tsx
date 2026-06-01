@@ -124,7 +124,13 @@ export default function BeautyProfileScreen({ onNext, onBack }: Props) {
       <div className="panel-fade fixed bottom-0 left-0 right-0 px-6 pb-14 pt-8 z-20"
         style={{ background: "linear-gradient(to top, rgba(250,246,239,1) 55%, transparent)" }}>
         <button
-          onClick={() => ready && onNext({ skin, picks, tier })}
+          onClick={() => {
+            if (!ready) return;
+            try {
+              localStorage.setItem("luxe-profile", JSON.stringify({ skin, picks, tier }));
+            } catch {}
+            onNext({ skin, picks, tier });
+          }}
           disabled={!ready}
           className={`btn-emerald w-full py-4 rounded-full max-w-lg mx-auto block cursor-pointer
             ${!ready ? "opacity-30 cursor-not-allowed" : ""}`}>

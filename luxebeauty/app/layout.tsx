@@ -11,6 +11,25 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "LuxeBeauty",
   },
+  openGraph: {
+    title: "LuxeBeauty — Elevating Your Beauty Journey",
+    description: "Votre compagnon beauté de luxe — découvrez, curez, sublimez.",
+    type: "website",
+    images: [
+      {
+        url: "/icons/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "LuxeBeauty",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "LuxeBeauty — Elevating Your Beauty Journey",
+    description: "Votre compagnon beauté de luxe — découvrez, curez, sublimez.",
+    images: ["/icons/icon-512.png"],
+  },
 };
 
 export const viewport: Viewport = {
@@ -27,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="apple-touch-icon" href="/icons/icon.svg" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-full">
