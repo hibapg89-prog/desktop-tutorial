@@ -32,6 +32,7 @@ import MuseMirrorScreen from "@/components/MuseMirrorScreen";
 import MuseBoxScreen from "@/components/MuseBoxScreen";
 import TutorialDetailScreen from "@/components/TutorialDetailScreen";
 import { ToastProvider } from "@/components/ToastContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/ThemeContext";
 import { CurrencyProvider } from "@/components/CurrencyContext";
 import { A11yProvider } from "@/components/AccessibilityContext";
@@ -115,6 +116,7 @@ export default function Home() {
   const transitionClass = direction.current === "fwd" ? "screen-enter-fwd" : "screen-enter-back";
 
   return (
+    <ErrorBoundary>
     <A11yProvider>
     <ThemeProvider>
     <CurrencyProvider>
@@ -272,6 +274,7 @@ export default function Home() {
             onVanity={() => go("vanity")}
             onSocial={() => go("social")}
             onSettings={() => go("settings")}
+            onEditProfile={() => go("beauty-profile")}
           />
         )}
         {screen === "settings" && (
@@ -304,5 +307,6 @@ export default function Home() {
     </CurrencyProvider>
     </ThemeProvider>
     </A11yProvider>
+    </ErrorBoundary>
   );
 }

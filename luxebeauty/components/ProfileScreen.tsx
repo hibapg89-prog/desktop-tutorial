@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 
 interface Props {
-  onBack:      () => void;
-  onVanity?:   () => void;
-  onSocial?:   () => void;
-  onSettings?: () => void;
+  onBack:          () => void;
+  onVanity?:       () => void;
+  onSocial?:       () => void;
+  onSettings?:     () => void;
+  onEditProfile?:  () => void;
 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -67,7 +68,7 @@ const RECENT_REVIEWS = [
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-export default function ProfileScreen({ onBack, onVanity, onSocial, onSettings }: Props) {
+export default function ProfileScreen({ onBack, onVanity, onSocial, onSettings, onEditProfile }: Props) {
   const [tab, setTab] = useState<"distinctions" | "reviews" | "circles">("distinctions");
   const [profile, setProfile] = useState<BeautyProfile | null>(null);
 
@@ -165,9 +166,20 @@ export default function ProfileScreen({ onBack, onVanity, onSocial, onSettings }
           {/* Beauty profile chips — only if onboarding was completed */}
           {profile && (
             <div className="mt-4 px-5 pb-1">
-              <p className="font-sans text-[7.5px] tracking-[0.22em] uppercase text-[#8A8070] mb-2">
-                Votre Profil Beauté
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-sans text-[7.5px] tracking-[0.22em] uppercase text-[#8A8070]">
+                  Votre Profil Beauté
+                </p>
+                {onEditProfile && (
+                  <button
+                    onClick={onEditProfile}
+                    aria-label="Éditer votre profil beauté"
+                    className="font-sans text-[7px] tracking-[0.15em] uppercase cursor-pointer press-scale transition-opacity hover:opacity-70"
+                    style={{ color: "#C8B06A" }}>
+                    Éditer →
+                  </button>
+                )}
+              </div>
               <div className="flex flex-wrap gap-1.5">
                 <span
                   className="px-3 py-1 rounded-full font-sans text-[8px] tracking-[0.05em]"

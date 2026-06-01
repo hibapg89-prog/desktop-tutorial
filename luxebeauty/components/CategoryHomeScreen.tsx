@@ -164,6 +164,20 @@ export default function CategoryHomeScreen({
   const [tourStep,   setTourStep]   = useState(0);
   const [tourDone,   setTourDone]   = useState(false);
   const [tipIdx]                    = useState(() => Math.floor(Math.random() * TIPS.length));
+  const [profileLine, setProfileLine] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("luxe-profile");
+      if (stored) {
+        const p = JSON.parse(stored) as { skin?: string; picks?: string[] };
+        const parts: string[] = [];
+        if (p.skin) parts.push(p.skin);
+        if (p.picks?.length) parts.push(p.picks[0]);
+        if (parts.length) setProfileLine(parts.join(" · "));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => { if (!tourDone) setTourStep(0); }, 800);
@@ -325,7 +339,7 @@ export default function CategoryHomeScreen({
         </button>
         <div className="text-center">
           <p className="font-sans text-[8px] tracking-[0.28em] uppercase text-[#C8B06A] mb-0.5">
-            ✦ Bienvenue, Muse
+            {profileLine ? `✦ ${profileLine}` : "✦ Bienvenue, Muse"}
           </p>
           <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">Votre Univers</h2>
         </div>

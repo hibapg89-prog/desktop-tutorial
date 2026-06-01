@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   onNext: (data: Record<string, unknown>) => void;
@@ -20,6 +20,18 @@ export default function BeautyProfileScreen({ onNext, onBack }: Props) {
   const [skin, setSkin]       = useState<string | null>(null);
   const [picks, setPicks]     = useState<string[]>([]);
   const [tier, setTier]       = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("luxe-profile");
+      if (stored) {
+        const p = JSON.parse(stored);
+        if (p.skin)  setSkin(p.skin);
+        if (p.picks) setPicks(p.picks);
+        if (p.tier)  setTier(p.tier);
+      }
+    } catch {}
+  }, []);
 
   const toggleConcern = (c: string) =>
     setPicks(p => p.includes(c) ? p.filter(x => x !== c) : p.length < 3 ? [...p, c] : p);
