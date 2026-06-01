@@ -34,6 +34,7 @@ import TutorialDetailScreen from "@/components/TutorialDetailScreen";
 import { ToastProvider } from "@/components/ToastContext";
 import { ThemeProvider } from "@/components/ThemeContext";
 import { CurrencyProvider } from "@/components/CurrencyContext";
+import { A11yProvider } from "@/components/AccessibilityContext";
 import SettingsScreen from "@/components/SettingsScreen";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
@@ -114,6 +115,7 @@ export default function Home() {
   const transitionClass = direction.current === "fwd" ? "screen-enter-fwd" : "screen-enter-back";
 
   return (
+    <A11yProvider>
     <ThemeProvider>
     <CurrencyProvider>
     <ToastProvider>
@@ -301,5 +303,6 @@ export default function Home() {
     </ToastProvider>
     </CurrencyProvider>
     </ThemeProvider>
+    </A11yProvider>
   );
 }

@@ -406,6 +406,65 @@ button:focus-visible, [role="button"]:focus-visible {
   background-clip: text;
 }
 
+/* ═══════════════════════════════════════
+   ACCESSIBILITY MODES
+   ═══════════════════════════════════════ */
+
+/* ── Calm Mode — zero motion ─────────── */
+[data-calm-mode="true"] *,
+[data-calm-mode="true"] *::before,
+[data-calm-mode="true"] *::after {
+  animation-duration:        0.01ms !important;
+  animation-iteration-count: 1      !important;
+  transition-duration:       0.01ms !important;
+  scroll-behavior:           auto   !important;
+}
+
+/* ── Large Typography ────────────────── */
+[data-large-type="true"] .text-\[7px\]   { font-size: 9px   !important; }
+[data-large-type="true"] .text-\[8px\]   { font-size: 10px  !important; }
+[data-large-type="true"] .text-\[9px\]   { font-size: 12px  !important; }
+[data-large-type="true"] .text-\[10px\]  { font-size: 13px  !important; }
+[data-large-type="true"] .text-\[11px\]  { font-size: 14px  !important; }
+[data-large-type="true"] .text-\[12px\]  { font-size: 15px  !important; }
+[data-large-type="true"] .text-\[13px\]  { font-size: 16px  !important; }
+[data-large-type="true"] .text-sm        { font-size: 1rem    !important; }
+[data-large-type="true"] .text-base      { font-size: 1.15rem !important; }
+[data-large-type="true"] .text-lg        { font-size: 1.3rem  !important; }
+[data-large-type="true"] .text-xl        { font-size: 1.45rem !important; }
+[data-large-type="true"] .text-2xl       { font-size: 1.65rem !important; }
+[data-large-type="true"] .text-3xl       { font-size: 2rem    !important; }
+
+/* ── High Contrast ───────────────────── */
+[data-high-contrast="true"] .text-\[\#8A8070\] { color: #3A2E1E !important; }
+[data-high-contrast="true"] .text-\[\#5A5040\] { color: #2A1E0E !important; }
+[data-high-contrast="true"] .text-\[\#C8B06A\] { color: #8A6E20 !important; }
+[data-high-contrast="true"] .text-\[\#1C1C1C\] { color: #000000 !important; }
+[data-high-contrast="true"] .text-\[\#0B3C26\] { color: #052014 !important; }
+
+[data-high-contrast="true"] .card-pearl {
+  border: 1.5px solid rgba(11,60,38,0.45) !important;
+  box-shadow: 0 2px 16px rgba(11,60,38,0.15) !important;
+}
+[data-high-contrast="true"] .divider-gold {
+  background: rgba(11,60,38,0.35) !important;
+  height: 1.5px !important;
+}
+[data-high-contrast="true"] .btn-ghost {
+  border: 2px solid rgba(11,60,38,0.7) !important;
+  color: #052014 !important;
+}
+
+/* ── Guided Path — vivid focus rings ── */
+[data-guided-path="true"] button:focus-visible,
+[data-guided-path="true"] [role="button"]:focus-visible,
+[data-guided-path="true"] a:focus-visible,
+[data-guided-path="true"] [role="switch"]:focus-visible {
+  outline:        3px solid #0B3C26 !important;
+  outline-offset: 4px               !important;
+  border-radius:  8px;
+}
+
 /* ── Fixed panel surfaces (dark mode via !important) ── */
 .panel-bottom {
   /* light: inline styles provide background — no extra needed */
