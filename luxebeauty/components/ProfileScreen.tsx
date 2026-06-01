@@ -3,9 +3,10 @@
 import { useState } from "react";
 
 interface Props {
-  onBack:    () => void;
-  onVanity?: () => void;
-  onSocial?: () => void;
+  onBack:      () => void;
+  onVanity?:   () => void;
+  onSocial?:   () => void;
+  onSettings?: () => void;
 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -53,7 +54,7 @@ const RECENT_REVIEWS = [
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-export default function ProfileScreen({ onBack, onVanity, onSocial }: Props) {
+export default function ProfileScreen({ onBack, onVanity, onSocial, onSettings }: Props) {
   const [tab, setTab] = useState<"distinctions" | "reviews" | "circles">("distinctions");
 
   const earned = DISTINCTIONS.filter(d => d.earned).length;
@@ -71,10 +72,16 @@ export default function ProfileScreen({ onBack, onVanity, onSocial }: Props) {
           <p className="font-sans text-[8px] tracking-[0.3em] uppercase text-[#0B3C26] opacity-40 mb-0.5">Mon Monde</p>
           <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">Profile</h2>
         </div>
-        <div className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ border: "1px solid rgba(11,60,38,0.12)" }}>
-          <span className="font-sans text-[9px] text-[#C8B06A] tracking-wide">✦</span>
-        </div>
+        <button
+          onClick={onSettings}
+          className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-opacity hover:opacity-70 press-scale"
+          style={{ border: "1px solid rgba(11,60,38,0.12)" }}
+          aria-label="Paramètres">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="2" stroke="#C8B06A" strokeWidth="1.2"/>
+            <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="#C8B06A" strokeWidth="1.2" strokeLinecap="round"/>
+          </svg>
+        </button>
       </div>
 
       <div className="divider-gold mx-5 mb-0" />

@@ -405,3 +405,134 @@ button:focus-visible, [role="button"]:focus-visible {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ═══════════════════════════════════════
+   DARK MODE — Velours de Nuit
+   ═══════════════════════════════════════ */
+
+[data-theme="dark"] {
+  --emerald:       #4AAA70;
+  --emerald-mid:   #3D9060;
+  --emerald-light: #52B878;
+  --emerald-mist:  rgba(74,170,112,0.1);
+  --muted:         #9A8A78;
+  --charcoal:      #F0E8D8;
+  --ivory:         #0C0A08;
+  --ivory-warm:    #120F0A;
+  --ivory-deep:    #1A1510;
+}
+
+[data-theme="dark"] body {
+  background-color: #0C0A08;
+  color: #F0E8D8;
+}
+
+[data-theme="dark"] .satin-bg {
+  background-color: #0C0A08;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(200,176,106,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 80%, rgba(74,170,112,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 40%, rgba(200,176,106,0.03) 0%, transparent 45%),
+    radial-gradient(ellipse at 20% 70%, rgba(200,176,106,0.02) 0%, transparent 40%);
+}
+
+[data-theme="dark"] .satin-pearlescent {
+  background-color: #120F0A;
+  background-image:
+    radial-gradient(ellipse at 25% 15%, rgba(200,176,106,0.06) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 85%, rgba(74,170,112,0.04) 0%, transparent 45%);
+}
+
+[data-theme="dark"] .card-pearl {
+  background: rgba(22,18,14,0.9);
+  border-color: rgba(200,176,106,0.12);
+  box-shadow:
+    0 2px 20px rgba(0,0,0,0.5),
+    0 1px 4px rgba(200,176,106,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+[data-theme="dark"] .card-pearl:hover {
+  border-color: rgba(200,176,106,0.28);
+  box-shadow:
+    0 8px 36px rgba(0,0,0,0.6),
+    0 2px 8px rgba(200,176,106,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .card-pearl:active {
+  box-shadow:
+    0 2px 12px rgba(0,0,0,0.4),
+    0 1px 3px rgba(200,176,106,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+[data-theme="dark"] .btn-ghost {
+  border-color: rgba(74,170,112,0.3);
+  color: #4AAA70;
+}
+
+[data-theme="dark"] .btn-ghost:hover {
+  border-color: #4AAA70;
+  background: rgba(74,170,112,0.08);
+}
+
+[data-theme="dark"] .chip {
+  background: rgba(30,25,18,0.7);
+  border-color: rgba(200,176,106,0.15);
+  color: #9A8A78;
+}
+
+[data-theme="dark"] .chip:hover {
+  border-color: rgba(74,170,112,0.4);
+  color: #4AAA70;
+}
+
+[data-theme="dark"] .chip.active {
+  background: rgba(74,170,112,0.1);
+  border-color: #4AAA70;
+  color: #4AAA70;
+}
+
+[data-theme="dark"] .divider-gold {
+  background: linear-gradient(90deg, transparent, rgba(200,176,106,0.2), transparent);
+}
+
+[data-theme="dark"] .divider-emerald {
+  background: linear-gradient(90deg, transparent, rgba(74,170,112,0.15), transparent);
+}
+
+[data-theme="dark"] .nav-tab {
+  color: rgba(74,170,112,0.35);
+}
+
+[data-theme="dark"] .nav-tab.active {
+  color: #4AAA70;
+}
+
+[data-theme="dark"] .dot.off {
+  background: rgba(74,170,112,0.2);
+}
+
+[data-theme="dark"] .scan-line {
+  background: linear-gradient(90deg, transparent, rgba(74,170,112,0.7), transparent);
+  box-shadow: 0 0 8px rgba(74,170,112,0.4);
+}
+
+[data-theme="dark"] .iridescent-card {
+  background: rgba(22,18,14,0.88);
+  border-color: rgba(200,176,106,0.12);
+}
+
+/* Tailwind arbitrary colour overrides */
+[data-theme="dark"] .text-\[\#1C1C1C\]  { color: #F0E8D8; }
+[data-theme="dark"] .text-\[\#5A5040\]  { color: #8A7A68; }
+[data-theme="dark"] .text-\[\#8A8070\]  { color: #9A8A78; }
+[data-theme="dark"] .text-\[\#0B3C26\]  { color: #4AAA70; }
+[data-theme="dark"] .text-\[\#2D7A52\]  { color: #52B878; }
+[data-theme="dark"] .text-\[\#3A7A5A\]  { color: #52B878; }
+[data-theme="dark"] .text-\[\#C8B06A\]  { color: #C8B06A; }
+[data-theme="dark"] .bg-\[\#FAF6EF\],
+[data-theme="dark"] .bg-\[\#FAF7F2\],
+[data-theme="dark"] .bg-\[\#FFFDF8\]    { background-color: #120F0A; }
+[data-theme="dark"] .border-\[\#C8B06A\] { border-color: rgba(200,176,106,0.25); }

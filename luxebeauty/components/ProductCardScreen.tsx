@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 import { useToast } from "./ToastContext";
+import { useCurrency } from "./CurrencyContext";
 import type { VanityItem } from "./VanityScreen";
 
 interface Props {
@@ -12,10 +13,10 @@ interface Props {
 }
 
 const RETAILERS = [
-  { name: "Charlotte Tilbury", sub: "Site officiel · Livraison offerte", price: "€52", badge: "Official", accent: "#C8B06A" },
-  { name: "Sephora", sub: "Click & Collect disponible", price: "€52", badge: "Bestseller", accent: "#D4547A" },
-  { name: "Net-a-Porter", sub: "Livraison express 24h", price: "€55", badge: "Luxe", accent: "#0B3C26" },
-  { name: "SpaceNK", sub: "Points beauté cumulables", price: "€52", badge: "Member", accent: "#6B5B8A" },
+  { name: "Charlotte Tilbury", sub: "Site officiel · Livraison offerte", eur: 52, badge: "Official",  accent: "#C8B06A" },
+  { name: "Sephora",           sub: "Click & Collect disponible",        eur: 52, badge: "Bestseller", accent: "#D4547A" },
+  { name: "Net-a-Porter",      sub: "Livraison express 24h",             eur: 55, badge: "Luxe",       accent: "#0B3C26" },
+  { name: "SpaceNK",           sub: "Points beauté cumulables",          eur: 52, badge: "Member",     accent: "#6B5B8A" },
 ];
 
 const INGREDIENTS = [
@@ -232,6 +233,7 @@ export default function ProductCardScreen({ onDupe, onBack, onSave }: Props) {
 
 function BoutiqueSheet({ onClose }: { onClose: () => void }) {
   const { showToast } = useToast();
+  const { formatPrice } = useCurrency();
 
   return (
     <>
@@ -297,7 +299,7 @@ function BoutiqueSheet({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="font-serif text-sm text-[#0B3C26]">{r.price}</span>
+                  <span className="font-serif text-sm text-[#0B3C26]">{formatPrice(r.eur)}</span>
                   <span className="font-sans text-[7px] tracking-wide px-2 py-0.5 rounded-full"
                     style={{ background: `${r.accent}18`, color: r.accent }}>
                     {r.badge}

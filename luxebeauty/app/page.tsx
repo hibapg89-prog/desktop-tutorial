@@ -32,6 +32,9 @@ import MuseMirrorScreen from "@/components/MuseMirrorScreen";
 import MuseBoxScreen from "@/components/MuseBoxScreen";
 import TutorialDetailScreen from "@/components/TutorialDetailScreen";
 import { ToastProvider } from "@/components/ToastContext";
+import { ThemeProvider } from "@/components/ThemeContext";
+import { CurrencyProvider } from "@/components/CurrencyContext";
+import SettingsScreen from "@/components/SettingsScreen";
 import { VanityItem, INITIAL_VANITY_ITEMS } from "@/components/VanityScreen";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
 import BeautyMapScreen from "@/components/BeautyMapScreen";
@@ -73,7 +76,8 @@ type Screen =
   | "muse-box"
   | "tutorial-detail"
   | "map"
-  | "routine";
+  | "routine"
+  | "settings";
 
 const mainDots: Screen[] = ["landing", "concierge", "beauty-profile", "home", "vanity", "scan", "editorial"];
 
@@ -103,6 +107,8 @@ export default function Home() {
   const transitionClass = direction.current === "fwd" ? "screen-enter-fwd" : "screen-enter-back";
 
   return (
+    <ThemeProvider>
+    <CurrencyProvider>
     <ToastProvider>
     <main className="relative min-h-screen overflow-hidden">
 
@@ -253,7 +259,11 @@ export default function Home() {
             onBack={goBack}
             onVanity={() => go("vanity")}
             onSocial={() => go("social")}
+            onSettings={() => go("settings")}
           />
+        )}
+        {screen === "settings" && (
+          <SettingsScreen onBack={goBack} />
         )}
         {screen === "muse-mirror" && (
           <MuseMirrorScreen onBack={goBack} />
@@ -279,5 +289,7 @@ export default function Home() {
       )}
     </main>
     </ToastProvider>
+    </CurrencyProvider>
+    </ThemeProvider>
   );
 }
