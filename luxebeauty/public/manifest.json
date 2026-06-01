@@ -1,0 +1,43 @@
+{
+  "name": "LuxeBeauty",
+  "short_name": "LuxeBeauty",
+  "description": "Votre compagnon beauté de luxe — découvrez, curez, sublimez.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FAF7F2",
+  "theme_color": "#0B3C26",
+  "lang": "fr",
+  "categories": ["lifestyle", "shopping"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scanner un Produit",
+      "short_name": "Scanner",
+      "description": "Analyser un produit beauté",
+      "url": "/?screen=scan"
+    },
+    {
+      "name": "Ma Vanité",
+      "short_name": "Vanité",
+      "description": "Accéder à ma collection",
+      "url": "/?screen=vanity"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

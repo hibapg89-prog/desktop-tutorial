@@ -8,35 +8,35 @@ interface Props { onNext: () => void; }
 const STEPS = [
   {
     id: "purpose",
-    question: "What brings you to LuxeBeauty?",
-    sub: "We'll tailor your experience around what matters most to you",
+    question: "Que cherchez-vous chez LuxeBeauty ?",
+    sub: "Nous personnalisons votre expérience autour de ce qui vous inspire vraiment",
     options: [
-      { id: "discover", icon: "✦", label: "Discover", desc: "Explore new products & trends" },
-      { id: "shop",     icon: "◈", label: "Shop",     desc: "Find & buy luxury beauties" },
-      { id: "dupes",    icon: "◇", label: "Find Dupes", desc: "Luxury looks, smarter prices" },
-      { id: "routine",  icon: "○", label: "Refine My Routine", desc: "Build the perfect ritual" },
+      { id: "discover", icon: "✦", label: "Découvrir",              desc: "Explorer les tendances et les nouveautés" },
+      { id: "shop",     icon: "◈", label: "Shopper",                desc: "Trouver et acquérir les beautés de luxe" },
+      { id: "dupes",    icon: "◇", label: "L'Alternative Artisanale", desc: "Le luxe accessible, sans compromis" },
+      { id: "routine",  icon: "○", label: "Affiner Mon Rituel",     desc: "Construire le rituel beauté parfait" },
     ],
   },
   {
     id: "vibe",
-    question: "Your beauty signature?",
-    sub: "Your aesthetic shapes every recommendation we make",
+    question: "Quelle est votre signature beauté ?",
+    sub: "Votre esthétique guide chacune de nos recommandations",
     options: [
-      { id: "minimal",  icon: "—", label: "Minimalist", desc: "Clean, effortless, refined" },
-      { id: "bold",     icon: "◆", label: "Bold",       desc: "Statement looks, fearless colour" },
-      { id: "natural",  icon: "◯", label: "Natural",    desc: "Skin-first, ingredient-led" },
-      { id: "creative", icon: "⊞", label: "Creative",   desc: "Experimental & trend-forward" },
+      { id: "minimal",  icon: "—", label: "Minimaliste", desc: "Épuré, sans effort, infiniment raffiné" },
+      { id: "bold",     icon: "◆", label: "Audacieuse",  desc: "Looks affirmés, couleur sans retenue" },
+      { id: "natural",  icon: "◯", label: "Naturelle",   desc: "La peau d'abord, les ingrédients en vedette" },
+      { id: "creative", icon: "⊞", label: "Créative",    desc: "Expérimentale et avant-garde" },
     ],
   },
   {
     id: "cadence",
-    question: "How do you refresh your routine?",
-    sub: "So we know when to surface new launches and seasonal edits",
+    question: "Comment renouvelez-vous votre rituel ?",
+    sub: "Pour vous proposer les lancements et éditions saisonnières au moment juste",
     options: [
-      { id: "daily",    icon: "∞", label: "Daily ritual",        desc: "Always discovering something new" },
-      { id: "weekly",   icon: "◇", label: "Weekly treats",       desc: "A few indulgences a week" },
-      { id: "monthly",  icon: "○", label: "Monthly indulgence",  desc: "Intentional, considered picks" },
-      { id: "seasonal", icon: "✦", label: "Seasonally",          desc: "Big refreshes with the seasons" },
+      { id: "daily",    icon: "∞", label: "Rituel quotidien",       desc: "Toujours en quête de nouveautés" },
+      { id: "weekly",   icon: "◇", label: "Plaisirs de la semaine", desc: "Quelques indulgences par semaine" },
+      { id: "monthly",  icon: "○", label: "Indulgence mensuelle",   desc: "Des choix intentionnels et réfléchis" },
+      { id: "seasonal", icon: "✦", label: "Au fil des saisons",     desc: "Les grands renouvellements saisonniers" },
     ],
   },
 ];
@@ -84,7 +84,7 @@ export default function ConciergeScreen({ onNext }: Props) {
           onClick={goBack}
           className="font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] transition-opacity cursor-pointer"
           style={{ opacity: step === 0 ? 0 : 0.5, pointerEvents: step === 0 ? "none" : "auto" }}>
-          ← Back
+          ← Retour
         </button>
         <div className="opacity-20">
           <SwanLogo size={22} />
@@ -106,7 +106,7 @@ export default function ConciergeScreen({ onNext }: Props) {
           ))}
         </div>
         <p className="font-sans text-[8px] tracking-[0.22em] uppercase text-[#C8B06A] mt-2 text-center">
-          Your Beauty Ritual · {step + 1} of {STEPS.length}
+          Votre Rituel Beauté · {step + 1} sur {STEPS.length}
         </p>
       </div>
 
@@ -115,7 +115,7 @@ export default function ConciergeScreen({ onNext }: Props) {
         className="relative z-10 px-6 mb-7 flex-shrink-0 transition-all duration-260"
         style={{ opacity: exiting ? 0 : 1, transform: exiting ? "translateY(-8px)" : "translateY(0)" }}>
         <p className="font-sans text-[8px] tracking-[0.3em] uppercase text-[#C8B06A] mb-3">
-          Membership Concierge
+          Votre Concierge Beauté
         </p>
         <h2 className="font-serif text-3xl font-normal text-[#1C1C1C] leading-tight mb-2">
           {current.question}
@@ -199,7 +199,7 @@ export default function ConciergeScreen({ onNext }: Props) {
             boxShadow: selected ? "0 4px 24px rgba(200,176,106,0.4)" : "none",
             cursor: selected ? "pointer" : "not-allowed",
           }}>
-          {isLast ? "Begin My Journey" : "Continue"}
+          {isLast ? "Commencer Mon Voyage ✦" : "Continuer"}
         </button>
       </div>
     </div>
