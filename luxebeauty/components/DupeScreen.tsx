@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "./ToastContext";
 
 interface Props {
   onBack: () => void;
@@ -8,6 +9,11 @@ interface Props {
 
 export default function DupeScreen({ onBack }: Props) {
   const [view, setView] = useState<"split" | "compare">("split");
+  const { showToast } = useToast();
+
+  const handleCTA = () => {
+    showToast("Comparaison sauvegardée dans ta Vanity ✦", "♡");
+  };
 
   return (
     <div className="satin-bg min-h-screen flex flex-col overflow-hidden">
@@ -19,15 +25,19 @@ export default function DupeScreen({ onBack }: Props) {
           ← Back
         </button>
         <div className="text-center">
-          <p className="font-sans text-[9px] tracking-[0.3em] uppercase text-[#C8B06A] mb-0.5">Dupe Finder</p>
-          <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">Side by Side</h2>
+          <p className="font-sans text-[8px] tracking-[0.3em] uppercase text-[#C8B06A] mb-0.5">
+            ✦ Dupe Finder
+          </p>
+          <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">L&apos;Alternative Idéale</h2>
         </div>
         <div className="flex gap-1">
-          {["split","compare"].map(v => (
-            <button key={v} onClick={() => setView(v as "split"|"compare")}
-              className={`font-sans text-[8px] tracking-[0.15em] uppercase px-2 py-1 rounded-full transition-all cursor-pointer
-                ${view === v ? "bg-[#0B3C26] text-[rgba(240,232,204,0.95)]" : "text-[#0B3C26] opacity-40"}`}>
-              {v}
+          {(["split", "compare"] as const).map(v => (
+            <button key={v} onClick={() => setView(v)}
+              className={`font-sans text-[8px] tracking-[0.12em] uppercase px-2.5 py-1 rounded-full transition-all cursor-pointer
+                ${view === v
+                  ? "bg-[#0B3C26] text-[rgba(240,232,204,0.95)]"
+                  : "text-[#0B3C26] opacity-40"}`}>
+              {v === "split" ? "Aperçu" : "Comparer"}
             </button>
           ))}
         </div>
@@ -35,13 +45,53 @@ export default function DupeScreen({ onBack }: Props) {
 
       <div className="divider-gold mx-6 mb-4" />
 
-      {view === "split" ? <SplitView /> : <CompareView />}
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        {view === "split" ? <SplitView /> : <CompareView />}
 
-      {/* Bottom button */}
+        {/* Muse Verdict Panel — visible in both views */}
+        <div className="px-4 pb-2 mt-1">
+          <div className="rounded-2xl p-4"
+            style={{
+              background: "linear-gradient(145deg, rgba(11,60,38,0.04), rgba(200,176,106,0.07))",
+              border: "1px solid rgba(200,176,106,0.22)",
+            }}>
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className="text-xs" style={{ color: "#C8B06A" }}>✦</span>
+              <p className="font-sans text-[7px] tracking-[0.3em] uppercase" style={{ color: "#C8B06A" }}>
+                Le Verdict The Muse
+              </p>
+            </div>
+            <p className="font-cormorant text-[14px] italic font-light text-[#0B3C26] leading-relaxed mb-3">
+              &ldquo;Une formule artisanale qui capture l&apos;essence du luxe à une fraction du prix. La philosophie de soin est identique — seule l&apos;étiquette change.&rdquo;
+            </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#2D7A52]" />
+                <span className="font-sans text-[9px] text-[#2D7A52]">92% d&apos;équivalence formule</span>
+              </div>
+              <div className="px-3 py-1 rounded-full"
+                style={{ background: "rgba(11,60,38,0.07)", border: "1px solid rgba(11,60,38,0.14)" }}>
+                <span className="font-sans text-[8px] tracking-[0.08em] text-[#0B3C26]">
+                  Économisez €28
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-32" />
+      </div>
+
+      {/* Fixed bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 px-6 pb-10 pt-4 z-20"
-        style={{ background: "rgba(250,246,239,0.97)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(200,176,106,0.15)" }}>
-        <button className="btn-rose w-full py-4 rounded-full cursor-pointer">
-          {view === "split" ? "Discover the Dupe" : "Compare & Decide"}
+        style={{
+          background: "rgba(250,246,239,0.97)",
+          backdropFilter: "blur(16px)",
+          borderTop: "1px solid rgba(200,176,106,0.15)",
+        }}>
+        <button onClick={handleCTA} className="btn-gold w-full py-4 rounded-full cursor-pointer">
+          {view === "split" ? "Sauvegarder dans ma Vanity" : "Valider mon Choix"}
         </button>
       </div>
     </div>
@@ -50,70 +100,68 @@ export default function DupeScreen({ onBack }: Props) {
 
 function SplitView() {
   return (
-    <div className="flex-1 overflow-y-auto px-4 pb-32">
-      {/* Section header */}
+    <div className="px-4 pb-4">
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <p className="font-sans text-[8px] tracking-[0.18em] uppercase text-[#0B3C26] text-center">Parisian Luxury</p>
-        <p className="font-sans text-[8px] tracking-[0.18em] uppercase text-[#8A8070] text-center">Local Artisan</p>
+        <p className="font-sans text-[8px] tracking-[0.18em] uppercase text-[#0B3C26] text-center">
+          Le Luxe Parisien
+        </p>
+        <p className="font-sans text-[8px] tracking-[0.18em] uppercase text-[#2D7A52] text-center">
+          L&apos;Alternative Artisanale
+        </p>
       </div>
 
-      {/* Cards */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Left: Luxury */}
+        {/* Luxury */}
         <div className="card-pearl rounded-3xl overflow-hidden p-4 flex flex-col items-center text-center">
-          {/* Product visual */}
           <div className="w-full h-36 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden"
             style={{ background: "linear-gradient(145deg, #FAF0E0, #EDE5CC)" }}>
             <div className="absolute inset-0 opacity-20"
               style={{ background: "radial-gradient(circle at 60% 30%, #C8B06A, transparent 60%)" }} />
-            <LuxuryCreamJar />
+            <LuxuryLipstick />
           </div>
-
-          <p className="font-sans text-[8px] tracking-[0.2em] uppercase text-[#C8B06A] mb-1">La Mer</p>
+          <p className="font-sans text-[8px] tracking-[0.2em] uppercase text-[#C8B06A] mb-1">
+            Charlotte Tilbury
+          </p>
           <p className="font-serif text-sm font-normal text-[#1C1C1C] leading-tight mb-2">
-            Crème de la Mer
+            Matte Revolution
           </p>
           <p className="font-cormorant text-xs italic text-[#8A8070] mb-3 leading-tight">
-            "Iconic, rich,<br />anti-aging formula"
+            &ldquo;Icône absolue<br />du rouge à lèvres&rdquo;
           </p>
-
-          <div className="font-serif text-base text-[#0B3C26] font-normal mb-3">$320</div>
-
+          <div className="font-serif text-base text-[#0B3C26] font-normal mb-3">€52</div>
           <div className="w-full space-y-1.5">
-            {["Hydration", "Anti-aging", "Radiance"].map(t => (
+            {["Pigments haute couture", "Tenue 12h", "Formule soin"].map(t => (
               <div key={t} className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#C8B06A]" />
-                <span className="font-sans text-[9px] text-[#8A8070]">{t}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#C8B06A] flex-shrink-0" />
+                <span className="font-sans text-[9px] text-[#8A8070] text-left">{t}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right: Local artisan */}
+        {/* Artisan */}
         <div className="iridescent-card rounded-3xl overflow-hidden p-4 flex flex-col items-center text-center">
-          {/* Product visual */}
           <div className="w-full h-36 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden"
             style={{ background: "linear-gradient(145deg, #EAF0E8, #D8E8D0)" }}>
             <div className="absolute inset-0 opacity-20"
               style={{ background: "radial-gradient(circle at 40% 40%, #1A5C3A, transparent 60%)" }} />
-            <LocalCreamJar />
+            <ArtisanLipstick />
           </div>
-
-          <p className="font-sans text-[8px] tracking-[0.2em] uppercase text-[#1A5C3A] mb-1">Maison Verte</p>
+          <p className="font-sans text-[8px] tracking-[0.2em] uppercase text-[#1A5C3A] mb-1">
+            Maison Verte
+          </p>
           <p className="font-serif text-sm font-normal text-[#1C1C1C] leading-tight mb-2">
-            Botanical Reserve Crème
+            Rouge Botanique
           </p>
           <p className="font-cormorant text-xs italic text-[#8A8070] mb-3 leading-tight">
-            "Sustainable,<br />hand-crafted, potent"
+            &ldquo;Formule naturelle<br />façonnée à la main&rdquo;
           </p>
-
-          <div className="font-serif text-base text-[#0B3C26] font-normal mb-3">$85</div>
-
+          <div className="font-serif text-base text-[#0B3C26] font-normal mb-3">€24</div>
           <div className="w-full space-y-1.5">
-            {["Natural", "Eco-certified", "Potent"].map(t => (
+            {["100% naturel", "Certifié bio", "Vegan"].map(t => (
               <div key={t} className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#1A5C3A]" />
-                <span className="font-sans text-[9px] text-[#8A8070]">{t}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1A5C3A] flex-shrink-0" />
+                <span className="font-sans text-[9px] text-[#8A8070] text-left">{t}</span>
               </div>
             ))}
           </div>
@@ -125,29 +173,31 @@ function SplitView() {
 
 function CompareView() {
   const metrics = [
-    { label: "Scent Profile", luxury: "Subtle florals", local: "Earthy botanicals", luxVal: 80, locVal: 90 },
-    { label: "Longevity", luxury: "12+ hours", local: "8–10 hours", luxVal: 92, locVal: 75 },
-    { label: "Sustainability", luxury: "Mixed", local: "100% natural", luxVal: 45, locVal: 96 },
+    { label: "Pigmentation", luxury: "Ultra-intense", local: "Intense naturelle", luxVal: 95, locVal: 82 },
+    { label: "Tenue", luxury: "12 heures", local: "8–10 heures", luxVal: 92, locVal: 75 },
+    { label: "Formule Clean", luxury: "Conventionnelle", local: "100% naturelle", luxVal: 42, locVal: 96 },
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 pb-32">
-      {/* Header */}
+    <div className="px-4 pb-4">
       <div className="grid grid-cols-2 gap-3 mb-4 text-center">
         <div className="card-pearl rounded-2xl py-3 px-4">
-          <p className="font-sans text-[7px] tracking-[0.2em] uppercase text-[#C8B06A] mb-0.5">Sephora Luxury</p>
-          <p className="font-serif text-sm text-[#1C1C1C]">Guerlain Abeille</p>
+          <p className="font-sans text-[7px] tracking-[0.2em] uppercase text-[#C8B06A] mb-0.5">Le Luxe</p>
+          <p className="font-serif text-sm text-[#1C1C1C]">Matte Revolution</p>
         </div>
         <div className="iridescent-card rounded-2xl py-3 px-4">
-          <p className="font-sans text-[7px] tracking-[0.2em] uppercase text-[#1A5C3A] mb-0.5">Independent Alt</p>
-          <p className="font-serif text-sm text-[#1C1C1C]">Maison Verte</p>
+          <p className="font-sans text-[7px] tracking-[0.2em] uppercase text-[#1A5C3A] mb-0.5">
+            L&apos;Alternative Artisanale
+          </p>
+          <p className="font-serif text-sm text-[#1C1C1C]">Rouge Botanique</p>
         </div>
       </div>
 
-      {/* Comparison bars */}
       {metrics.map((m) => (
         <div key={m.label} className="card-pearl rounded-2xl p-4 mb-3">
-          <p className="font-sans text-[9px] tracking-[0.15em] uppercase text-[#0B3C26] mb-3">{m.label}</p>
+          <p className="font-sans text-[9px] tracking-[0.15em] uppercase text-[#0B3C26] mb-3 opacity-65">
+            {m.label}
+          </p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="font-sans text-[9px] text-[#8A8070] mb-1.5">{m.luxury}</p>
@@ -171,15 +221,17 @@ function CompareView() {
 
       {/* Price comparison */}
       <div className="card-pearl rounded-2xl p-4 mb-3">
-        <p className="font-sans text-[9px] tracking-[0.15em] uppercase text-[#0B3C26] mb-3">Price Comparison</p>
+        <p className="font-sans text-[9px] tracking-[0.15em] uppercase text-[#0B3C26] mb-3 opacity-65">
+          Investissement
+        </p>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div>
-            <p className="font-serif text-xl text-[#C8B06A]">$320</p>
-            <p className="font-sans text-[9px] text-[#8A8070] mt-0.5">Guerlain Abeille</p>
+            <p className="font-serif text-xl text-[#C8B06A]">€52</p>
+            <p className="font-sans text-[9px] text-[#8A8070] mt-0.5">Matte Revolution</p>
           </div>
           <div>
-            <p className="font-serif text-xl text-[#0B3C26]">$85</p>
-            <p className="font-sans text-[9px] text-[#8A8070] mt-0.5">Save $235</p>
+            <p className="font-serif text-xl text-[#0B3C26]">€24</p>
+            <p className="font-sans text-[9px] text-[#2D7A52] mt-0.5 font-medium">Économisez €28</p>
           </div>
         </div>
       </div>
@@ -187,41 +239,48 @@ function CompareView() {
   );
 }
 
-function LuxuryCreamJar() {
+function LuxuryLipstick() {
   return (
-    <svg width="64" height="56" viewBox="0 0 64 56" fill="none">
-      <ellipse cx="32" cy="48" rx="28" ry="6" fill="#C8B06A" opacity="0.3" />
-      <rect x="6" y="20" width="52" height="28" rx="4" fill="url(#luxGold)" />
-      <ellipse cx="32" cy="20" rx="26" ry="7" fill="#F0E8CC" />
-      <ellipse cx="32" cy="20" rx="20" ry="5" fill="rgba(255,255,255,0.5)" />
-      <rect x="14" y="26" width="36" height="16" rx="2" fill="rgba(11,60,38,0.06)" />
-      <text x="32" y="37" textAnchor="middle" fill="#0B3C26" fontSize="5" fontFamily="serif" opacity="0.5" letterSpacing="0.5">LA MER</text>
+    <svg width="48" height="88" viewBox="0 0 48 88" fill="none">
+      <rect x="12" y="30" width="24" height="50" rx="2.5" fill="url(#dupeLuxGold)" />
+      <rect x="14" y="38" width="20" height="22" rx="1" fill="rgba(11,60,38,0.07)" stroke="rgba(200,176,106,0.25)" strokeWidth="0.5" />
+      <text x="24" y="52" textAnchor="middle" fill="#0B3C26" fontSize="3.5" fontFamily="serif" opacity="0.55" letterSpacing="0.3">CT</text>
+      <rect x="10" y="76" width="28" height="5" rx="1.5" fill="#A89050" />
+      <rect x="16" y="32" width="4" height="20" rx="2" fill="rgba(255,255,255,0.22)" />
+      <rect x="14" y="6" width="20" height="28" rx="1" fill="#8B3A3A" />
+      <path d="M14 6 Q24 -2 34 6" fill="#8B3A3A" />
+      <path d="M16 4 Q20 -1 23 3" stroke="rgba(255,255,255,0.28)" strokeWidth="1" strokeLinecap="round" fill="none" />
+      <rect x="12" y="30" width="24" height="4" rx="1" fill="#C8B06A" />
       <defs>
-        <linearGradient id="luxGold" x1="6" y1="20" x2="58" y2="48" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#E8D8A8" />
-          <stop offset="100%" stopColor="#C8B06A" />
+        <linearGradient id="dupeLuxGold" x1="12" y1="30" x2="36" y2="30" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#D4C07A" />
+          <stop offset="50%" stopColor="#E8D898" />
+          <stop offset="100%" stopColor="#A89050" />
         </linearGradient>
       </defs>
     </svg>
   );
 }
 
-function LocalCreamJar() {
+function ArtisanLipstick() {
   return (
-    <svg width="64" height="56" viewBox="0 0 64 56" fill="none">
-      <ellipse cx="32" cy="48" rx="28" ry="6" fill="#1A5C3A" opacity="0.2" />
-      <rect x="6" y="20" width="52" height="28" rx="4" fill="url(#localGreen)" />
-      <ellipse cx="32" cy="20" rx="26" ry="7" fill="#E8F0E4" />
-      <ellipse cx="32" cy="20" rx="20" ry="5" fill="rgba(255,255,255,0.5)" />
-      <rect x="14" y="26" width="36" height="16" rx="2" fill="rgba(11,60,38,0.06)" />
-      <text x="32" y="37" textAnchor="middle" fill="#0B3C26" fontSize="4.5" fontFamily="serif" opacity="0.5" letterSpacing="0.3">MAISON</text>
-      {/* Leaf decoration */}
-      <path d="M10 32 Q14 28 14 34 Q14 34 10 32Z" fill="#1A5C3A" opacity="0.4" />
-      <path d="M54 28 Q50 24 50 30 Q50 30 54 28Z" fill="#1A5C3A" opacity="0.4" />
+    <svg width="48" height="88" viewBox="0 0 48 88" fill="none">
+      <rect x="12" y="30" width="24" height="50" rx="2.5" fill="url(#dupeArtGreen)" />
+      <rect x="14" y="38" width="20" height="22" rx="1" fill="rgba(11,60,38,0.05)" stroke="rgba(26,92,58,0.2)" strokeWidth="0.5" />
+      <text x="24" y="52" textAnchor="middle" fill="#0B3C26" fontSize="3.5" fontFamily="serif" opacity="0.55" letterSpacing="0.3">MV</text>
+      <rect x="10" y="76" width="28" height="5" rx="1.5" fill="#2D7A52" />
+      <rect x="16" y="32" width="4" height="20" rx="2" fill="rgba(255,255,255,0.18)" />
+      <rect x="14" y="6" width="20" height="28" rx="1" fill="#C4504A" />
+      <path d="M14 6 Q24 -2 34 6" fill="#C4504A" />
+      <path d="M16 4 Q20 -1 23 3" stroke="rgba(255,255,255,0.22)" strokeWidth="1" strokeLinecap="round" fill="none" />
+      <rect x="12" y="30" width="24" height="4" rx="1" fill="#1A5C3A" />
+      <path d="M8 52 Q12 48 12 54 Z" fill="#1A5C3A" opacity="0.45" />
+      <path d="M40 48 Q36 44 36 50 Z" fill="#1A5C3A" opacity="0.45" />
       <defs>
-        <linearGradient id="localGreen" x1="6" y1="20" x2="58" y2="48" gradientUnits="userSpaceOnUse">
+        <linearGradient id="dupeArtGreen" x1="12" y1="30" x2="36" y2="30" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#D0E8C8" />
-          <stop offset="100%" stopColor="#A8C8A0" />
+          <stop offset="50%" stopColor="#E8F4E0" />
+          <stop offset="100%" stopColor="#B0D4A8" />
         </linearGradient>
       </defs>
     </svg>

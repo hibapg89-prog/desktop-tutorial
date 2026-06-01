@@ -385,6 +385,13 @@ button:focus-visible, [role="button"]:focus-visible {
   will-change: transform, opacity;
 }
 
+/* ── Bottom sheet slide-up ──────────── */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.sheet-enter { animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
 /* ── Gold shimmer text ───────────────── */
 @keyframes goldShimmer {
   0%   { background-position: -200% center; }
