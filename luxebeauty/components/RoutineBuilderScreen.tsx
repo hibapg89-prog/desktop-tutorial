@@ -2,13 +2,64 @@
 
 import { useState, useEffect } from "react";
 
+// ─── Design helpers ───────────────────────────────────────────────────────────
+
+const CAT_COLORS: Record<string, string> = {
+  skincare: "#2D7A52",
+  makeup:   "#C4968A",
+  hair:     "#C8B06A",
+  body:     "#8A7A6A",
+};
+
+function SunDecor({ style }: { style?: React.CSSProperties }) {
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style={style}>
+      <circle cx="32" cy="32" r="12" fill="#C8A400" opacity="0.9"/>
+      {[0,45,90,135,180,225,270,315].map((deg) => (
+        <line key={deg} x1="32" y1="7" x2="32" y2="16"
+          stroke="#C8A400" strokeWidth="2.5" strokeLinecap="round"
+          transform={`rotate(${deg} 32 32)`} opacity="0.8"/>
+      ))}
+    </svg>
+  );
+}
+
+function MoonDecor({ style }: { style?: React.CSSProperties }) {
+  return (
+    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style={style}>
+      <path d="M34 8 A22 22 0 1 0 8 34 A16 16 0 1 1 34 8Z" fill="#C8B8F0" opacity="0.9"/>
+    </svg>
+  );
+}
+
+function CatDot({ category }: { category: string }) {
+  return (
+    <div className="w-3 h-3 rounded-full flex-none"
+      style={{ background: CAT_COLORS[category] ?? "#8A8070", opacity: 0.7 }}/>
+  );
+}
+
+function CatCircle({ category, size = 56 }: { category: string; size?: number }) {
+  const color = CAT_COLORS[category] ?? "#8A8070";
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", background: `${color}18`, border: `1.5px solid ${color}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div style={{ width: size * 0.3, height: size * 0.3, borderRadius: "50%", background: color, opacity: 0.5 }}/>
+    </div>
+  );
+}
+
+function RitualDecor({ type, style }: { type: string; style?: React.CSSProperties }) {
+  if (type === "morning") return <SunDecor style={style}/>;
+  if (type === "evening") return <MoonDecor style={style}/>;
+  return <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={style}><circle cx="20" cy="20" r="14" stroke="#C8B06A" strokeWidth="1.5" opacity="0.6"/><circle cx="20" cy="20" r="6" fill="#C8B06A" opacity="0.4"/></svg>;
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Product {
   id: string;
   name: string;
   brand: string;
-  emoji: string;
   category: "skincare" | "makeup" | "hair" | "body";
   actif: string | null;
   duration: number; // seconds; 0 = no timer
@@ -18,7 +69,7 @@ interface Step {
   productId: string;
   name: string;
   brand: string;
-  emoji: string;
+  category: "skincare" | "makeup" | "hair" | "body";
   actif: string | null;
   duration: number;
   done: boolean;
@@ -39,24 +90,24 @@ interface Ritual {
 // ─── Data ────────────────────────────────────────────────────────────────────
 
 const PRODUCT_LIBRARY: Product[] = [
-  { id: "cleanser",    name: "Nettoyant Doux",      brand: "CeraVe",          emoji: "💧", category: "skincare", actif: null,          duration: 60  },
-  { id: "oil-clean",   name: "Huile Démaquillante",  brand: "DHC",             emoji: "🌹", category: "skincare", actif: null,          duration: 90  },
-  { id: "toner",       name: "Tonique Éclat",        brand: "Pixi",            emoji: "✨", category: "skincare", actif: null,          duration: 30  },
-  { id: "vitc",        name: "Sérum Vitamine C",     brand: "SkinCeuticals",   emoji: "🍋", category: "skincare", actif: "vitamin-c",   duration: 60  },
-  { id: "spf",         name: "SPF 50+ Fluide",       brand: "La Roche-Posay",  emoji: "☀️", category: "skincare", actif: null,          duration: 60  },
-  { id: "retinol",     name: "Sérum Rétinol 0.5%",  brand: "The Ordinary",    emoji: "⭐", category: "skincare", actif: "retinol",     duration: 90  },
-  { id: "aha",         name: "Exfoliant AHA 10%",    brand: "NARS",            emoji: "🌊", category: "skincare", actif: "aha",         duration: 600 },
-  { id: "niacin",      name: "Sérum Niacinamide",    brand: "Paula's Choice",  emoji: "💎", category: "skincare", actif: "niacinamide", duration: 60  },
-  { id: "hyalur",      name: "Sérum Hyaluronique",   brand: "Vichy",           emoji: "💧", category: "skincare", actif: "hyaluronic",  duration: 60  },
-  { id: "barrier",     name: "Crème Barrière",       brand: "COSRX",           emoji: "🛡️", category: "skincare", actif: null,          duration: 60  },
-  { id: "mask",        name: "Masque Hydratant",     brand: "Tatcha",          emoji: "🎭", category: "skincare", actif: null,          duration: 1200},
-  { id: "eye",         name: "Contour des Yeux",     brand: "Kiehl's",         emoji: "👁️", category: "skincare", actif: null,          duration: 60  },
-  { id: "lip",         name: "Soin des Lèvres",      brand: "Laneige",         emoji: "🌸", category: "makeup",   actif: null,          duration: 30  },
-  { id: "hair-oil",    name: "Huile Capillaire",     brand: "Olaplex",         emoji: "💫", category: "hair",     actif: null,          duration: 300 },
-  { id: "body-lotion", name: "Lotion Corps",         brand: "Nécessaire",      emoji: "🍃", category: "body",     actif: null,          duration: 120 },
-  { id: "dry-brush",   name: "Brossage à Sec",       brand: "The Muse",        emoji: "🌿", category: "body",     actif: null,          duration: 300 },
-  { id: "gua-sha",     name: "Rituel Gua Sha",       brand: "Mount Lai",       emoji: "🪨", category: "body",     actif: null,          duration: 300 },
-  { id: "roller",      name: "Roller Quartz Rose",   brand: "Herbivore",       emoji: "💜", category: "body",     actif: null,          duration: 180 },
+  { id: "cleanser",    name: "Nettoyant Doux",      brand: "CeraVe",          category: "skincare", actif: null,          duration: 60  },
+  { id: "oil-clean",   name: "Huile Démaquillante",  brand: "DHC",             category: "skincare", actif: null,          duration: 90  },
+  { id: "toner",       name: "Tonique Éclat",        brand: "Pixi",            category: "skincare", actif: null,          duration: 30  },
+  { id: "vitc",        name: "Sérum Vitamine C",     brand: "SkinCeuticals",   category: "skincare", actif: "vitamin-c",   duration: 60  },
+  { id: "spf",         name: "SPF 50+ Fluide",       brand: "La Roche-Posay",  category: "skincare", actif: null,          duration: 60  },
+  { id: "retinol",     name: "Sérum Rétinol 0.5%",  brand: "The Ordinary",    category: "skincare", actif: "retinol",     duration: 90  },
+  { id: "aha",         name: "Exfoliant AHA 10%",    brand: "NARS",            category: "skincare", actif: "aha",         duration: 600 },
+  { id: "niacin",      name: "Sérum Niacinamide",    brand: "Paula's Choice",  category: "skincare", actif: "niacinamide", duration: 60  },
+  { id: "hyalur",      name: "Sérum Hyaluronique",   brand: "Vichy",           category: "skincare", actif: "hyaluronic",  duration: 60  },
+  { id: "barrier",     name: "Crème Barrière",       brand: "COSRX",           category: "skincare", actif: null,          duration: 60  },
+  { id: "mask",        name: "Masque Hydratant",     brand: "Tatcha",          category: "skincare", actif: null,          duration: 1200},
+  { id: "eye",         name: "Contour des Yeux",     brand: "Kiehl's",         category: "skincare", actif: null,          duration: 60  },
+  { id: "lip",         name: "Soin des Lèvres",      brand: "Laneige",         category: "makeup",   actif: null,          duration: 30  },
+  { id: "hair-oil",    name: "Huile Capillaire",     brand: "Olaplex",         category: "hair",     actif: null,          duration: 300 },
+  { id: "body-lotion", name: "Lotion Corps",         brand: "Nécessaire",      category: "body",     actif: null,          duration: 120 },
+  { id: "dry-brush",   name: "Brossage à Sec",       brand: "The Muse",        category: "body",     actif: null,          duration: 300 },
+  { id: "gua-sha",     name: "Rituel Gua Sha",       brand: "Mount Lai",       category: "body",     actif: null,          duration: 300 },
+  { id: "roller",      name: "Roller Quartz Rose",   brand: "Herbivore",       category: "body",     actif: null,          duration: 180 },
 ];
 
 const CONFLICTS = [
@@ -67,12 +118,12 @@ const CONFLICTS = [
 ] as const;
 
 const PAIRINGS = [
-  { afterActif: "retinol",   emoji: "🛡️", suggestion: "Crème Barrière",    reason: "Le rétinol assèche — une crème barrière protège ton microbiome cutané." },
-  { afterActif: "vitamin-c", emoji: "☀️", suggestion: "SPF 50+",           reason: "La Vitamine C est photo-sensibilisante. Le SPF après est indispensable." },
-  { afterActif: "aha",       emoji: "💧", suggestion: "Sérum Hyaluronique", reason: "Après l'exfoliation, la peau absorbe mieux les actifs hydratants." },
+  { afterActif: "retinol",   suggestion: "Crème Barrière",    reason: "Le rétinol assèche — une crème barrière protège ton microbiome cutané." },
+  { afterActif: "vitamin-c", suggestion: "SPF 50+",           reason: "La Vitamine C est photo-sensibilisante. Le SPF après est indispensable." },
+  { afterActif: "aha",       suggestion: "Sérum Hyaluronique", reason: "Après l'exfoliation, la peau absorbe mieux les actifs hydratants." },
 ];
 
-const CUSTOM_ICONS = ["🌟", "🌺", "🧘‍♀️", "🛁", "💆", "🌿", "🏋️‍♀️", "☕"];
+const CUSTOM_ICONS = ["◈", "◇", "◆", "◐", "○", "✦", "◉", "✶"];
 const PROD_CATS = [
   { id: "all",      label: "Tout" },
   { id: "skincare", label: "Visage" },
@@ -82,7 +133,7 @@ const PROD_CATS = [
 ];
 
 function makeStep(p: Product): Step {
-  return { productId: p.id, name: p.name, brand: p.brand, emoji: p.emoji, actif: p.actif, duration: p.duration, done: false };
+  return { productId: p.id, name: p.name, brand: p.brand, category: p.category, actif: p.actif, duration: p.duration, done: false };
 }
 
 function detectConflicts(steps: Step[]) {
@@ -105,7 +156,7 @@ const INITIAL_RITUALS: Ritual[] = [
     id: "morning",
     name: "Rituel de l'Aube",
     type: "morning",
-    icon: "☀️",
+    icon: "◈",
     gradient: "linear-gradient(145deg, #FFFBEA 0%, #FFE580 50%, #FFCF40 100%)",
     textColor: "#5A4200",
     accentColor: "#C8A400",
@@ -121,7 +172,7 @@ const INITIAL_RITUALS: Ritual[] = [
     id: "evening",
     name: "Rituel du Crépuscule",
     type: "evening",
-    icon: "🌙",
+    icon: "◐",
     gradient: "linear-gradient(145deg, #1E1030 0%, #2D1850 50%, #1A0E3A 100%)",
     textColor: "#C8B8F0",
     accentColor: "#9070E0",
@@ -151,7 +202,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [showCreate, setShowCreate]   = useState(false);
   const [newName, setNewName]         = useState("");
-  const [newIcon, setNewIcon]         = useState("🌟");
+  const [newIcon, setNewIcon]         = useState("◈");
   const [prodFilter, setProdFilter]   = useState("all");
   const [activeStep, setActiveStep]   = useState(0);
   const [timer, setTimer]             = useState(0);
@@ -250,7 +301,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
     };
     setRituals(rs => [...rs, newRitual]);
     setNewName("");
-    setNewIcon("🌟");
+    setNewIcon("◈");
     setShowCreate(false);
     openEditor(id);
   };
@@ -310,7 +361,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
         >
           <div className="relative h-44 flex flex-col justify-between p-5" style={{ background: INITIAL_RITUALS[0].gradient }}>
             {/* Decorative glow */}
-            <div className="absolute top-4 right-4 text-5xl opacity-30 shimmer">☀️</div>
+            <div className="absolute top-3 right-3 shimmer" style={{ opacity: 0.28 }}><SunDecor/></div>
             <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full opacity-15 blur-2xl" style={{ background: "#FFD060" }}/>
 
             <div>
@@ -321,9 +372,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
             <div className="flex items-end justify-between">
               <div className="flex gap-1">
                 {INITIAL_RITUALS[0].steps.slice(0, 4).map((s, i) => (
-                  <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.6)" }}>
-                    {s.emoji}
-                  </div>
+                  <div key={i} className="w-7 h-7 rounded-full" style={{ background: `${CAT_COLORS[s.category] ?? "#8A8070"}40`, border: `1px solid rgba(255,255,255,0.5)` }}/>
                 ))}
               </div>
               <div className="text-right">
@@ -345,7 +394,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
             {["top-3 right-8", "top-8 right-16", "top-6 right-4"].map((pos, i) => (
               <div key={i} className={`absolute ${pos} text-xs opacity-40 shimmer`} style={{ animationDelay: `${i*0.8}s`, color: "#C8B8F0" }}>✦</div>
             ))}
-            <div className="absolute top-4 right-4 text-5xl opacity-25 shimmer" style={{ animationDelay: "0.5s" }}>🌙</div>
+            <div className="absolute top-3 right-3 shimmer" style={{ opacity: 0.22, animationDelay: "0.5s" }}><MoonDecor/></div>
 
             <div>
               <div className="font-sans text-[9px] tracking-[0.3em] uppercase mb-1" style={{ color: "rgba(200,184,240,0.7)" }}>Rituel du Soir</div>
@@ -355,9 +404,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
             <div className="flex items-end justify-between">
               <div className="flex gap-1">
                 {INITIAL_RITUALS[1].steps.slice(0, 5).map((s, i) => (
-                  <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(200,184,240,0.3)" }}>
-                    {s.emoji}
-                  </div>
+                  <div key={i} className="w-7 h-7 rounded-full" style={{ background: `${CAT_COLORS[s.category] ?? "#8A8070"}30`, border: "1px solid rgba(200,184,240,0.3)" }}/>
                 ))}
               </div>
               <div className="text-right">
@@ -403,8 +450,8 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
                   <button
                     key={icon}
                     onClick={() => setNewIcon(icon)}
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-xl press-scale transition-all"
-                    style={{ background: newIcon === icon ? "rgba(200,176,106,0.2)" : "transparent", border: `1.5px solid ${newIcon === icon ? "#C8B06A" : "rgba(200,176,106,0.15)"}` }}
+                    className="w-9 h-9 rounded-full flex items-center justify-center press-scale transition-all font-serif"
+                    style={{ fontSize: "16px", color: newIcon === icon ? "#C8B06A" : "#8A7A6A", background: newIcon === icon ? "rgba(200,176,106,0.2)" : "transparent", border: `1.5px solid ${newIcon === icon ? "#C8B06A" : "rgba(200,176,106,0.15)"}` }}
                   >
                     {icon}
                   </button>
@@ -417,7 +464,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
                 className="w-full py-2.5 rounded-xl font-sans text-xs font-medium press-scale transition-all"
                 style={{ background: newName.trim() ? "#0B3C26" : "rgba(11,60,38,0.1)", color: newName.trim() ? "#FAF7F2" : "#8AAA98" }}
               >
-                Créer le Rituel {newIcon}
+                Créer le Rituel
               </button>
             </div>
           )}
@@ -425,7 +472,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
           {/* Custom ritual cards */}
           {rituals.filter(r => r.type === "custom").length === 0 && !showCreate ? (
             <div className="rounded-2xl p-5 text-center" style={{ background: "rgba(200,176,106,0.06)", border: "1px dashed rgba(200,176,106,0.3)" }}>
-              <div className="text-2xl mb-2">🌟</div>
+              <div className="font-serif text-2xl mb-2" style={{ color: "#C8B06A" }}>✦</div>
               <div className="font-serif text-sm" style={{ color: "#9A8A78" }}>Crée ton premier rituel personnalisé</div>
               <div className="font-sans text-[10px] mt-1" style={{ color: "#B8A898" }}>Dimanche Self-Care, Pré-Soirée, Post-Gym...</div>
             </div>
@@ -438,7 +485,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
                   className="rounded-2xl p-4 text-left press-scale ritual-fade"
                   style={{ animationDelay: `${0.2 + i * 0.07}s`, background: r.gradient, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                 >
-                  <div className="text-2xl mb-2">{r.icon}</div>
+                  <div className="font-serif text-xl mb-2" style={{ color: r.accentColor }}>{r.icon}</div>
                   <div className="font-serif text-sm leading-tight mb-1" style={{ color: r.textColor }}>{r.name}</div>
                   <div className="font-sans text-[9px]" style={{ color: r.accentColor }}>{r.steps.length} étape{r.steps.length !== 1 ? "s" : ""}</div>
                 </button>
@@ -476,8 +523,8 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
           <div className="font-sans text-[9px] tracking-widest uppercase mb-0.5" style={{ color: ritual.accentColor, opacity: 0.8 }}>
             {ritual.type === "morning" ? "Rituel du Matin" : ritual.type === "evening" ? "Rituel du Soir" : "Rituel Personnalisé"}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{ritual.icon}</span>
+          <div className="flex items-center gap-2.5">
+            <RitualDecor type={ritual.type} style={{ width: 28, height: 28 }}/>
             <span className="font-serif text-xl" style={{ color: ritual.textColor }}>{ritual.name}</span>
           </div>
         </div>
@@ -488,7 +535,13 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
         {/* Conflict warnings */}
         {conflicts.map((c, i) => (
           <div key={i} className="rounded-xl p-3 flex gap-2" style={{ background: c.level === "high" ? "rgba(232,115,74,0.1)" : "rgba(200,168,74,0.1)", border: `1px solid ${c.level === "high" ? "rgba(232,115,74,0.3)" : "rgba(200,168,74,0.3)"}` }}>
-            <div className="text-sm flex-none">{c.level === "high" ? "⚠️" : "💡"}</div>
+            <div className="flex-none mt-0.5">
+              {c.level === "high" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C87020" strokeWidth="2" strokeLinecap="round"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A08020" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              )}
+            </div>
             <p className="font-sans text-[10px] leading-relaxed" style={{ color: c.level === "high" ? "#8A3A20" : "#7A6020" }}>
               <span className="font-medium">Alerte Actifs :</span> {c.warning}
             </p>
@@ -498,7 +551,9 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
         {/* Pairing suggestions */}
         {pairings.map((p, i) => (
           <div key={i} className="rounded-xl p-3 flex items-center gap-3" style={{ background: "rgba(11,60,38,0.05)", border: "1px solid rgba(11,60,38,0.1)" }}>
-            <div className="text-xl">{p.emoji}</div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-none" style={{ background: "rgba(11,60,38,0.1)" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D7A52" strokeWidth="1.5"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+            </div>
             <div className="flex-1">
               <div className="font-sans text-[9px] tracking-widest uppercase mb-0.5" style={{ color: "#4A7C5F" }}>Muse Suggère</div>
               <div className="font-serif text-sm" style={{ color: "#0B1F14" }}>{p.suggestion}</div>
@@ -539,8 +594,8 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
                     {idx + 1}
                   </div>
 
-                  {/* Emoji */}
-                  <div className="text-xl flex-none">{step.emoji}</div>
+                  {/* Category dot */}
+                  <CatDot category={step.category}/>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
@@ -598,7 +653,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
                 const inRitual = existingIds.includes(product.id);
                 return (
                   <div key={product.id} className="flex items-center gap-3 py-2" style={{ borderBottom: "1px solid rgba(11,60,38,0.05)" }}>
-                    <div className="text-xl flex-none">{product.emoji}</div>
+                    <CatDot category={product.category}/>
                     <div className="flex-1 min-w-0">
                       <div className="font-serif text-sm" style={{ color: "#1A2A20" }}>{product.name}</div>
                       <div className="font-sans text-[9px]" style={{ color: "#8AA898" }}>
@@ -631,7 +686,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
             className="w-full py-4 rounded-2xl font-serif text-base press-scale"
             style={{ background: "linear-gradient(135deg, #0B3C26, #1A5C3A)", color: "#FAF7F2", boxShadow: "0 4px 20px rgba(11,60,38,0.4)" }}
           >
-            Commencer {ritual.icon} {ritual.name}
+            Commencer — {ritual.name}
           </button>
         </div>
       )}
@@ -708,7 +763,7 @@ export default function RoutineBuilderScreen({ onBack }: Props) {
               <div className="step-in w-full rounded-3xl p-6 flex flex-col items-center text-center" key={activeStep}
                 style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.3)" }}>
 
-                <div className="text-7xl mb-4">{currentStep.emoji}</div>
+                <CatCircle category={currentStep.category} size={80}/>
 
                 <div className="font-sans text-[9px] tracking-widest uppercase mb-1" style={{ color: ritual.accentColor, opacity: 0.9 }}>
                   Étape {activeStep + 1}

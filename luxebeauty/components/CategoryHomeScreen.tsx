@@ -137,7 +137,7 @@ const TOUR_STEPS = [
     title: "La Muse vous guide ✦",
     body: "Ce bouton cygne flottant est votre guide personnel. Appuyez dessus à tout moment pour naviguer ou découvrir un conseil du jour.",
     highlight: "fab",
-    icon: "🦢",
+    icon: "swan",
   },
 ];
 
@@ -236,7 +236,11 @@ export default function CategoryHomeScreen({
             </div>
 
             <div className="text-center mb-4">
-              <span className="text-3xl mb-3 block">{TOUR_STEPS[tourStep].icon}</span>
+              <div className="flex justify-center mb-3">
+                {TOUR_STEPS[tourStep].icon === "swan"
+                  ? <SwanLogo size={36} />
+                  : <span className="font-serif text-2xl" style={{ color: "#0B3C26" }}>{TOUR_STEPS[tourStep].icon}</span>}
+              </div>
               <h3 className="font-serif text-[18px] text-[#1C1C1C] mb-2">
                 {TOUR_STEPS[tourStep].title}
               </h3>
