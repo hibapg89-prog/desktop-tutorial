@@ -1,7 +1,0 @@
-{
-  "buildCommand": "cd luxebeauty && npm run build",
-  "outputDirectory": "luxebeauty/.next",
-  "installCommand": "cd luxebeauty && npm install",
-  "framework": "nextjs",
-  "devCommand": "cd luxebeauty && npm run dev"
-}
