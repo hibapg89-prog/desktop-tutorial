@@ -51,7 +51,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full">
         <ServiceWorkerRegistrar />
-        {children}
+        <div className="app-shell">
+          {children}
+        </div>
       </body>
     </html>
   );
