@@ -8,8 +8,8 @@ const ContentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // Google Fonts files
   "font-src 'self' https://fonts.gstatic.com",
-  // Local images, data URIs (icons), blob URLs (camera/canvas)
-  "img-src 'self' data: blob:",
+  // Local images, data URIs (icons), blob URLs (camera/canvas), Google Stitch + Nano Banana AI images
+  "img-src 'self' data: blob: https://lh3.googleusercontent.com https://static.prod-images.emergentagent.com",
   // API calls stay on same origin
   "connect-src 'self'",
   // Audio/video stay local

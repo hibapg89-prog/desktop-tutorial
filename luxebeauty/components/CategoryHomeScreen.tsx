@@ -29,23 +29,61 @@ interface Props {
   onRoutine?: () => void;
 }
 
+// ─── Types ─────────────────────────────────────────────────────────────────────
+type Category = {
+  id: string; label: string; sub: string;
+  gradient: string; accent: string; icon: string;
+  photo?: string;
+};
+
+// ─── Stitch AI image assets ────────────────────────────────────────────────────
+const IMGS = {
+  botanicalSerum:  "https://lh3.googleusercontent.com/aida-public/AB6AXuA-yQk1Vprf4wB3aVc_OzAOOlBsO6bCP628MCOgDCEHbQhJ4aV0CaDMSzdavo1htSxaLcECEGtzu3y6tzWRLtuqJd6umP55mxu0D72TXb2CvpsGIRGwkkqBmYLr9-rEG9heNYNeCLThmGjXkSrVwHjpwIAP0OpFKAjXamVlm1aJHhFcRD9AvoO9T4lD-OzXpnApvj9uvVlk3CkXrg6q2QZoBQVwSbsAF5nTxg0HC1T43G2POzC7UzzkCSrtmbnTQzWzManOlYywsjt2",
+  springAwakening: "https://lh3.googleusercontent.com/aida-public/AB6AXuC0wwEdDQR2CUVs-gePtcXvh_R0avV_ZTrRH1i7wN_r3FlleviLQeY1IBiAx97BTSPz0GQr3FbESwuGfzNO9VP7X_50xwK_m1kBgd7cA2Za5JRFa9oKfHWFLyzND8RBrct9WQvPQIrMNT9shbvkRGI_gjOFi_4H5tWdODwKaW9JQTKlSAHvEnx5YHQ0Wr8YU2WT1RW1Pt2DCn3dKiP3trwZhox-wXza0cOMAwDglNBFtdbSp4ls9CHzzJcge-8j326hYzG44_0q77_Z",
+  jadeRenewal:     "https://lh3.googleusercontent.com/aida-public/AB6AXuD3IqY-2AZRkfQAN3pN9NIToQFrIBIK9WbPze9lxDXqMihdyDzVcA_6aBpNLBtnen8-C76B9pQA2Hdk9rOKga9L1ls1aHPcyh9mve5Eohhb477D2D9rDYVvtY-Bb0UpkQvKUrmxDLoGnoQd1e-POV5hjjx4FV6c4d5pW-lRnx7x0cwfB0pYIJvy-Qw1z0IVZGWdLqP4B7QmH0bHTEJ7ugmLgdJrd9M5VzxXSkYc9Nq8xiTANMvxNdvi6ZxmXxQ5ijGi3rxUhFa_Ewqz",
+  goldenElixir:    "https://lh3.googleusercontent.com/aida-public/AB6AXuD-cjCfv1sJtUb5FNhS_r1BJPIIxzqms5eQItZ5RNNpomQndk3yeGRNaY0JM56S-0kFE_SnLl9hFr9OA5QxL7evdHBMDs44gwjt9bEN1Gfe1Q9Sahj1eQ5RJIWwksbyX-rmVEKbEsP7eiJp27Grvd8MG0RG6MlkE111U4WYmbIdAGgiAhex8IMf6wnNI9f-cfx4V6W1MJmLuwM6X6vY63d66gSIOSWQDA2SsX_MmfNd2ubTk9zK_KMSkJvNalRLvT5hyUNnOVBdjup1",
+  fragrance:       "https://lh3.googleusercontent.com/aida-public/AB6AXuAUwkKJDEdMdzlVXMCB8i5beuSh3vKRRPYAMUcF4ilX1nLVWjyAN-lruv7k-HyoNtzPHDaNsjsh_GO9ijWDteQXzP1zamz5QVey2CT5aUIimBuHploOL_jsHQVZtCCn_wCdn847UQjr6quVMg3LnrA1VenRBZFe50TQU7RY1hnZvoBeQoE4G2beRciJzklClMVW4SmiUw7Uxp43OI2yTmRlfxopvwFc29m_PMEDcQFYvfVLWkm-g0IHqdLJjjSG1gaT_fzTi4NIQLjl",
+  clayMask:        "https://lh3.googleusercontent.com/aida-public/AB6AXuBVYnnS62AwRsGnJqDNnUNg9M02tAS9tC44Qnuv_GyKJOw6aYDGvL8iWcvgLGyuV-Zd77pzClfckY8Zu8P1O3hhNYGQ8ud5jl30E10dClIX_8I35wLxrtcWNkzSRc3pjo3VWAwoXjRPAZdkKUG8ltErpy-ZDduMjZgZiY4DjjTP33lgY3wK2hPFo9xRACRS3fBlYjRv0vS2FIy_NBGQlEmxUote9MZiyZ-aQmp30esJtXCUoCeqEpxDviZLvzQEgJso1bXrySnD4by8",
+  skincareModel:   "https://lh3.googleusercontent.com/aida-public/AB6AXuClvx_YVWOjMNFawsC2jxE8dWuhiNa2IEI7S7IwOVc7WsfjLrPCsoyHPG7A2oqT8m3UaJPW3_7N1vOUHm9Z3K-88XLx3exCm_2vDzdsXxwniLsomXm-DSZXJi1DN9jTrDsXO3EOm7PCeXrUuTRd4mk5-ZLdmfn9m8VWAiDPWLV-iis89Z6XgMTnXOvRWkqJoNcVZZPpa6Eu4tXBRveFWooYlsQHRgokhNLNnA1gi_62qmBKIt5UqTOTocW18Y6PUV9k76KOKySgVK_8",
+  copperTools:     "https://lh3.googleusercontent.com/aida-public/AB6AXuAiiEFnb9ujv-HlQQbhcCQDSmmP9Kw7K0vZVPqo_stM_zzJkkIm-lfIBDgygrFVB0xNJEfC4wqCXHaravk7J6Tz4qPxlzYzQ1ycmBgn3m24p0-eJyCfaJ7kasamMZue4X-_vcTaCO1z44Dg-q8hU6c0ZiZ6N2QgMEVvBs1nNzLVBjrja95DCH5FWEJ-vACeH3vxyQXF8vl3sReqSJipthUq53ex_gtkYevOQaZ-GlRA08477iTrOsbRrUw6VDWwRGoj7fLxZE0381Al",
+  facialMassage:   "https://lh3.googleusercontent.com/aida-public/AB6AXuDp3EGzgEzB7NIQvprmIopUGWX0lLW17lmixtkwAIk_CzymB-QvXIWvyzeAjXknSfp6zoZzxhxZZ2jqcJqwkf68shVNiRRe8BY4T673B3t_etqeVUQUDgp5E6Ie5NgBZqKXLvZAyRSvQW1e6bBcU2TPOpkn70q0RRqUDdzbX3ZVHkYBv617G4SeZMIkPozm8GtvoJ-8T7VP1EJwKS-gq9Ir_WMwm4cAHFkcoSh8zf5giBqhJMDR4BC_tJT_vGpudrYboUHYigHBoXwu",
+  creamTexture:    "https://lh3.googleusercontent.com/aida-public/AB6AXuCKThEniki91lEBuuo3JziHk1g2nX_88yvNgZbQ7F8J5FmA1qQzYO_N5tgjBJztcPT8sqrMa8J9liLKxX0_bT2Cx8ZOXk0r-gKRCZZrpYQZZhhgkty7ePpo-I9gOjxwJDEoDLqaQl7f3K3Gbl2_vzJ4LngZIt9gGI_8GKR9IJso9fQeY4TcPSuI2GcmLBwBFYAZcLfrLcE5UmOQZ_G6A4m-Yb0dpC8SZcsBN9UDP7xc7qmBhXv71Ww9XcbPLxGi2VAiIV-pJaDazNtf",
+};
+
+// ─── Nano Banana custom AI image assets ───────────────────────────────────────
+const _NB = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/";
+const NANO_IMGS = {
+  productScan:     _NB + "97d840f1dc315c0183f248851f5f9b727e9a3cdb9fcee7648c59e2dd3dca1371.png",
+  fragranceBottle: _NB + "97d61168a66367cebd1a3697ae585767198666b50a1fc371874b4ad02d5063de7.png",
+  vanityGrid:      _NB + "fa1f912538285e338ab1693d4f0abfec12d3107d55efb884f163cf14ac4bac5c.png",
+  makeupOrganized: _NB + "296e177e32c1fe4f1fbf3ee52d9cf1269cfbf55f36624f2472a58b3c03b0c0e4.png",
+  intimateCare:    _NB + "8fc820a51f32be3d43b44fea8366d12c297d600a64489ce16d95121e2eff981f.png",
+  mensGrooming:    _NB + "09b145d15431862f87a3d8aa3063174af71f23a3ceb6066d3eedba1571a07d32.png",
+  devicesSection:  _NB + "9e4cc246cb879e26c1abb7c0869f39c6d0fa6ee84f7784288881a35fa0916959.png",
+  dragDrop:        _NB + "022d71f83bdef8fb9da775b4ca5aa84877d928bae297d610940c597e22b820dc.png",
+  vanityDiagram:   _NB + "e4378aa66f9839487b189eb6761b41b0984a8c8e496fd362e0103adfb527ab8a.png",
+};
+
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
-const categories = [
+const categories: Category[] = [
   {
     id: "muse", label: "The Muse", sub: "Your curator",
     gradient: "linear-gradient(135deg, #E8D898, #C8A840, #F0E8CC)",
     accent: "#C8B06A", icon: "✦",
+    photo: NANO_IMGS.vanityGrid,
   },
   {
     id: "carte", label: "La Carte", sub: "Cartographie du Raffinement",
     gradient: "linear-gradient(135deg, #D8E8D0, #88B890, #C0D8B8)",
     accent: "#0B3C26", icon: "◈",
+    photo: NANO_IMGS.vanityDiagram,
   },
   {
     id: "makeup", label: "Makeup", sub: "Color & beauty",
     gradient: "linear-gradient(135deg, #F0C0B0, #C87870, #E8A898)",
     accent: "#C4968A", icon: "◈",
+    photo: NANO_IMGS.makeupOrganized,
   },
   {
     id: "skincare", label: "Skincare", sub: "Glow routines",
@@ -61,6 +99,7 @@ const categories = [
     id: "fragrance", label: "Fragrance", sub: "Signature scents",
     gradient: "linear-gradient(135deg, #F0E0B0, #C8A040, #E8D098)",
     accent: "#C8B06A", icon: "○",
+    photo: NANO_IMGS.fragranceBottle,
   },
   {
     id: "body", label: "Body", sub: "Head to toe",
@@ -76,11 +115,13 @@ const categories = [
     id: "devices", label: "Devices", sub: "Tech beauty",
     gradient: "linear-gradient(135deg, #D8E0E8, #90A8B8, #C0CED8)",
     accent: "#5A7A9A", icon: "⊞",
+    photo: NANO_IMGS.devicesSection,
   },
   {
     id: "accessories", label: "Accessories", sub: "Finishing touch",
     gradient: "linear-gradient(135deg, #E8E0C8, #C0B080, #EAE0C0)",
     accent: "#A09070", icon: "◇",
+    photo: NANO_IMGS.dragDrop,
   },
   {
     id: "parapharmacy", label: "Parapharmacy", sub: "Libre service",
@@ -91,11 +132,13 @@ const categories = [
     id: "intimate", label: "Intimate Wellness", sub: "Care & pleasure",
     gradient: "linear-gradient(135deg, #F0D0E0, #C87898, #D8A0C0)",
     accent: "#B06880", icon: "◯",
+    photo: NANO_IMGS.intimateCare,
   },
   {
     id: "wellness", label: "Wellness", sub: "Health from within",
     gradient: "linear-gradient(135deg, #D8E8D0, #70A860, #B8D8A8)",
     accent: "#2A6A3A", icon: "◈",
+    photo: NANO_IMGS.mensGrooming,
   },
   {
     id: "rituels", label: "Mes Rituels", sub: "Routines sacrées",
@@ -137,18 +180,31 @@ const TOUR_STEPS = [
     title: "La Muse vous guide ✦",
     body: "Ce bouton cygne flottant est votre guide personnel. Appuyez dessus à tout moment pour naviguer ou découvrir un conseil du jour.",
     highlight: "fab",
-    icon: "🦢",
+    icon: "swan",
   },
 ];
 
 const navTabs = ["Home", "Scan", "Routine", "Profile"];
 
 const FEATURED = [
-  { title: "Rouge à Lèvres", sub: "Édition Automne", cat: "Makeup", gradient: "linear-gradient(135deg, #F0C0B0, #C87870, #E8A898)", accent: "#C4968A" },
-  { title: "Soin du Regard", sub: "Rituel contour", cat: "Skincare", gradient: "linear-gradient(135deg, #C0D8B0, #2D7A52, #A8C890)", accent: "#2D7A52" },
-  { title: "Eau de Parfum", sub: "Signature florale", cat: "Fragrance", gradient: "linear-gradient(135deg, #F0E0B0, #C8A040, #EAD898)", accent: "#C8B06A" },
-  { title: "Soin Corps", sub: "Éclat et nutrition", cat: "Corps", gradient: "linear-gradient(135deg, #F0ECE4, #D8CDB8, #EAE4D8)", accent: "#8A7A6A" },
-  { title: "Ritual Nocturne", sub: "Maison Verte", cat: "Ritual", gradient: "linear-gradient(135deg, #1E1030, #3D2060, #C8A840)", accent: "#C8B06A" },
+  { title: "The Verdant Ritual",    sub: "Editor's Choice",    cat: "Skincare",  img: IMGS.botanicalSerum,       accent: "#2D7A52" },
+  { title: "Soin du Regard",        sub: "Rituel contour",     cat: "Skincare",  img: IMGS.skincareModel,        accent: "#2D7A52" },
+  { title: "Scan & Identify",       sub: "Trouvez votre dupe", cat: "Scan",      img: NANO_IMGS.productScan,     accent: "#C8B06A" },
+  { title: "Eau de Parfum",         sub: "Signature florale",  cat: "Fragrance", img: IMGS.fragrance,            accent: "#C8B06A" },
+  { title: "Cellular Recharge",     sub: "Éclat & nutrition",  cat: "Corps",     img: IMGS.creamTexture,         accent: "#8A7A6A" },
+  { title: "Ritual Nocturne",       sub: "Maison Verte",       cat: "Ritual",    img: IMGS.copperTools,          accent: "#C8B06A" },
+];
+
+const SEASONAL_RITUALS = [
+  { title: "The Spring Awakening", tag: "Édition Limitée", img: IMGS.springAwakening },
+  { title: "Jade Stone Renewal",   tag: "Best Seller",     img: IMGS.jadeRenewal    },
+  { title: "Golden Hour Elixir",   tag: "Nouveauté",       img: IMGS.goldenElixir   },
+];
+
+const MEMBER_FAVORITES = [
+  { title: "Signature Fragrance No. 4", sub: "Bergamot, Rose & Oud fumé", price: "240€", img: IMGS.fragrance  },
+  { title: "Purifying Thermal Mask",    sub: "Cendres volcaniques & eau minérale", price: "95€",  img: IMGS.clayMask   },
+  { title: "Sculptural Face Lift",      sub: "Gua sha & infusion d'oxygène",       price: "185€", img: IMGS.facialMassage },
 ];
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -236,7 +292,11 @@ export default function CategoryHomeScreen({
             </div>
 
             <div className="text-center mb-4">
-              <span className="text-3xl mb-3 block">{TOUR_STEPS[tourStep].icon}</span>
+              <div className="flex justify-center mb-3">
+                {TOUR_STEPS[tourStep].icon === "swan"
+                  ? <SwanLogo size={36} />
+                  : <span className="font-serif text-2xl" style={{ color: "#0B3C26" }}>{TOUR_STEPS[tourStep].icon}</span>}
+              </div>
               <h3 className="font-serif text-[18px] text-[#1C1C1C] mb-2">
                 {TOUR_STEPS[tourStep].title}
               </h3>
@@ -369,11 +429,70 @@ export default function CategoryHomeScreen({
           {FEATURED.map((item, i) => (
             <button key={i} onClick={onEditorial ?? onProducts}
               className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer press-scale relative"
-              style={{ width: 128, height: 76, background: item.gradient, border: "1px solid rgba(200,176,106,0.18)" }}>
+              style={{ width: 128, height: 96 }}>
+              <img src={item.img} alt={item.title}
+                className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0"
+                style={{ background: "linear-gradient(to top, rgba(11,20,15,0.75) 0%, rgba(0,0,0,0.05) 55%)" }} />
               <div className="absolute inset-0 flex flex-col justify-end p-3">
                 <p className="font-sans text-[6px] tracking-[0.2em] uppercase mb-0.5" style={{ color: item.accent }}>{item.cat}</p>
-                <p className="font-serif text-[12px] text-[#1C1C1C] leading-tight">{item.title}</p>
-                <p className="font-sans text-[7px] text-[#5A5040] opacity-70 mt-0.5">{item.sub}</p>
+                <p className="font-serif text-[11px] text-white leading-tight">{item.title}</p>
+                <p className="font-sans text-[7px] text-white/60 mt-0.5">{item.sub}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Rituels en Saison ── */}
+      <div className="px-3 mb-4 flex-shrink-0">
+        <div className="flex items-center justify-between mb-2.5">
+          <p className="font-sans text-[7px] tracking-[0.22em] uppercase text-[#C8B06A]">Rituels en Saison</p>
+          <button onClick={onRoutine ?? onProducts}
+            className="font-sans text-[7px] tracking-[0.15em] uppercase cursor-pointer transition-opacity hover:opacity-80"
+            style={{ color: "rgba(11,60,38,0.4)" }}>
+            Voir tout →
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar">
+          {SEASONAL_RITUALS.map((item, i) => (
+            <button key={i} onClick={onRoutine ?? onProducts}
+              className="flex-shrink-0 rounded-2xl overflow-hidden relative cursor-pointer press-scale"
+              style={{ width: 112, height: 152 }}>
+              <img src={item.img} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0"
+                style={{ background: "linear-gradient(to top, rgba(11,20,15,0.78) 0%, rgba(0,0,0,0) 50%)" }} />
+              <div className="absolute inset-0 flex flex-col justify-end p-3">
+                <p className="font-sans text-[5px] tracking-[0.22em] uppercase text-[#C8B06A] mb-0.5">{item.tag}</p>
+                <p className="font-serif text-[11px] text-white leading-snug">{item.title}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Favoris des Membres ── */}
+      <div className="px-3 mb-4 flex-shrink-0">
+        <p className="font-sans text-[7px] tracking-[0.22em] uppercase text-[#C8B06A] mb-3">Favoris des Membres</p>
+        <div className="flex flex-col gap-2">
+          {MEMBER_FAVORITES.map((item, i) => (
+            <button key={i} onClick={onProducts}
+              className="flex items-center gap-3 p-3 rounded-xl cursor-pointer press-scale text-left"
+              style={{
+                background: "rgba(255,255,255,0.55)",
+                border: "1px solid rgba(200,176,106,0.15)",
+                backdropFilter: "blur(8px)",
+              }}>
+              <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0"
+                style={{ background: "#F0ECE4" }}>
+                <img src={item.img} alt={item.title} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-serif text-[12px] text-[#1C1C1C] leading-tight mb-0.5 truncate">{item.title}</p>
+                <p className="font-sans text-[9px] text-[#8A8070] leading-snug line-clamp-2">{item.sub}</p>
+              </div>
+              <div className="flex-shrink-0 text-right">
+                <p className="font-sans text-[10px] text-[#C8B06A] font-medium">{item.price}</p>
               </div>
             </button>
           ))}
@@ -391,7 +510,12 @@ export default function CategoryHomeScreen({
                 ${cat.id === "muse" || cat.id === "carte" ? "col-span-2 h-24" : "h-32"}`}
               style={{ animationDelay: `${i * 0.045}s` }}
             >
-              <div className="absolute inset-0" style={{ background: cat.gradient, opacity: 0.55 }} />
+              {cat.photo && (
+                <img src={cat.photo} alt="" aria-hidden
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ opacity: 0.4 }} />
+              )}
+              <div className="absolute inset-0" style={{ background: cat.gradient, opacity: cat.photo ? 0.28 : 0.55 }} />
 
               <div className="absolute inset-0 flex items-center justify-end pr-4 pointer-events-none">
                 <span className="text-4xl opacity-10" style={{ color: cat.accent }}>{cat.icon}</span>
