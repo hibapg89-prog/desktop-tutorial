@@ -14,10 +14,14 @@ type Distinction = "gem" | "glow" | "ritual" | "trend" | "local";
 interface Post {
   id:           string;
   type:         PostType;
+  section?:     string;
   author:       string;
   initials:     string;
   avatarHex:    string;
   distinction?: Distinction;
+  location?:    string;
+  flag?:        string;
+  score?:       number;
   mst:          number;
   adores:       number;
   whispers:     number;
@@ -65,7 +69,6 @@ const DISTINCTIONS: Record<Distinction, { icon: string; label: string }> = {
   local:  { icon: "◯",  label: "Local Advocate" },
 };
 
-// Monk Skin Tone Scale (MST 1–10)
 const MST = [
   "#F6EDE4", "#F3E0CF", "#F0D4B0", "#E8C89A",
   "#D4A870", "#B88A50", "#9B6E3C", "#7A4A28",
@@ -86,13 +89,18 @@ const POST_TYPES = [
   { id: "ask",          icon: "✦", label: "Ask The Circle",  desc: "Ask for recommendations" },
 ];
 
+const SECTION_LABELS: Record<string, string> = {
+  member: "Curated Member Reviews",
+  picks:  "Editor's Picks",
+};
+
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 
 const POSTS: Post[] = [
   {
-    id: "1", type: "review",
+    id: "1", type: "review", section: "member",
     author: "Amélie D.", initials: "AD", avatarHex: "#D4A888",
-    distinction: "glow", mst: 4,
+    distinction: "glow", mst: 4, location: "France", flag: "🇫🇷", score: 4.8,
     product: "Charlotte Tilbury Pillow Talk Lipstick", brand: "Charlotte Tilbury",
     rating: 5, shadeHex: "#BC8F8F", shadeName: "Pillow Talk",
     productHex: "#C4968A",
@@ -101,41 +109,41 @@ const POSTS: Post[] = [
     brandReply: "Charlotte Tilbury",
   },
   {
-    id: "2", type: "before-after",
+    id: "2", type: "before-after", section: "member",
     author: "Sophie M.", initials: "SM", avatarHex: "#C8A080",
-    distinction: "ritual", mst: 5,
+    distinction: "ritual", mst: 5, location: "France", flag: "🇫🇷",
     product: "La Mer Crème de la Mer", brand: "La Mer",
     beforeHex: "#C8B4A0", afterHex: "#EAE0D4",
     afterText: "30 days · visibly plumped, deeply nourished",
     adores: 512, whispers: 88, timeAgo: "5h",
   },
   {
-    id: "3", type: "shelfie",
+    id: "3", type: "shelfie", section: "member",
     author: "Isabelle R.", initials: "IR", avatarHex: "#A07850",
-    distinction: "gem", mst: 6,
+    distinction: "gem", mst: 6, location: "Italy", flag: "🇮🇹",
     productCount: 9,
     shelfHexes: ["#C4968A","#E8D898","#A8C890","#C8B06A","#BC8F8F","#D4C0B0","#8A9070","#C0D8B0","#E0C8A8"],
     adores: 741, whispers: 63, timeAgo: "1d",
   },
   {
-    id: "4", type: "ask",
+    id: "4", type: "ask", section: "member",
     author: "Claire L.", initials: "CL", avatarHex: "#E0C0A0",
-    mst: 3,
+    mst: 3, location: "France", flag: "🇫🇷",
     question: "Which SPF doesn't pill under Charlotte Tilbury foundation? I've tried three and they all ball up 😭",
     votes: 34, whispers: 67, adores: 89, timeAgo: "3h",
   },
   {
-    id: "5", type: "ritual",
+    id: "5", type: "ritual", section: "picks",
     author: "Nadège T.", initials: "NT", avatarHex: "#825C43",
-    distinction: "ritual", mst: 8,
+    distinction: "ritual", mst: 8, location: "Martinique", flag: "🇲🇶",
     ritualType: "morning", stepCount: 6,
     steps: ["Tatcha Rice Wash", "Sulwhasoo First Care Serum", "La Mer Eye Concentrate", "Chanel UV Essentiel SPF 50", "Charlotte Tilbury Light Wonder", "Rare Beauty Blush"],
     adores: 198, whispers: 31, timeAgo: "8h",
   },
   {
-    id: "6", type: "review",
+    id: "6", type: "review", section: "picks",
     author: "Fatima A.", initials: "FA", avatarHex: "#604134",
-    distinction: "local", mst: 9,
+    distinction: "local", mst: 9, location: "Morocco", flag: "🇲🇦", score: 4.9,
     product: "Tatcha The Dewy Skin Cream", brand: "Tatcha",
     rating: 5, shadeHex: "#A8C890", shadeName: "N/A",
     productHex: "#D8E8D0",
@@ -143,18 +151,18 @@ const POSTS: Post[] = [
     adores: 367, whispers: 54, timeAgo: "1d",
   },
   {
-    id: "7", type: "before-after",
+    id: "7", type: "before-after", section: "picks",
     author: "Léa B.", initials: "LB", avatarHex: "#E8C0B0",
-    mst: 2,
+    mst: 2, location: "France", flag: "🇫🇷",
     product: "Sulwhasoo First Care Activating Serum", brand: "Sulwhasoo",
     beforeHex: "#C8B8A8", afterHex: "#EAE0D0",
     afterText: "14 days · texture refined, glow restored",
     adores: 423, whispers: 77, timeAgo: "2d",
   },
   {
-    id: "8", type: "ask",
+    id: "8", type: "ask", section: "picks",
     author: "Priya S.", initials: "PS", avatarHex: "#9B6E4A",
-    mst: 7,
+    mst: 7, location: "India", flag: "🇮🇳",
     question: "Best dupe for La Mer? Willing to spend up to €80 but €900 is… a lot 😅",
     votes: 112, whispers: 203, adores: 445, timeAgo: "6h",
   },
@@ -163,11 +171,11 @@ const POSTS: Post[] = [
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ReviewsScreen({ onBack }: Props) {
-  const [feedMode,    setFeedMode]    = useState<FeedMode>("muse");
-  const [activeMST,   setActiveMST]   = useState<number | null>(null);
-  const [adoredIds,   setAdoredIds]   = useState<Set<string>>(new Set());
-  const [collectedIds,setCollectedIds]= useState<Set<string>>(new Set());
-  const [writeOpen,   setWriteOpen]   = useState(false);
+  const [feedMode,     setFeedMode]     = useState<FeedMode>("muse");
+  const [activeMST,    setActiveMST]    = useState<number | null>(null);
+  const [adoredIds,    setAdoredIds]    = useState<Set<string>>(new Set());
+  const [collectedIds, setCollectedIds] = useState<Set<string>>(new Set());
+  const [writeOpen,    setWriteOpen]    = useState(false);
 
   const { showToast } = useToast();
 
@@ -191,6 +199,12 @@ export default function ReviewsScreen({ onBack }: Props) {
   const filtered = activeMST
     ? POSTS.filter(p => Math.abs(p.mst - activeMST) <= 1)
     : POSTS;
+
+  // Tag which posts open a new section
+  const postsWithHeaders = filtered.map((post, i) => ({
+    ...post,
+    showHeader: i === 0 || filtered[i - 1].section !== post.section,
+  }));
 
   return (
     <div className="satin-bg min-h-screen flex flex-col overflow-hidden">
@@ -270,7 +284,7 @@ export default function ReviewsScreen({ onBack }: Props) {
             <p className="font-cormorant text-xl italic text-[#8A8070]">No posts for this tone yet</p>
             <p className="font-sans text-[10px] text-[#C8B06A] mt-2 tracking-wide">Be the first to share ✦</p>
           </div>
-        ) : filtered.map(post => {
+        ) : postsWithHeaders.map(post => {
           const props: CardProps = {
             post,
             adored:    adoredIds.has(post.id),
@@ -280,6 +294,19 @@ export default function ReviewsScreen({ onBack }: Props) {
           };
           return (
             <div key={post.id}>
+              {post.showHeader && post.section && (
+                <div className="text-center mb-4 mt-2">
+                  <p className="font-serif text-base tracking-[0.2em] uppercase"
+                    style={{ color: "#0B3C26" }}>
+                    {SECTION_LABELS[post.section]}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2 px-6">
+                    <div className="divider-gold flex-1" />
+                    <span className="font-sans text-[8px] text-[#C8B06A]">✦</span>
+                    <div className="divider-gold flex-1" />
+                  </div>
+                </div>
+              )}
               {post.type === "review"       && <ReviewCard       {...props} />}
               {post.type === "before-after" && <BeforeAfterCard  {...props} />}
               {post.type === "shelfie"      && <ShelfieCard      {...props} />}
@@ -355,14 +382,7 @@ function AuthorRow({ post }: { post: Post }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <p className="font-sans text-[10px] font-medium text-[#1C1C1C] truncate">{post.author}</p>
-          {post.distinction && (
-            <span className="font-sans text-[8px] text-[#8A8070] opacity-60 hidden">
-              {DISTINCTIONS[post.distinction].label}
-            </span>
-          )}
-        </div>
+        <p className="font-sans text-[10px] font-medium text-[#1C1C1C] truncate">{post.author}</p>
         <p className="font-sans text-[8px] text-[#8A8070]">{post.timeAgo} ago</p>
       </div>
     </div>
@@ -423,12 +443,6 @@ function ReviewCard({ post, adored, collected, onAdore, onCollect }: CardProps) 
             )}
           </div>
         </div>
-        <div className="absolute bottom-3 right-4 flex gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="w-2.5 h-2.5 rounded-[2px]"
-              style={{ background: i < (post.rating ?? 0) ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.2)" }} />
-          ))}
-        </div>
         <div className="absolute top-2 right-3">
           <span className="font-sans text-[7px] tracking-[0.12em] uppercase text-white/50">Review</span>
         </div>
@@ -436,12 +450,34 @@ function ReviewCard({ post, adored, collected, onAdore, onCollect }: CardProps) 
 
       <div className="px-4 pt-3 pb-4">
         <AuthorRow post={post} />
-        <p className="font-sans text-[9px] text-[#8A8070] tracking-[0.06em] uppercase mb-2 truncate">
+
+        {/* Stars — dusty rose ★ + numerical score */}
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex gap-0.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <span key={i} className="text-[11px]"
+                style={{ color: i < (post.rating ?? 0) ? "#C4968A" : "rgba(196,150,138,0.22)" }}>
+                ★
+              </span>
+            ))}
+          </div>
+          {post.score && (
+            <span className="font-sans text-[9px] font-medium" style={{ color: "#C4968A" }}>
+              {post.score.toFixed(1)}
+            </span>
+          )}
+        </div>
+
+        {/* Product title — serif */}
+        <p className="font-serif text-[13px] text-[#0B3C26] leading-snug mb-2 line-clamp-2">
           {post.product}
         </p>
-        <p className="font-cormorant text-[15px] italic text-[#5A5040] leading-relaxed mb-3">
+
+        {/* Testimonial — light sans */}
+        <p className="font-sans text-[10px] font-light text-[#5A5040] leading-relaxed mb-3">
           &ldquo;{post.text}&rdquo;
         </p>
+
         {post.brandReply && (
           <div className="flex items-center gap-2 py-2 px-3 rounded-xl mb-2"
             style={{ background: "rgba(200,176,106,0.07)", border: "1px solid rgba(200,176,106,0.18)" }}>
@@ -452,7 +488,16 @@ function ReviewCard({ post, adored, collected, onAdore, onCollect }: CardProps) 
             </p>
           </div>
         )}
+
         <ActionBar post={post} adored={adored} collected={collected} onAdore={onAdore} onCollect={onCollect} />
+
+        {/* Reviewer location */}
+        {post.location && (
+          <p className="font-sans text-[8px] text-[#8A8070] mt-2.5 pt-2.5"
+            style={{ borderTop: "1px solid rgba(200,176,106,0.1)" }}>
+            {post.author}, {post.location} {post.flag}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -464,26 +509,22 @@ function BeforeAfterCard({ post, adored, collected, onAdore, onCollect }: CardPr
   return (
     <div className="card-pearl rounded-2xl overflow-hidden">
       <div className="h-32 flex relative">
-        {/* Before */}
         <div className="flex-1 relative" style={{ background: post.beforeHex ?? "#C8B8A8" }}>
           <div className="absolute top-2 left-3">
             <span className="font-sans text-[7px] tracking-[0.15em] uppercase text-white/60">Before</span>
           </div>
         </div>
-        {/* Gold divider + arrow */}
         <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2"
           style={{ background: "linear-gradient(to bottom, transparent, rgba(200,176,106,0.85), transparent)" }} />
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center z-10"
           style={{ background: "rgba(200,176,106,0.95)", boxShadow: "0 2px 10px rgba(11,60,38,0.25)" }}>
           <span className="font-sans text-[8px] text-white font-medium">→</span>
         </div>
-        {/* After */}
         <div className="flex-1 relative" style={{ background: post.afterHex ?? "#EAE0D0" }}>
           <div className="absolute top-2 right-3">
             <span className="font-sans text-[7px] tracking-[0.15em] uppercase text-white/60">After</span>
           </div>
         </div>
-        {/* Caption overlay */}
         {post.afterText && (
           <div className="absolute bottom-0 left-0 right-0 py-2 px-4 text-center"
             style={{ background: "linear-gradient(to top, rgba(11,60,38,0.35), transparent)" }}>
@@ -497,8 +538,14 @@ function BeforeAfterCard({ post, adored, collected, onAdore, onCollect }: CardPr
 
       <div className="px-4 pt-3 pb-4">
         <AuthorRow post={post} />
-        <p className="font-sans text-[9px] text-[#8A8070] tracking-[0.06em] uppercase mb-2 truncate">{post.product}</p>
+        <p className="font-serif text-[13px] text-[#0B3C26] leading-snug mb-2 line-clamp-1">{post.product}</p>
         <ActionBar post={post} adored={adored} collected={collected} onAdore={onAdore} onCollect={onCollect} />
+        {post.location && (
+          <p className="font-sans text-[8px] text-[#8A8070] mt-2.5 pt-2.5"
+            style={{ borderTop: "1px solid rgba(200,176,106,0.1)" }}>
+            {post.author}, {post.location} {post.flag}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -509,13 +556,11 @@ function BeforeAfterCard({ post, adored, collected, onAdore, onCollect }: CardPr
 function ShelfieCard({ post, adored, collected, onAdore, onCollect }: CardProps) {
   return (
     <div className="card-pearl rounded-2xl overflow-hidden">
-      {/* Swatch grid */}
       <div className="p-3 relative"
         style={{ background: "linear-gradient(135deg, rgba(250,246,239,1), rgba(240,232,204,0.4))" }}>
         <div className="grid grid-cols-5 gap-1.5">
           {(post.shelfHexes ?? []).slice(0, 10).map((hex, i) => (
-            <div key={i}
-              className="rounded-lg"
+            <div key={i} className="rounded-lg"
               style={{ height: "28px", background: hex, border: "1px solid rgba(200,176,106,0.2)" }} />
           ))}
         </div>
@@ -536,6 +581,12 @@ function ShelfieCard({ post, adored, collected, onAdore, onCollect }: CardProps)
           My spring edit ✦
         </p>
         <ActionBar post={post} adored={adored} collected={collected} onAdore={onAdore} onCollect={onCollect} />
+        {post.location && (
+          <p className="font-sans text-[8px] text-[#8A8070] mt-2.5 pt-2.5"
+            style={{ borderTop: "1px solid rgba(200,176,106,0.1)" }}>
+            {post.author}, {post.location} {post.flag}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -547,7 +598,6 @@ function RitualCard({ post, adored, collected, onAdore, onCollect }: CardProps) 
   const isMorning = post.ritualType === "morning";
   return (
     <div className="card-pearl rounded-2xl overflow-hidden">
-      {/* Ritual header band */}
       <div className="px-4 py-2.5 flex items-center gap-2"
         style={{
           background: isMorning
@@ -574,12 +624,18 @@ function RitualCard({ post, adored, collected, onAdore, onCollect }: CardProps) 
             </div>
           ))}
           {(post.steps?.length ?? 0) > 4 && (
-            <p className="font-sans text-[9px] text-[#C8B06A] opacity-70 pl-6.5">
+            <p className="font-sans text-[9px] text-[#C8B06A] opacity-70 pl-6">
               +{(post.steps?.length ?? 0) - 4} more steps
             </p>
           )}
         </div>
         <ActionBar post={post} adored={adored} collected={collected} onAdore={onAdore} onCollect={onCollect} />
+        {post.location && (
+          <p className="font-sans text-[8px] text-[#8A8070] mt-2.5 pt-2.5"
+            style={{ borderTop: "1px solid rgba(200,176,106,0.1)" }}>
+            {post.author}, {post.location} {post.flag}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -591,7 +647,6 @@ function AskCard({ post, adored, collected, onAdore, onCollect }: CardProps) {
   return (
     <div className="card-pearl rounded-2xl overflow-hidden">
       <div className="px-4 pt-4 pb-4">
-        {/* Question */}
         <div className="flex items-start gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center"
             style={{ background: "rgba(200,176,106,0.1)", border: "1px solid rgba(200,176,106,0.25)" }}>
@@ -607,20 +662,16 @@ function AskCard({ post, adored, collected, onAdore, onCollect }: CardProps) {
           </div>
         </div>
 
-        {/* Author mini row */}
         <div className="flex items-center gap-2 mb-3">
-          <div className="relative w-7 h-7 flex-shrink-0">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center font-sans text-[8px] font-medium text-white"
-              style={{ background: post.avatarHex }}>
-              {post.initials}
-            </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center font-sans text-[8px] font-medium text-white flex-shrink-0"
+            style={{ background: post.avatarHex }}>
+            {post.initials}
           </div>
           <p className="font-sans text-[9px] text-[#8A8070]">
             {post.author} · {post.timeAgo} ago
           </p>
         </div>
 
-        {/* Response pill */}
         <div className="rounded-xl px-3 py-2 mb-3 flex items-center gap-2"
           style={{ background: "rgba(11,60,38,0.04)", border: "1px solid rgba(11,60,38,0.06)" }}>
           <span className="text-[8px] text-[#0B3C26] opacity-50">✦</span>
@@ -630,6 +681,12 @@ function AskCard({ post, adored, collected, onAdore, onCollect }: CardProps) {
         </div>
 
         <ActionBar post={post} adored={adored} collected={collected} onAdore={onAdore} onCollect={onCollect} />
+        {post.location && (
+          <p className="font-sans text-[8px] text-[#8A8070] mt-2.5 pt-2.5"
+            style={{ borderTop: "1px solid rgba(200,176,106,0.1)" }}>
+            {post.author}, {post.location} {post.flag}
+          </p>
+        )}
       </div>
     </div>
   );
