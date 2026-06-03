@@ -54,15 +54,16 @@ const IMGS = {
 const _NB = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/";
 const NANO_IMGS = {
   // Batch 4 — category grid backgrounds
-  productScan:     _NB + "97d840f1dc315c0183f248851f5f9b727e9a3cdb9fcee7648c59e2dd3dca1371.png",
-  fragranceBottle: _NB + "97d61168a66367cebd1a3697ae585767198666b50a1fc371874b4ad02d5063de7.png",
-  vanityGrid:      _NB + "fa1f912538285e338ab1693d4f0abfec12d3107d55efb884f163cf14ac4bac5c.png",
-  makeupOrganized: _NB + "296e177e32c1fe4f1fbf3ee52d9cf1269cfbf55f36624f2472a58b3c03b0c0e4.png",
-  intimateCare:    _NB + "8fc820a51f32be3d43b44fea8366d12c297d600a64489ce16d95121e2eff981f.png",
-  mensGrooming:    _NB + "09b145d15431862f87a3d8aa3063174af71f23a3ceb6066d3eedba1571a07d32.png",
-  devicesSection:  _NB + "9e4cc246cb879e26c1abb7c0869f39c6d0fa6ee84f7784288881a35fa0916959.png",
-  dragDrop:        _NB + "022d71f83bdef8fb9da775b4ca5aa84877d928bae297d610940c597e22b820dc.png",
-  vanityDiagram:   _NB + "e4378aa66f9839487b189eb6761b41b0984a8c8e496fd362e0103adfb527ab8a.png",
+  productScan:            _NB + "97d840f1dc315c0183f248851f5f9b727e9a3cdb9fcee7648c59e2dd3dca1371.png",
+  luxuryStickers:         _NB + "97d61168a66367cebd1a3697ae585767198666b50a1fc371874b4ad02d5063de7.png",
+  vanityGrid:             _NB + "fa1f912538285e338ab1693d4f0abfec12d3107d55efb884f163cf14ac4bac5c.png",
+  makeupOrganized:        _NB + "296e177e32c1fe4f1fbf3ee52d9cf1269cfbf55f36624f2472a58b3c03b0c0e4.png",
+  interactiveVanityDrawer:_NB + "1fcda2b9c976bf4a805eb9e22310bfc348ed29ae5a38855b0b37691eb43f7.png",
+  intimateCare:           _NB + "8fc820a51f32be3d43b44fea8366d12c297d600a64489ce16d95121e2eff981f.png",
+  mensGrooming:           _NB + "09b145d15431862f87a3d8aa3063174af71f23a3ceb6066d3eedba1571a07d32.png",
+  devicesSection:         _NB + "9e4cc246cb879e26c1abb7c0869f39c6d0fa6ee84f7784288881a35fa0916959.png",
+  dragDrop:               _NB + "022d71f83bdef8fb9da775b4ca5aa84877d928bae297d610940c597e22b820dc.png",
+  vanityDiagram:          _NB + "e4378aa66f9839487b189eb6761b41b0984a8c8e496fd362e0103adfb527ab8a.png",
   // Batch 3 — feature screens & flow mockups
   homeWithPlus:    _NB + "43b1c3753a9c4dfb1beff09b0319ac8bc2496964e7ebd065f3218a40154d31b6.png",
   inputMenu:       _NB + "a7ee4059e06ef377e55788dfd07cdc3869472c43e09806286b0684283a12205d.png",
@@ -83,7 +84,7 @@ const categories: Category[] = [
     id: "muse", label: "The Muse", sub: "Your curator",
     gradient: "linear-gradient(135deg, #E8D898, #C8A840, #F0E8CC)",
     accent: "#C8B06A", icon: "✦",
-    photo: NANO_IMGS.vanityGrid,
+    photo: NANO_IMGS.interactiveVanityDrawer,
   },
   {
     id: "carte", label: "La Carte", sub: "Cartographie du Raffinement",
@@ -111,7 +112,7 @@ const categories: Category[] = [
     id: "fragrance", label: "Fragrance", sub: "Signature scents",
     gradient: "linear-gradient(135deg, #F0E0B0, #C8A040, #E8D098)",
     accent: "#C8B06A", icon: "○",
-    photo: NANO_IMGS.fragranceBottle,
+    photo: NANO_IMGS.luxuryStickers,
   },
   {
     id: "body", label: "Body", sub: "Head to toe",

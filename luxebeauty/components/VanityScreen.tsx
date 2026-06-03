@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 
+const _NB = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/";
+const VANITY_DRAWER_IMG  = _NB + "1fcda2b9c976bf4a805eb9e22310bfc348ed29ae5a38855b0b37691eb43f7.png";
+const LUXURY_STICKERS_IMG = _NB + "97d61168a66367cebd1a3697ae585767198666b50a1fc371874b4ad02d5063de7.png";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type Shelf   = "vanity" | "wishlist";
@@ -294,6 +298,18 @@ function DrawerView({ items, selected, dragging, onSelect, onDragStart, onDragEn
 }) {
   return (
     <div className="mx-4 mt-2">
+
+      {/* Vanity drawer inspiration preview */}
+      <div className="relative overflow-hidden rounded-t-2xl" style={{ height: 88 }}>
+        <img src={VANITY_DRAWER_IMG} alt="" aria-hidden
+          className="w-full h-full object-cover"
+          style={{ objectPosition: "center 30%" }} />
+        <div className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, rgba(245,240,234,0.08) 0%, rgba(245,240,234,0.94) 100%)" }} />
+        <p className="absolute bottom-2 right-3 font-sans text-[7px] tracking-[0.35em] uppercase"
+          style={{ color: "rgba(11,60,38,0.35)" }}>My Vanity</p>
+      </div>
+
       {/* Marble rim top */}
       <div className="rounded-t-2xl" style={{
         height: "8px",
@@ -519,6 +535,15 @@ function StickerPicker({ currentSticker, onApply, onClose }: {
 
         {/* Handle */}
         <div className="w-8 h-0.5 rounded-full mx-auto mb-5" style={{ background: "rgba(11,60,38,0.15)" }} />
+
+        {/* Editorial stickers reference image */}
+        <div className="relative mx-auto mb-4 rounded-xl overflow-hidden" style={{ width: 180, height: 96 }}>
+          <img src={LUXURY_STICKERS_IMG} alt="" aria-hidden
+            className="w-full h-full object-cover"
+            style={{ objectPosition: "center 40%" }} />
+          <div className="absolute inset-0 rounded-xl"
+            style={{ border: "1px solid rgba(200,176,106,0.2)" }} />
+        </div>
 
         <p className="font-sans text-[8px] tracking-[0.3em] uppercase text-center mb-1" style={{ color: "#C8B06A" }}>
           Editorial Decoration
