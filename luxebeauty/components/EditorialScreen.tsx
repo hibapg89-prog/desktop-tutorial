@@ -8,7 +8,7 @@ interface Props {
   onTutorial?: (id: string) => void;
 }
 
-const TABS = ["Makeup", "Skincare", "Hair", "Nails", "Body"];
+const TABS = ["Makeup", "Skincare", "Hair", "Wellness"];
 
 const CARDS = [
   { id: "t1", tab: "Makeup", title: "Smokey Monica Bellucci Inspired", category: "Tutorial",
@@ -35,23 +35,25 @@ const CARDS = [
     difficulty: "Expert", duration: 45, emoji: "🎨", saves: 2388,
     gradient: "linear-gradient(145deg, #2A1A0A, #5A3A1A, #8A6A3A)", accent: "#D4A060",
     creator: "Gabrielle Audet", handle: "@gabacolorist", platform: "youtube" },
-  { id: "t7", tab: "Nails", title: "French Manicure Moderne", category: "Classic",
+  { id: "t7", tab: "Makeup", title: "French Manicure Moderne", category: "Classic",
     difficulty: "Beginner", duration: 25, emoji: "💅", saves: 1102,
     gradient: "linear-gradient(145deg, #3A1A1A, #6A3A4A, #B07890)", accent: "#C4968A",
     creator: "Naomi Park", handle: "@naominails_", platform: "instagram" },
-  { id: "t8", tab: "Nails", title: "Gel Soak-Off & Nail Rehab", category: "Care",
+  { id: "t8", tab: "Makeup", title: "Gel Soak-Off & Nail Rehab", category: "Care",
     difficulty: "Beginner", duration: 30, emoji: "🌸", saves: 788,
     gradient: "linear-gradient(145deg, #2A1A2A, #4A2A4A, #8A5A7A)", accent: "#D4A0C0",
     creator: "Léa Brun", handle: "@leamanicure", platform: "tiktok" },
-  { id: "t9", tab: "Body", title: "Silk Body Oil Ritual", category: "Ritual",
+  { id: "t9", tab: "Wellness", title: "Silk Body Oil Ritual", category: "Ritual",
     difficulty: "Beginner", duration: 10, emoji: "🌿", saves: 1567,
     gradient: "linear-gradient(145deg, #1A2A1A, #2A5A2A, #4A8A4A)", accent: "#C8B06A",
     creator: "Priya Sharma", handle: "@priyabodyritual", platform: "instagram" },
-  { id: "t10", tab: "Body", title: "Dry Brush Detox Morning", category: "Wellness",
+  { id: "t10", tab: "Wellness", title: "Dry Brush Detox Morning", category: "Ritual",
     difficulty: "Beginner", duration: 15, emoji: "✦", saves: 923,
     gradient: "linear-gradient(145deg, #2A1A0A, #5A3A2A, #8A6A4A)", accent: "#C8B06A",
     creator: "Emma Delacroix", handle: "@emmadelacroix.wellness", platform: "youtube" },
 ];
+
+const COVER_H = [152, 136, 168, 144, 160, 132, 156, 140, 164, 138];
 
 const DIFF_DOT: Record<string, string> = {
   Beginner: "#2A7A4A",
@@ -92,37 +94,37 @@ export default function EditorialScreen({ onBack, onTutorial }: Props) {
         <div className="w-12" />
       </div>
 
-      {/* Tab bar — scrollable */}
-      <div className="px-4 mb-3 flex-shrink-0">
-        <div className="flex gap-0 overflow-x-auto no-scrollbar">
+      {/* Tab bar — pill chips, dusty rose */}
+      <div className="px-4 mb-4 flex-shrink-0">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           {TABS.map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex-shrink-0 px-3 py-2.5 font-sans text-[9px] tracking-[0.15em] uppercase transition-all duration-200 cursor-pointer relative">
-              <span style={{ color: activeTab === tab ? "#0B3C26" : "rgba(11,60,38,0.38)" }}>{tab}</span>
-              {activeTab === tab && (
-                <div className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
-                  style={{ background: "#0B3C26" }} />
-              )}
+              className="flex-shrink-0 px-4 py-1.5 rounded-full font-sans text-[9px] tracking-[0.18em] uppercase transition-all duration-200 cursor-pointer"
+              style={activeTab === tab
+                ? { background: "#C4968A", color: "#FFFFFF" }
+                : { background: "rgba(196,150,138,0.12)", color: "rgba(196,150,138,0.7)" }
+              }>
+              {tab}
             </button>
           ))}
         </div>
-        <div className="divider-gold mt-0" />
+        <div className="divider-gold mt-2" />
       </div>
 
-      {/* Tutorial grid */}
+      {/* Tutorial grid — masonry columns */}
       <div className="flex-1 overflow-y-auto px-4 pb-8">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="columns-2 gap-3">
           {filtered.map((card, i) => (
             <button
               key={card.id}
               onClick={() => onTutorial?.(card.id)}
-              className="card-pearl rounded-2xl overflow-hidden text-left cursor-pointer group transition-all duration-200 press-scale grid-item-anim"
+              className="card-pearl rounded-2xl overflow-hidden text-left cursor-pointer group transition-all duration-200 press-scale grid-item-anim break-inside-avoid mb-3 w-full"
               style={{ animationDelay: `${i * 0.06}s` }}>
 
               {/* Cover */}
-              <div className="relative overflow-hidden" style={{ height: "148px" }}>
+              <div className="relative overflow-hidden" style={{ height: COVER_H[i % COVER_H.length] }}>
                 <div className="absolute inset-0" style={{ background: card.gradient }} />
 
                 {/* Floating emoji */}
@@ -165,7 +167,7 @@ export default function EditorialScreen({ onBack, onTutorial }: Props) {
 
               {/* Card body */}
               <div className="px-3 pt-2.5 pb-3">
-                <h3 className="font-serif text-[13px] font-normal text-[#1C1C1C] leading-tight mb-1.5 group-hover:text-[#0B3C26] transition-colors line-clamp-2">
+                <h3 className="font-serif text-[14px] font-normal text-[#0B3C26] leading-tight mb-1.5 group-hover:text-[#1A5C3A] transition-colors line-clamp-2">
                   {card.title}
                 </h3>
                 {/* Creator credit */}
