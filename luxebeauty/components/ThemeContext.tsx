@@ -19,7 +19,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem("luxe-theme") as Theme | null;
-    const initial = stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    // Only honour a stored preference if the user explicitly chose it (not auto-detected)
+    const initial = (stored === "light" || stored === "dark") ? stored : "light";
     apply(initial);
   }, []);
 
