@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+const GALLERY_IMG = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/59e5d2b1c2fceefb14a2318e4c0216a6933a4a44eb13f492e6ceb122c2792127.png";
+
 interface Props {
   onNext: () => void;
   onCancel: () => void;
@@ -48,6 +50,13 @@ export default function GalleryPickerScreen({ onNext, onCancel }: Props) {
             {selected.size} item{selected.size > 1 ? "s" : ""} selected
           </p>
         )}
+      </div>
+
+      {/* Gallery mockup preview */}
+      <div className="mx-6 mb-3 rounded-2xl overflow-hidden flex-shrink-0" style={{ height: 120 }}>
+        <img src={GALLERY_IMG} alt="" aria-hidden
+          className="w-full h-full object-cover"
+          style={{ objectPosition: "center 20%" }} />
       </div>
 
       <div className="divider-gold mx-6 mb-4" />

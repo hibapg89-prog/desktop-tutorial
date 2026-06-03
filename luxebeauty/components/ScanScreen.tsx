@@ -4,6 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { SwanLogo } from "./LandingScreen";
 import { useToast } from "./ToastContext";
 
+const _NB = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/";
+const SCAN_IMGS = {
+  cameraInterface: _NB + "ec2c4634be871952f83eeb0532a96c26c058a8908a3bc62922b1ca99cae5827e.png",
+  productResults:  _NB + "e8de0d6df4ba23d84757632cbb1d7aeb1ffc95ea32f9791f890b285629e7064a.png",
+};
+
 interface Props { onBack: () => void; onMuseMirror?: () => void; onAnalysis?: () => void; }
 
 type Phase = "idle" | "scanning" | "found";
@@ -55,10 +61,13 @@ export default function ScanScreen({ onBack, onMuseMirror, onAnalysis }: Props) 
       <div className="mx-5 relative rounded-3xl overflow-hidden flex-shrink-0" style={{ height: 320 }}>
 
         {/* Background */}
+        <img src={SCAN_IMGS.cameraInterface} alt="" aria-hidden
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          style={{ opacity: phase === "idle" ? 0.28 : phase === "scanning" ? 0.1 : 0 }} />
         <div className="absolute inset-0 transition-all duration-700" style={{
           background: phase === "found"
             ? "linear-gradient(145deg, rgba(200,176,106,0.14), rgba(240,235,220,0.92))"
-            : "linear-gradient(145deg, rgba(240,235,220,0.85), rgba(220,215,200,0.65))",
+            : "linear-gradient(145deg, rgba(240,235,220,0.75), rgba(220,215,200,0.55))",
         }} />
 
         {/* Corner brackets */}
@@ -173,11 +182,20 @@ export default function ScanScreen({ onBack, onMuseMirror, onAnalysis }: Props) 
         {/* Found identification card */}
         {phase === "found" && (
           <div className="absolute bottom-4 left-4 right-4 sheet-enter">
-            <div className="card-pearl rounded-2xl px-4 py-3 text-center"
+            <div className="card-pearl rounded-2xl overflow-hidden"
               style={{ border: "1px solid rgba(200,176,106,0.3)" }}>
-              <p className="font-sans text-[8px] tracking-[0.22em] uppercase text-[#C8B06A] mb-1">✦ Produit Identifié</p>
-              <p className="font-serif text-[15px] text-[#1C1C1C]">{PRODUCT.name} — {PRODUCT.shade}</p>
-              <p className="font-sans text-[9px] text-[#8A8070] font-light">{PRODUCT.brand} · {PRODUCT.category}</p>
+              <div className="relative overflow-hidden" style={{ height: 64 }}>
+                <img src={SCAN_IMGS.productResults} alt="" aria-hidden
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: "center 30%", opacity: 0.75 }} />
+                <div className="absolute inset-0"
+                  style={{ background: "linear-gradient(180deg, transparent 20%, rgba(250,246,239,0.98))" }} />
+              </div>
+              <div className="px-4 pb-3 text-center">
+                <p className="font-sans text-[8px] tracking-[0.22em] uppercase text-[#C8B06A] mb-0.5">✦ Produit Identifié</p>
+                <p className="font-serif text-[15px] text-[#1C1C1C]">{PRODUCT.name} — {PRODUCT.shade}</p>
+                <p className="font-sans text-[9px] text-[#8A8070] font-light">{PRODUCT.brand} · {PRODUCT.category}</p>
+              </div>
             </div>
           </div>
         )}

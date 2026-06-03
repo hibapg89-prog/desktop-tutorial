@@ -53,6 +53,7 @@ const IMGS = {
 // ─── Nano Banana custom AI image assets ───────────────────────────────────────
 const _NB = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/";
 const NANO_IMGS = {
+  // Batch 4 — category grid backgrounds
   productScan:     _NB + "97d840f1dc315c0183f248851f5f9b727e9a3cdb9fcee7648c59e2dd3dca1371.png",
   fragranceBottle: _NB + "97d61168a66367cebd1a3697ae585767198666b50a1fc371874b4ad02d5063de7.png",
   vanityGrid:      _NB + "fa1f912538285e338ab1693d4f0abfec12d3107d55efb884f163cf14ac4bac5c.png",
@@ -62,6 +63,17 @@ const NANO_IMGS = {
   devicesSection:  _NB + "9e4cc246cb879e26c1abb7c0869f39c6d0fa6ee84f7784288881a35fa0916959.png",
   dragDrop:        _NB + "022d71f83bdef8fb9da775b4ca5aa84877d928bae297d610940c597e22b820dc.png",
   vanityDiagram:   _NB + "e4378aa66f9839487b189eb6761b41b0984a8c8e496fd362e0103adfb527ab8a.png",
+  // Batch 3 — feature screens & flow mockups
+  homeWithPlus:    _NB + "43b1c3753a9c4dfb1beff09b0319ac8bc2496964e7ebd065f3218a40154d31b6.png",
+  inputMenu:       _NB + "a7ee4059e06ef377e55788dfd07cdc3869472c43e09806286b0684283a12205d.png",
+  shareSheet:      _NB + "76e584c14a202ced172bce61c6e890ed3b07266b5e1d1df015c32db0929a0d86.png",
+  cameraScan:      _NB + "ec2c4634be871952f83eeb0532a96c26c058a8908a3bc62922b1ca99cae5827e.png",
+  voiceCommand:    _NB + "129b9017c22f76befaea0e1b9cb0747e9a4a8859443bd483cd2a72e649a5a49d.png",
+  urlPaste:        _NB + "909002d40ece937454d024a3ce423cdba56e908c5f768f66d9e3b2666d1604bc.png",
+  galleryPicker:   _NB + "59e5d2b1c2fceefb14a2318e4c0216a6933a4a44eb13f492e6ceb122c2792127.png",
+  analyzingLoad:   _NB + "182392533010736461e799a56b8fda9a972649437e7d6202b1d38a15b9f8ec2a.png",
+  productResults:  _NB + "e8de0d6df4ba23d84757632cbb1d7aeb1ffc95ea32f9791f890b285629e7064a.png",
+  userFlowDiagram: _NB + "d10094bfe7525fe11c77230adbf5c8dbafdcb0604b19d2b7f3f72eac4a1ae517.png",
 };
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
@@ -187,12 +199,14 @@ const TOUR_STEPS = [
 const navTabs = ["Home", "Scan", "Routine", "Profile"];
 
 const FEATURED = [
-  { title: "The Verdant Ritual",    sub: "Editor's Choice",    cat: "Skincare",  img: IMGS.botanicalSerum,       accent: "#2D7A52" },
-  { title: "Soin du Regard",        sub: "Rituel contour",     cat: "Skincare",  img: IMGS.skincareModel,        accent: "#2D7A52" },
-  { title: "Scan & Identify",       sub: "Trouvez votre dupe", cat: "Scan",      img: NANO_IMGS.productScan,     accent: "#C8B06A" },
-  { title: "Eau de Parfum",         sub: "Signature florale",  cat: "Fragrance", img: IMGS.fragrance,            accent: "#C8B06A" },
-  { title: "Cellular Recharge",     sub: "Éclat & nutrition",  cat: "Corps",     img: IMGS.creamTexture,         accent: "#8A7A6A" },
-  { title: "Ritual Nocturne",       sub: "Maison Verte",       cat: "Ritual",    img: IMGS.copperTools,          accent: "#C8B06A" },
+  { title: "The Verdant Ritual",    sub: "Editor's Choice",    cat: "Skincare",  img: IMGS.botanicalSerum,            accent: "#2D7A52" },
+  { title: "Soin du Regard",        sub: "Rituel contour",     cat: "Skincare",  img: IMGS.skincareModel,             accent: "#2D7A52" },
+  { title: "Scan & Identify",       sub: "Trouvez votre dupe", cat: "Scan",      img: NANO_IMGS.productScan,          accent: "#C8B06A" },
+  { title: "Eau de Parfum",         sub: "Signature florale",  cat: "Fragrance", img: IMGS.fragrance,                 accent: "#C8B06A" },
+  { title: "Cellular Recharge",     sub: "Éclat & nutrition",  cat: "Corps",     img: IMGS.creamTexture,              accent: "#8A7A6A" },
+  { title: "Ritual Nocturne",       sub: "Maison Verte",       cat: "Ritual",    img: IMGS.copperTools,               accent: "#C8B06A" },
+  { title: "Share & Discover",      sub: "From any platform",  cat: "Feature",   img: NANO_IMGS.shareSheet,           accent: "#0B3C26" },
+  { title: "5 Ways to Discover",    sub: "Muse input methods", cat: "Feature",   img: NANO_IMGS.userFlowDiagram,      accent: "#C4968A" },
 ];
 
 const SEASONAL_RITUALS = [

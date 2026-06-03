@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 
+const VOICE_IMG = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/129b9017c22f76befaea0e1b9cb0747e9a4a8859443bd483cd2a72e649a5a49d.png";
+
 interface Props { onBack: () => void; }
 
 export default function VoiceScreen({ onBack }: Props) {
@@ -34,6 +36,16 @@ export default function VoiceScreen({ onBack }: Props) {
         className="absolute top-10 left-6 font-sans text-[9px] tracking-[0.22em] uppercase text-[#0B3C26] opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
         ← Back
       </button>
+
+      {/* Phone mockup preview */}
+      <div className="relative z-10 mx-auto mb-5 rounded-2xl overflow-hidden flex-shrink-0"
+        style={{ width: 220, height: 138 }}>
+        <img src={VOICE_IMG} alt="" aria-hidden
+          className="w-full h-full object-cover"
+          style={{ objectPosition: "center 20%" }} />
+        <div className="absolute inset-0 rounded-2xl"
+          style={{ border: "1px solid rgba(200,176,106,0.25)" }} />
+      </div>
 
       {/* Main layout: waveform + mic + waveform in a row */}
       <div className="relative z-10 flex items-center gap-0 w-full px-4" style={{ height: "180px" }}>

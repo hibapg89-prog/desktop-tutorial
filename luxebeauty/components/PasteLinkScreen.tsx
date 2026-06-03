@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 
+const URL_PASTE_IMG = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/909002d40ece937454d024a3ce423cdba56e908c5f768f66d9e3b2666d1604bc.png";
+
 interface Props {
   onPaste: () => void;
   onBack: () => void;
@@ -30,6 +32,16 @@ export default function PasteLinkScreen({ onPaste, onBack }: Props) {
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center text-center w-full max-w-sm">
+
+        {/* Phone mockup preview */}
+        <div className="relative anim-up mb-5 rounded-2xl overflow-hidden flex-shrink-0 mx-auto"
+          style={{ width: 200, height: 128 }}>
+          <img src={URL_PASTE_IMG} alt="" aria-hidden
+            className="w-full h-full object-cover"
+            style={{ objectPosition: "center 35%" }} />
+          <div className="absolute inset-0 rounded-2xl"
+            style={{ border: "1px solid rgba(200,176,106,0.22)" }} />
+        </div>
 
         {/* Swan + title */}
         <div className="anim-up mb-2">

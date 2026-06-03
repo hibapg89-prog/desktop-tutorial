@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 
+const ANALYZING_IMG = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/182392533010736461e799a56b8fda9a972649437e7d6202b1d38a15b9f8ec2a.png";
+
 interface Props { onDone: () => void; }
 
 const PHASES = [
@@ -75,6 +77,10 @@ export default function AnalysisLoadingScreen({ onDone }: Props) {
 
       {/* Ambient orbs */}
       <div className="absolute inset-0 pointer-events-none">
+        {/* Analyzing screen AI image — very subtle background layer */}
+        <img src={ANALYZING_IMG} alt="" aria-hidden
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full object-cover"
+          style={{ opacity: 0.05 }} />
         <div className="absolute top-[15%] left-[-10%] w-[50vw] h-[50vw] rounded-full transition-all duration-1000"
           style={{ background: `radial-gradient(circle, ${phase.color}30, transparent 65%)`, filter: "blur(40px)" }} />
         <div className="absolute bottom-[10%] right-[-5%] w-[45vw] h-[45vw] rounded-full"

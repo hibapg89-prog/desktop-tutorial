@@ -2,6 +2,8 @@
 
 import { SwanLogo } from "./LandingScreen";
 
+const INPUT_MENU_IMG = "https://static.prod-images.emergentagent.com/jobs/0924067f-38ed-47a3-b0af-39a4c7e30618/images/a7ee4059e06ef377e55788dfd07cdc3869472c43e09806286b0684283a12205d.png";
+
 interface Props {
   onCamera: () => void;
   onGallery: () => void;
@@ -37,6 +39,15 @@ export default function InputSelectorScreen({ onCamera, onGallery, onLink, onVoi
         <h2 className="font-serif text-2xl font-normal text-[rgba(240,232,204,0.95)]">
           Discover Beauty
         </h2>
+      </div>
+
+      {/* Input menu AI preview */}
+      <div className="relative mx-6 mb-4 rounded-2xl overflow-hidden flex-shrink-0" style={{ height: 160 }}>
+        <img src={INPUT_MENU_IMG} alt="" aria-hidden
+          className="w-full h-full object-cover"
+          style={{ objectPosition: "center 40%" }} />
+        <div className="absolute inset-0 rounded-2xl pointer-events-none"
+          style={{ border: "1px solid rgba(200,176,106,0.2)" }} />
       </div>
 
       {/* Icon grid */}
