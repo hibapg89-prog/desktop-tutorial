@@ -173,25 +173,29 @@ const TIPS = [
 const TOUR_STEPS = [
   {
     title: "Bienvenue dans The Muse ✦",
-    body: "Votre univers beauté commence ici. Explorez les catégories pour découvrir produits, tutoriels et adresses exclusives.",
+    hero: "Élevez votre art beauté",
+    body: "Votre univers beauté de luxe commence ici. Explorez produits, tutoriels et adresses exclusives soigneusement curatés pour vous.",
     highlight: "grid",
     icon: "✦",
   },
   {
     title: "La Boussole Émeraude",
-    body: "Appuyez sur le cygne en haut pour vos notifications. Votre guide personnel est toujours à portée de main.",
+    hero: "Votre Boussole Émeraude",
+    body: "Appuyez sur le cygne en haut pour accéder à vos notifications et conseils du jour. Votre guide est toujours à portée de main.",
     highlight: "header",
     icon: "◈",
   },
   {
     title: "Votre Vanité",
-    body: "Sauvegardez vos produits favoris dans votre Vanité. Scannez, explorez, et construisez votre collection idéale.",
+    hero: "Votre Vanité Privée",
+    body: "Sauvegardez vos trouvailles dans votre Vanité. Scannez n'importe quel produit et construisez votre collection idéale.",
     highlight: "nav",
     icon: "◇",
   },
   {
     title: "La Muse vous guide ✦",
-    body: "Ce bouton cygne flottant est votre guide personnel. Appuyez dessus à tout moment pour naviguer ou découvrir un conseil du jour.",
+    hero: "La Muse vous accompagne",
+    body: "Ce cygne flottant est votre concierge personnel. Appuyez à tout moment pour naviguer ou découvrir une inspiration du jour.",
     highlight: "fab",
     icon: "swan",
   },
@@ -285,56 +289,102 @@ export default function CategoryHomeScreen({
   return (
     <div className="satin-bg min-h-screen flex flex-col overflow-hidden">
 
-      {/* ── Tour overlay ── */}
+      {/* ── Tour overlay — full-screen luxury experience ── */}
       {!tourDone && tourStep >= 0 && (
-        <div className="fixed inset-0 z-[500] flex flex-col items-center justify-end pb-32"
-          style={{ background: "rgba(11,30,20,0.72)", backdropFilter: "blur(4px)" }}>
+        <div className="fixed inset-0 z-[500] satin-pearlescent flex flex-col items-center justify-center overflow-hidden">
 
-          {/* Step card */}
-          <div className="mx-5 card-pearl rounded-3xl px-6 py-6 w-full max-w-sm"
-            style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.35)" }}>
+          {/* Ambient bokeh */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-[-8%] left-[-12%] w-[75vw] h-[75vw] rounded-full"
+              style={{ background: "radial-gradient(circle, rgba(200,176,106,0.22), transparent 65%)", filter: "blur(52px)" }} />
+            <div className="absolute bottom-[2%] right-[-8%] w-[65vw] h-[65vw] rounded-full"
+              style={{ background: "radial-gradient(circle, rgba(196,150,138,0.18), transparent 65%)", filter: "blur(44px)" }} />
+            <div className="absolute top-[42%] left-[58%] w-[42vw] h-[42vw] rounded-full"
+              style={{ background: "radial-gradient(circle, rgba(11,60,38,0.06), transparent 65%)", filter: "blur(32px)" }} />
+            {/* Product silhouettes */}
+            <div className="absolute top-[10%] right-[7%] opacity-10 anim-float" style={{ filter: "blur(6px)", transform: "rotate(10deg)", animationDelay: "0.3s" }}>
+              <svg width="36" height="80" viewBox="0 0 36 80" fill="none">
+                <rect x="8" y="20" width="20" height="50" rx="10" fill="#C8B06A" />
+                <ellipse cx="18" cy="12" rx="11" ry="13" fill="#C8B06A" />
+              </svg>
+            </div>
+            <div className="absolute bottom-[18%] left-[6%] opacity-10 anim-float" style={{ filter: "blur(8px)", transform: "rotate(-8deg)", animationDelay: "1.1s" }}>
+              <svg width="28" height="68" viewBox="0 0 28 68" fill="none">
+                <rect x="7" y="28" width="14" height="34" rx="2" fill="#0B3C26" />
+                <path d="M7 28 Q14 16 21 28" fill="#0B3C26" />
+              </svg>
+            </div>
+            <div className="absolute top-[58%] left-[74%] opacity-8 anim-float" style={{ filter: "blur(10px)", animationDelay: "1.7s" }}>
+              <svg width="48" height="36" viewBox="0 0 48 36" fill="none">
+                <rect x="2" y="9" width="44" height="22" rx="4" fill="#C8B06A" />
+                <ellipse cx="24" cy="9" rx="19" ry="6" fill="#E8D8A8" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Main content */}
+          <div key={tourStep} className="relative z-10 flex flex-col items-center text-center px-8 anim-up w-full max-w-xs">
+
+            {/* Multilingual welcome — step 0 only */}
+            {tourStep === 0 && (
+              <p className="font-sans text-[8px] tracking-[0.35em] uppercase mb-5" style={{ color: "#C8B06A", opacity: 0.75 }}>
+                Bienvenue &nbsp;·&nbsp; Welcome &nbsp;·&nbsp; Benvenuta
+              </p>
+            )}
+
+            {/* Step supertitle — steps 1–3 */}
+            {tourStep > 0 && (
+              <p className="font-sans text-[8px] tracking-[0.35em] uppercase mb-5" style={{ color: "#C8B06A", opacity: 0.65 }}>
+                {TOUR_STEPS[tourStep].icon !== "swan" ? TOUR_STEPS[tourStep].icon : "✦"}&nbsp;&nbsp;The Muse
+              </p>
+            )}
+
+            {/* Swan */}
+            <div className="anim-float mb-6">
+              <SwanLogo size={92} glow />
+            </div>
+
+            {/* Hero serif title */}
+            <h2 className="font-cormorant text-[2rem] italic font-light text-[#0B3C26] leading-tight mb-3">
+              {TOUR_STEPS[tourStep].hero}
+            </h2>
+
+            <div className="divider-gold w-16 mb-4 mx-auto" />
+
+            {/* Body */}
+            <p className="font-sans text-[10px] font-light leading-relaxed mb-8" style={{ color: "#8A8070", maxWidth: "240px" }}>
+              {TOUR_STEPS[tourStep].body}
+            </p>
 
             {/* Progress dots */}
-            <div className="flex justify-center gap-1.5 mb-4">
+            <div className="flex justify-center gap-2 mb-8">
               {TOUR_STEPS.map((_, i) => (
                 <div key={i} className="rounded-full transition-all duration-300"
                   style={{
-                    width: i === tourStep ? "20px" : "5px",
+                    width: i === tourStep ? "24px" : "5px",
                     height: "5px",
-                    background: i === tourStep ? "#0B3C26" : "rgba(11,60,38,0.2)",
+                    background: i === tourStep ? "#C8B06A" : "rgba(200,176,106,0.28)",
                   }} />
               ))}
             </div>
 
-            <div className="text-center mb-4">
-              <div className="flex justify-center mb-3">
-                {TOUR_STEPS[tourStep].icon === "swan"
-                  ? <SwanLogo size={36} />
-                  : <span className="font-serif text-2xl" style={{ color: "#0B3C26" }}>{TOUR_STEPS[tourStep].icon}</span>}
-              </div>
-              <h3 className="font-serif text-[18px] text-[#1C1C1C] mb-2">
-                {TOUR_STEPS[tourStep].title}
-              </h3>
-              <p className="font-sans text-[11px] text-[#5A5040] leading-relaxed">
-                {TOUR_STEPS[tourStep].body}
-              </p>
-            </div>
+            {/* Primary CTA — dusty rose */}
+            <button
+              onClick={() => {
+                if (tourStep < TOUR_STEPS.length - 1) setTourStep(s => s + 1);
+                else dismissTour();
+              }}
+              className="w-full py-3.5 rounded-full cursor-pointer font-sans text-[10px] tracking-[0.2em] uppercase mb-3"
+              style={{ background: "#C4968A", color: "#FFFFFF" }}>
+              {tourStep < TOUR_STEPS.length - 1 ? "Continuer →" : "Commencer ✦"}
+            </button>
 
-            <div className="flex gap-2.5">
-              <button onClick={dismissTour}
-                className="flex-1 py-2.5 rounded-full cursor-pointer font-sans text-[9px] tracking-[0.12em] uppercase"
-                style={{ border: "1px solid rgba(11,60,38,0.2)", color: "rgba(11,60,38,0.5)" }}>
-                Passer
-              </button>
-              <button
-                onClick={() => {
-                  if (tourStep < TOUR_STEPS.length - 1) setTourStep(s => s + 1);
-                  else dismissTour();
-                }}
-                className="flex-1 py-2.5 rounded-full cursor-pointer btn-emerald font-sans text-[9px] tracking-[0.12em] uppercase">
-                {tourStep < TOUR_STEPS.length - 1 ? "Suivant →" : "C'est parti ✦"}
-              </button>
-            </div>
+            {/* Skip — text only */}
+            <button onClick={dismissTour}
+              className="font-sans text-[9px] tracking-[0.15em] uppercase cursor-pointer py-2 transition-opacity hover:opacity-70"
+              style={{ color: "#0B3C26", opacity: 0.38 }}>
+              Ignorer
+            </button>
           </div>
         </div>
       )}
