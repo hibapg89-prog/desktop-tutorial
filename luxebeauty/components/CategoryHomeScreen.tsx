@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { SwanLogo } from "./LandingScreen";
 import { useToast } from "./ToastContext";
+import { useTheme } from "./ThemeContext";
 
 interface Props {
   onVanity: () => void;
@@ -235,6 +236,8 @@ export default function CategoryHomeScreen({
   onSocial, onProfile, onNotifications, onMuseBox, onMap, onRoutine,
 }: Props) {
   const { showToast } = useToast();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [guideOpen,  setGuideOpen]  = useState(false);
   const [tourStep,   setTourStep]   = useState(0);
   const [tourDone,   setTourDone]   = useState(false);
@@ -417,7 +420,7 @@ export default function CategoryHomeScreen({
 
             {/* Greeting */}
             <div className="rounded-2xl px-4 py-3 mb-4"
-              style={{ background: "rgba(11,60,38,0.05)", border: "1px solid rgba(11,60,38,0.08)" }}>
+              style={{ background: isDark ? "rgba(57,57,57,0.6)" : "rgba(11,60,38,0.05)", border: isDark ? "1px solid rgba(67,72,71,0.5)" : "1px solid rgba(11,60,38,0.08)" }}>
               <p className="font-cormorant italic text-[14px] text-[#0B3C26] leading-relaxed">
                 "Où souhaitez-vous aller aujourd'hui ?"
               </p>
@@ -429,7 +432,7 @@ export default function CategoryHomeScreen({
                 <button key={label}
                   onClick={() => { setGuideOpen(false); action?.(); }}
                   className="flex flex-col items-center gap-1.5 py-2.5 rounded-2xl cursor-pointer press-scale transition-all"
-                  style={{ background: "rgba(200,176,106,0.08)", border: "1px solid rgba(200,176,106,0.2)" }}>
+                  style={{ background: isDark ? "rgba(42,42,42,0.8)" : "rgba(200,176,106,0.08)", border: isDark ? "1px solid rgba(67,72,71,0.6)" : "1px solid rgba(200,176,106,0.2)" }}>
                   <span className="font-sans text-base text-[#C8B06A]">{icon}</span>
                   <span className="font-sans text-[7px] tracking-[0.08em] text-[#5A5040] text-center leading-tight">{label}</span>
                 </button>
@@ -631,7 +634,7 @@ export default function CategoryHomeScreen({
       <div className="fixed bottom-[76px] left-0 right-0 flex justify-center z-30 pointer-events-none">
         <button
           onClick={() => setGuideOpen(g => !g)}
-          className="pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center cursor-pointer press-scale transition-all duration-300"
+          className="pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center cursor-pointer press-scale transition-all duration-300 swan-fab"
           style={{
             background: "radial-gradient(circle at 35% 35%, rgba(255,252,248,0.98), rgba(240,235,218,0.92), rgba(220,210,185,0.88))",
             boxShadow: guideOpen
@@ -645,7 +648,7 @@ export default function CategoryHomeScreen({
 
       {/* ── Bottom nav ── */}
       <div className="panel-bottom fixed bottom-0 left-0 right-0 z-20 px-2 pb-6 pt-3"
-        style={{ background: "rgba(250,246,239,0.95)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(200,176,106,0.15)" }}>
+        style={{ background: isDark ? "rgba(32,32,31,0.97)" : "rgba(250,246,239,0.95)", backdropFilter: "blur(16px)", borderTop: isDark ? "1px solid rgba(67,72,71,0.6)" : "1px solid rgba(200,176,106,0.15)" }}>
         <div className="flex justify-around">
           {navTabs.map((tab, i) => (
             <button key={tab}
