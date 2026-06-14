@@ -1,4 +1,4 @@
-"use client";
+use client";
 
 import { useState, useEffect } from "react";
 import { SwanLogo } from "./LandingScreen";
@@ -29,112 +29,110 @@ interface Props {
   onRoutine?: () => void;
 }
 
-// ─── Data ──────────────────────────────────────────────────────────────────────
-
 const categories = [
   {
     id: "muse", label: "The Muse", sub: "Your curator",
     gradient: "linear-gradient(135deg, #E8D898, #C8A840, #F0E8CC)",
-    accent: "#C8B06A", icon: "✦",
+    accent: "#C8B06A", icon: "🦢",
   },
   {
     id: "carte", label: "La Carte", sub: "Cartographie du Raffinement",
     gradient: "linear-gradient(135deg, #D8E8D0, #88B890, #C0D8B8)",
-    accent: "#0B3C26", icon: "◈",
+    accent: "#0B3C26", icon: "🧭",
   },
   {
     id: "makeup", label: "Makeup", sub: "Color & beauty",
     gradient: "linear-gradient(135deg, #F0C0B0, #C87870, #E8A898)",
-    accent: "#C4968A", icon: "◈",
+    accent: "#C4968A", icon: "💄",
   },
   {
     id: "skincare", label: "Skincare", sub: "Glow routines",
-    gradient: "linear-gradient(135deg, #C0D8B0, #688850, #A8C890)",
-    accent: "#1A5C3A", icon: "◇",
+    gradient: "linear-gradient(135deg, #C0D8B8, #688850, #A8C890)",
+    accent: "#1A5C3A", icon: "✨",
   },
   {
     id: "haircare", label: "Haircare", sub: "Lush locks",
     gradient: "linear-gradient(135deg, #E8DCC8, #C0A880, #F0E8D8)",
-    accent: "#A08060", icon: "〜",
+    accent: "#A08060", icon: "💇",
   },
   {
     id: "fragrance", label: "Fragrance", sub: "Signature scents",
     gradient: "linear-gradient(135deg, #F0E0B0, #C8A040, #E8D098)",
-    accent: "#C8B06A", icon: "○",
+    accent: "#C8B06A", icon: "🌸",
   },
   {
     id: "body", label: "Body", sub: "Head to toe",
     gradient: "linear-gradient(135deg, #F0ECE4, #D8CDB8, #EAE4D8)",
-    accent: "#8A7A6A", icon: "◯",
+    accent: "#8A7A6A", icon: "🧴",
   },
   {
     id: "nails", label: "Nails", sub: "Polish & art",
     gradient: "linear-gradient(135deg, #E8C0C8, #B06870, #D8A0A8)",
-    accent: "#B07880", icon: "◆",
+    accent: "#B07880", icon: "💅",
   },
   {
     id: "devices", label: "Devices", sub: "Tech beauty",
     gradient: "linear-gradient(135deg, #D8E0E8, #90A8B8, #C0CED8)",
-    accent: "#5A7A9A", icon: "⊞",
+    accent: "#5A7A9A", icon: "🔧",
   },
   {
     id: "accessories", label: "Accessories", sub: "Finishing touch",
     gradient: "linear-gradient(135deg, #E8E0C8, #C0B080, #EAE0C0)",
-    accent: "#A09070", icon: "◇",
+    accent: "#A09070", icon: "🎀",
   },
   {
     id: "parapharmacy", label: "Parapharmacy", sub: "Libre service",
     gradient: "linear-gradient(135deg, #E0EEE8, #88B8A0, #C0DED0)",
-    accent: "#3A7A5A", icon: "✚",
+    accent: "#3A7A5A", icon: "🧪",
   },
   {
     id: "intimate", label: "Intimate Wellness", sub: "Care & pleasure",
     gradient: "linear-gradient(135deg, #F0D0E0, #C87898, #D8A0C0)",
-    accent: "#B06880", icon: "◯",
+    accent: "#B06880", icon: "🌿",
   },
   {
     id: "wellness", label: "Wellness", sub: "Health from within",
     gradient: "linear-gradient(135deg, #D8E8D0, #70A860, #B8D8A8)",
-    accent: "#2A6A3A", icon: "◈",
+    accent: "#2A6A3A", icon: "🧘",
   },
   {
     id: "rituels", label: "Mes Rituels", sub: "Routines sacrées",
     gradient: "linear-gradient(135deg, #1E1030, #3D2060, #C8A840)",
-    accent: "#C8B06A", icon: "◐",
+    accent: "#C8B06A", icon: "🌙",
   },
 ];
 
 const TIPS = [
-  "Appliquez votre sérum sur peau légèrement humide pour une absorption optimale ✦",
-  "Le SPF est le seul anti-âge prouvé — ne jamais l'oublier, même en hiver ◈",
-  "Massez votre contour des yeux de l'intérieur vers l'extérieur pour drainer le liquide ◇",
-  "Une brosse à cheveux propre = une chevelure plus saine. Lavez-la chaque semaine ✦",
-  "Alternez vos shampoings — votre cuir chevelu s'adapte et s'équilibre ◈",
-  "L'huile de jojoba imite le sébum naturel — idéale pour tous les types de peau ✦",
-  "Dormez sur une taie en soie pour préserver votre peau et vos cheveux la nuit ◈",
+  "Appliquez votre sérum sur peau légèrement humide pour une absorption optimale 🦢",
+  "Le SPF est le seul anti-âge prouvé — ne jamais l'oublier, même en hiver 💄",
+  "Massez votre contour des yeux de l'intérieur vers l'extérieur pour drainer le liquide ✨",
+  "Une brosse à cheveux propre = une chevelure plus saine. Lavez-la chaque semaine 🦢",
+  "Alternez vos shampooings — votre cuir chevelu s'adapte et s'équilibre 🧘",
+  "L'huile de jojoba imite le sébum naturel — idéale pour tous les types de peau 🦢",
+  "Dormez sur une taie en soie pour préserver votre peau et vos cheveux la nuit 💄",
 ];
 
 const TOUR_STEPS = [
   {
-    title: "Bienvenue dans The Muse ✦",
+    title: "Bienvenue dans The Muse 🦢",
     body: "Votre univers beauté commence ici. Explorez les catégories pour découvrir produits, tutoriels et adresses exclusives.",
     highlight: "grid",
-    icon: "✦",
+    icon: "swan",
   },
   {
     title: "La Boussole Émeraude",
     body: "Appuyez sur le cygne en haut pour vos notifications. Votre guide personnel est toujours à portée de main.",
     highlight: "header",
-    icon: "◈",
+    icon: "💄",
   },
   {
     title: "Votre Vanité",
     body: "Sauvegardez vos produits favoris dans votre Vanité. Scannez, explorez, et construisez votre collection idéale.",
     highlight: "nav",
-    icon: "◇",
+    icon: "✨",
   },
   {
-    title: "La Muse vous guide ✦",
+    title: "La Muse vous guide 🦢",
     body: "Ce bouton cygne flottant est votre guide personnel. Appuyez dessus à tout moment pour naviguer ou découvrir un conseil du jour.",
     highlight: "fab",
     icon: "swan",
@@ -145,13 +143,11 @@ const navTabs = ["Home", "Scan", "Routine", "Profile"];
 
 const FEATURED = [
   { title: "Rouge à Lèvres", sub: "Édition Automne", cat: "Makeup", gradient: "linear-gradient(135deg, #F0C0B0, #C87870, #E8A898)", accent: "#C4968A" },
-  { title: "Soin du Regard", sub: "Rituel contour", cat: "Skincare", gradient: "linear-gradient(135deg, #C0D8B0, #2D7A52, #A8C890)", accent: "#2D7A52" },
+  { title: "Soin du Regard", sub: "Rituel contour", cat: "Skincare", gradient: "linear-gradient(135deg, #C0D8B8, #2D7A52, #A8C890)", accent: "#2D7A52" },
   { title: "Eau de Parfum", sub: "Signature florale", cat: "Fragrance", gradient: "linear-gradient(135deg, #F0E0B0, #C8A040, #EAD898)", accent: "#C8B06A" },
   { title: "Soin Corps", sub: "Éclat et nutrition", cat: "Corps", gradient: "linear-gradient(135deg, #F0ECE4, #D8CDB8, #EAE4D8)", accent: "#8A7A6A" },
-  { title: "Ritual Nocturne", sub: "Maison Verte", cat: "Ritual", gradient: "linear-gradient(135deg, #1E1030, #3D2060, #C8A840)", accent: "#C8B06A" },
+  { title: "Rituel Nocturne", sub: "Maison Verte", cat: "Ritual", gradient: "linear-gradient(135deg, #1E1030, #3D2060, #C8A840)", accent: "#C8B06A" },
 ];
-
-// ─── Component ─────────────────────────────────────────────────────────────────
 
 export default function CategoryHomeScreen({
   onVanity, onProducts, onScan, onVoice, onBack,
@@ -161,7 +157,7 @@ export default function CategoryHomeScreen({
 }: Props) {
   const { showToast } = useToast();
   const [guideOpen,  setGuideOpen]  = useState(false);
-  const [tourStep,   setTourStep]   = useState(0);
+  const [tourStep,   setTourStep]   = useState(-1);
   const [tourDone,   setTourDone]   = useState(false);
   const [tipIdx]                    = useState(() => Math.floor(Math.random() * TIPS.length));
   const [profileLine, setProfileLine] = useState<string | null>(null);
@@ -174,7 +170,7 @@ export default function CategoryHomeScreen({
         const parts: string[] = [];
         if (p.skin) parts.push(p.skin);
         if (p.picks?.length) parts.push(p.picks[0]);
-        if (parts.length) setProfileLine(parts.join(" · "));
+        if (parts.length) setProfileLine(parts.join(" • "));
       }
     } catch {}
   }, []);
@@ -204,64 +200,77 @@ export default function CategoryHomeScreen({
   const dismissTour = () => { setTourDone(true); setTourStep(-1); };
 
   const quickNav = [
-    { icon: "◈", label: "Ma Vanité",      action: onVanity },
-    { icon: "◇", label: "La Carte",       action: onMap ?? onProducts },
-    { icon: "✦", label: "Inspirations",   action: onEditorial ?? onProducts },
-    { icon: "○", label: "Muse Box",       action: onMuseBox ?? onProducts },
-    { icon: "⊞", label: "Scanner",        action: onScan },
+    { icon: "💄", label: "Ma Vanité",      action: onVanity },
+    { icon: "✨", label: "La Carte",       action: onMap ?? onProducts },
+    { icon: "🦢", label: "Inspirations",   action: onEditorial ?? onProducts },
+    { icon: "🌸", label: "Muse Box",       action: onMuseBox ?? onProducts },
+    { icon: "🔧", label: "Scanner",        action: onScan },
   ];
 
   return (
     <div className="satin-bg min-h-screen flex flex-col overflow-hidden">
 
-      {/* ── Tour overlay ── */}
+      {/* ── Immersive Tour Experience ── */}
       {!tourDone && tourStep >= 0 && (
-        <div className="fixed inset-0 z-[500] flex flex-col items-center justify-end pb-32"
-          style={{ background: "rgba(11,30,20,0.72)", backdropFilter: "blur(4px)" }}>
+        <div className="fixed inset-0 z-[500] flex flex-col items-center justify-center text-center px-8 satin-bg animate-in fade-in duration-700">
+          
+          {/* Ambient orbs */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-[80vw] h-[80vw] rounded-full opacity-30"
+              style={{ background: "radial-gradient(circle, rgba(200,176,106,0.4), transparent 70%)" }} />
+            <div className="absolute bottom-[-5%] right-[-5%] w-[60vw] h-[60vw] rounded-full opacity-20"
+              style={{ background: "radial-gradient(circle, rgba(11,60,38,0.3), transparent 70%)" }} />
+          </div>
 
-          {/* Step card */}
-          <div className="mx-5 card-pearl rounded-3xl px-6 py-6 w-full max-w-sm"
-            style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.35)" }}>
-
-            {/* Progress dots */}
-            <div className="flex justify-center gap-1.5 mb-4">
-              {TOUR_STEPS.map((_, i) => (
-                <div key={i} className="rounded-full transition-all duration-300"
-                  style={{
-                    width: i === tourStep ? "20px" : "5px",
-                    height: "5px",
-                    background: i === tourStep ? "#0B3C26" : "rgba(11,60,38,0.2)",
-                  }} />
-              ))}
+          <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+            {/* Icon */}
+            <div className="mb-10 anim-float">
+              {TOUR_STEPS[tourStep].icon === "swan"
+                ? <SwanLogo size={80} glow />
+                : <span className="text-5xl" style={{ color: "#0B3C26" }}>{TOUR_STEPS[tourStep].icon}</span>}
             </div>
 
-            <div className="text-center mb-4">
-              <div className="flex justify-center mb-3">
-                {TOUR_STEPS[tourStep].icon === "swan"
-                  ? <SwanLogo size={36} />
-                  : <span className="font-serif text-2xl" style={{ color: "#0B3C26" }}>{TOUR_STEPS[tourStep].icon}</span>}
-              </div>
-              <h3 className="font-serif text-[18px] text-[#1C1C1C] mb-2">
+            {/* Content */}
+            <div className="mb-12">
+              <h2 className="font-serif text-3xl font-normal text-[#0B3C26] leading-tight mb-4">
                 {TOUR_STEPS[tourStep].title}
-              </h3>
-              <p className="font-sans text-[11px] text-[#5A5040] leading-relaxed">
+              </h2>
+              <div className="divider-gold w-12 mx-auto mb-6" />
+              <p className="font-cormorant text-xl italic font-light text-[#8A8070] leading-relaxed">
                 {TOUR_STEPS[tourStep].body}
               </p>
             </div>
 
-            <div className="flex gap-2.5">
-              <button onClick={dismissTour}
-                className="flex-1 py-2.5 rounded-full cursor-pointer font-sans text-[9px] tracking-[0.12em] uppercase"
-                style={{ border: "1px solid rgba(11,60,38,0.2)", color: "rgba(11,60,38,0.5)" }}>
-                Passer
-              </button>
+            {/* Moon Phase Dots */}
+            <div className="flex justify-center gap-2.5 mb-12">
+              {TOUR_STEPS.map((_, i) => (
+                <div key={i} className="transition-all duration-500"
+                  style={{
+                    width: i === tourStep ? "10px" : "10px",
+                    height: "10px",
+                    borderRadius: "50%",
+                    border: "1px solid #C8B06A",
+                    background: i === tourStep ? "#C8B06A" : "transparent",
+                    opacity: i === tourStep ? 1 : 0.4,
+                    boxShadow: i === tourStep ? "0 0 10px rgba(200,176,106,0.5)" : "none"
+                  }} />
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className="w-full space-y-4">
               <button
                 onClick={() => {
                   if (tourStep < TOUR_STEPS.length - 1) setTourStep(s => s + 1);
                   else dismissTour();
                 }}
-                className="flex-1 py-2.5 rounded-full cursor-pointer btn-emerald font-sans text-[9px] tracking-[0.12em] uppercase">
-                {tourStep < TOUR_STEPS.length - 1 ? "Suivant →" : "C'est parti ✦"}
+                className="btn-gold w-full py-4 rounded-full cursor-pointer text-sm tracking-widest uppercase shadow-lg">
+                {tourStep < TOUR_STEPS.length - 1 ? "Continuer" : "Entrer dans l'Atelier"}
+              </button>
+              
+              <button onClick={dismissTour}
+                className="font-sans text-[10px] tracking-[0.2em] uppercase text-[#0B3C26] opacity-30 hover:opacity-100 transition-opacity cursor-pointer">
+                Passer la visite
               </button>
             </div>
           </div>
@@ -318,7 +327,7 @@ export default function CategoryHomeScreen({
             {/* Conseil du jour */}
             <div className="divider-gold mb-3" />
             <div className="flex items-start gap-2.5">
-              <span className="text-[#C8B06A] text-sm flex-shrink-0 mt-0.5">✦</span>
+              <span className="text-[#C8B06A] text-sm flex-shrink-0 mt-0.5">🦢</span>
               <div>
                 <p className="font-sans text-[8px] tracking-[0.18em] uppercase text-[#C8B06A] mb-1">Conseil du Jour</p>
                 <p className="font-sans text-[10px] text-[#5A5040] leading-relaxed italic">{TIPS[tipIdx]}</p>
@@ -343,7 +352,7 @@ export default function CategoryHomeScreen({
         </button>
         <div className="text-center">
           <p className="font-sans text-[8px] tracking-[0.28em] uppercase text-[#C8B06A] mb-0.5">
-            {profileLine ? `✦ ${profileLine}` : "✦ Bienvenue, Muse"}
+            {profileLine ? `🦢 ${profileLine}` : "🦢 Bienvenue, Muse"}
           </p>
           <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">Votre Univers</h2>
         </div>
@@ -374,7 +383,7 @@ export default function CategoryHomeScreen({
             <button key={i} onClick={onEditorial ?? onProducts}
               className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer press-scale relative"
               style={{ width: 128, height: 76, background: item.gradient, border: "1px solid rgba(200,176,106,0.18)" }}>
-              <div className="absolute inset-0 flex flex-col justify-end p-3">
+              <div className="absolute inset-0 flex flex-col justify-end p-3 text-left">
                 <p className="font-sans text-[6px] tracking-[0.2em] uppercase mb-0.5" style={{ color: item.accent }}>{item.cat}</p>
                 <p className="font-serif text-[12px] text-[#1C1C1C] leading-tight">{item.title}</p>
                 <p className="font-sans text-[7px] text-[#5A5040] opacity-70 mt-0.5">{item.sub}</p>
@@ -464,7 +473,7 @@ export default function CategoryHomeScreen({
         <div className="flex justify-around">
           {navTabs.map((tab, i) => (
             <button key={tab}
-              onClick={i === 0 ? () => {} : i === 1 ? onScan : i === 2 ? (onMuseBox ?? onProducts) : (onProfile ?? onSocial ?? onBack)}
+              onClick={i === 0 ? () => {} : i === 1 ? onScan : i === 2 ? (onRoutine ?? onProducts) : (onProfile ?? onSocial ?? onBack)}
               className={`nav-tab ${i === 0 ? "active" : ""}`}>
               <div className="nav-line" />
               <NavIcon idx={i} />
