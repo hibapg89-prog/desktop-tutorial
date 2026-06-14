@@ -1,0 +1,13 @@
+# Automatic PR labels based on changed files
+
+luxebeauty:
+  - changed-files:
+    - any-glob-to-any-file: 'luxebeauty/**'
+
+workflows:
+  - changed-files:
+    - any-glob-to-any-file: '.github/**'
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: '**/*.md'
