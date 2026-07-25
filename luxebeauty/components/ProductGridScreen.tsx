@@ -82,7 +82,7 @@ export default function ProductGridScreen({ onBack }: Props) {
                 <div className="absolute top-2.5 left-2.5">
                   <span className="font-sans text-[8px] tracking-[0.06em] px-2 py-1 rounded-full"
                     style={{ background: "rgba(11,60,38,0.08)", color: "#0B3C26", border: "1px solid rgba(11,60,38,0.2)" }}>
-                    Dupe ✓
+                    Alternative ✓
                   </span>
                 </div>
               )}

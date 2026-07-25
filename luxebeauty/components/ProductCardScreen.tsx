@@ -7,7 +7,7 @@ import { useCurrency } from "./CurrencyContext";
 import type { VanityItem } from "./VanityScreen";
 
 interface Props {
-  onDupe: () => void;
+  onCuratorReveal: () => void;
   onBack: () => void;
   onSave?: (item: VanityItem) => void;
 }
@@ -28,7 +28,7 @@ const INGREDIENTS = [
 
 const BADGES = ["Clean Beauty", "Vegan", "12h de tenue", "Pigments haute couture"];
 
-export default function ProductCardScreen({ onDupe, onBack, onSave }: Props) {
+export default function ProductCardScreen({ onCuratorReveal, onBack, onSave }: Props) {
   const { showToast } = useToast();
   const [saved, setSaved] = useState(false);
   const [boutiqueOpen, setBoutiqueOpen] = useState(false);
@@ -215,7 +215,7 @@ export default function ProductCardScreen({ onDupe, onBack, onSave }: Props) {
               className="btn-gold flex-1 py-4 rounded-full cursor-pointer">
               Où Acheter
             </button>
-            <button onClick={onDupe}
+            <button onClick={onCuratorReveal}
               className="btn-ghost flex-1 py-4 rounded-full cursor-pointer">
               Alternative Artisanale
             </button>

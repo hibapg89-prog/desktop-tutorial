@@ -9,7 +9,7 @@ import GalleryPickerScreen from "@/components/GalleryPickerScreen";
 import AnalysisLoadingScreen from "@/components/AnalysisLoadingScreen";
 import ProductCardScreen from "@/components/ProductCardScreen";
 import ProductGridScreen from "@/components/ProductGridScreen";
-import DupeScreen from "@/components/DupeScreen";
+import CurationScreen from "@/components/CurationScreen";
 import PasteLinkScreen from "@/components/PasteLinkScreen";
 import CategoryHomeScreen from "@/components/CategoryHomeScreen";
 import VanityScreen from "@/components/VanityScreen";
@@ -53,7 +53,7 @@ type Screen =
   | "loading"
   | "product-card"
   | "product-grid"
-  | "dupe"
+  | "curator"
   | "paste-link"
   | "home"
   | "vanity"
@@ -170,7 +170,7 @@ export default function Home() {
         )}
         {screen === "product-card" && (
           <ProductCardScreen
-            onDupe={() => go("dupe")}
+            onCuratorReveal={() => go("curator")}
             onBack={goBack}
             onSave={(item) => setVanityItems(prev => [item, ...prev])}
           />
@@ -178,8 +178,8 @@ export default function Home() {
         {screen === "product-grid" && (
           <ProductGridScreen onBack={goBack} />
         )}
-        {screen === "dupe" && (
-          <DupeScreen onBack={goBack} />
+        {screen === "curator" && (
+          <CurationScreen onBack={goBack} />
         )}
         {screen === "paste-link" && (
           <PasteLinkScreen

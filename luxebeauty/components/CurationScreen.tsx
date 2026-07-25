@@ -7,7 +7,7 @@ interface Props {
   onBack: () => void;
 }
 
-export default function DupeScreen({ onBack }: Props) {
+export default function CurationScreen({ onBack }: Props) {
   const [view, setView] = useState<"split" | "compare">("split");
   const { showToast } = useToast();
 
@@ -26,7 +26,7 @@ export default function DupeScreen({ onBack }: Props) {
         </button>
         <div className="text-center">
           <p className="font-sans text-[8px] tracking-[0.3em] uppercase text-[#C8B06A] mb-0.5">
-            ✦ Dupe Finder
+            ✦ Discover Your Alternative
           </p>
           <h2 className="font-serif text-lg font-normal text-[#1C1C1C]">L&apos;Alternative Idéale</h2>
         </div>
@@ -59,7 +59,7 @@ export default function DupeScreen({ onBack }: Props) {
             <div className="flex items-center gap-2 mb-2.5">
               <span className="text-xs" style={{ color: "#C8B06A" }}>✦</span>
               <p className="font-sans text-[7px] tracking-[0.3em] uppercase" style={{ color: "#C8B06A" }}>
-                Le Verdict The Muse
+                The Muse is Curating
               </p>
             </div>
             <p className="font-cormorant text-[14px] italic font-light text-[#0B3C26] leading-relaxed mb-3">
@@ -242,7 +242,7 @@ function CompareView() {
 function LuxuryLipstick() {
   return (
     <svg width="48" height="88" viewBox="0 0 48 88" fill="none">
-      <rect x="12" y="30" width="24" height="50" rx="2.5" fill="url(#dupeLuxGold)" />
+      <rect x="12" y="30" width="24" height="50" rx="2.5" fill="url(#curatorLuxGold)" />
       <rect x="14" y="38" width="20" height="22" rx="1" fill="rgba(11,60,38,0.07)" stroke="rgba(200,176,106,0.25)" strokeWidth="0.5" />
       <text x="24" y="52" textAnchor="middle" fill="#0B3C26" fontSize="3.5" fontFamily="serif" opacity="0.55" letterSpacing="0.3">CT</text>
       <rect x="10" y="76" width="28" height="5" rx="1.5" fill="#A89050" />
@@ -252,7 +252,7 @@ function LuxuryLipstick() {
       <path d="M16 4 Q20 -1 23 3" stroke="rgba(255,255,255,0.28)" strokeWidth="1" strokeLinecap="round" fill="none" />
       <rect x="12" y="30" width="24" height="4" rx="1" fill="#C8B06A" />
       <defs>
-        <linearGradient id="dupeLuxGold" x1="12" y1="30" x2="36" y2="30" gradientUnits="userSpaceOnUse">
+        <linearGradient id="curatorLuxGold" x1="12" y1="30" x2="36" y2="30" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#D4C07A" />
           <stop offset="50%" stopColor="#E8D898" />
           <stop offset="100%" stopColor="#A89050" />
@@ -265,7 +265,7 @@ function LuxuryLipstick() {
 function ArtisanLipstick() {
   return (
     <svg width="48" height="88" viewBox="0 0 48 88" fill="none">
-      <rect x="12" y="30" width="24" height="50" rx="2.5" fill="url(#dupeArtGreen)" />
+      <rect x="12" y="30" width="24" height="50" rx="2.5" fill="url(#curatorArtGreen)" />
       <rect x="14" y="38" width="20" height="22" rx="1" fill="rgba(11,60,38,0.05)" stroke="rgba(26,92,58,0.2)" strokeWidth="0.5" />
       <text x="24" y="52" textAnchor="middle" fill="#0B3C26" fontSize="3.5" fontFamily="serif" opacity="0.55" letterSpacing="0.3">MV</text>
       <rect x="10" y="76" width="28" height="5" rx="1.5" fill="#2D7A52" />
@@ -277,7 +277,7 @@ function ArtisanLipstick() {
       <path d="M8 52 Q12 48 12 54 Z" fill="#1A5C3A" opacity="0.45" />
       <path d="M40 48 Q36 44 36 50 Z" fill="#1A5C3A" opacity="0.45" />
       <defs>
-        <linearGradient id="dupeArtGreen" x1="12" y1="30" x2="36" y2="30" gradientUnits="userSpaceOnUse">
+        <linearGradient id="curatorArtGreen" x1="12" y1="30" x2="36" y2="30" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#D0E8C8" />
           <stop offset="50%" stopColor="#E8F4E0" />
           <stop offset="100%" stopColor="#B0D4A8" />
