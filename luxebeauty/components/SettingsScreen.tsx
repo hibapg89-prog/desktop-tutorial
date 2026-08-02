@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SwanLogo } from "./LandingScreen";
 import { useTheme } from "./ThemeContext";
 import { useCurrency, type Currency } from "./CurrencyContext";
@@ -8,55 +8,24 @@ import { useCurrency, type Currency } from "./CurrencyContext";
 interface Props {
   onBack: () => void;
   onAccessibility?: () => void;
+  onNotifications?: () => void;
 }
 
 const CURRENCIES: { code: Currency; label: string; symbol: string }[] = [
-  { code: "EUR", label: "Euro",          symbol: "€" },
-  { code: "USD", label: "Dollar",        symbol: "$" },
+  { code: "EUR", label: "Euro",           symbol: "€" },
+  { code: "USD", label: "Dollar",         symbol: "$" },
   { code: "GBP", label: "Livre Sterling", symbol: "£" },
 ];
 
 const LANGUAGES = [
-  { code: "FR", label: "Français",  available: true  },
-  { code: "EN", label: "English",   available: false },
+  { code: "FR", label: "Français", available: true  },
+  { code: "EN", label: "English",       available: false },
   { code: "AR", label: "العربية",   available: false },
 ];
 
-const NOTIF_DEFAULTS: Record<string, boolean> = {
-  "Muse du Matin":    true,
-  "Nouveautés":       true,
-  "Rappels de Rituel": false,
-  "Offres Privées":   false,
-};
-
-const NOTIF_DESCS: Record<string, string> = {
-  "Muse du Matin":    "Édition beauté quotidienne à 8h",
-  "Nouveautés":       "Lancements et collections exclusifs",
-  "Rappels de Rituel": "Vos soins programmés",
-  "Offres Privées":   "Accès anticipé et remises curées",
-};
-
-const STORAGE_KEY = "luxe-notifications";
-
-export default function SettingsScreen({ onBack, onAccessibility }: Props) {
+export default function SettingsScreen({ onBack, onAccessibility, onNotifications }: Props) {
   const { theme, setTheme } = useTheme();
   const { currency, setCurrency } = useCurrency();
-  const [notifs, setNotifs] = useState<Record<string, boolean>>(NOTIF_DEFAULTS);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setNotifs(JSON.parse(stored));
-    } catch {}
-  }, []);
-
-  function toggleNotif(key: string) {
-    setNotifs(prev => {
-      const next = { ...prev, [key]: !prev[key] };
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
-      return next;
-    });
-  }
 
   return (
     <div className="satin-bg min-h-screen flex flex-col overflow-hidden">
@@ -183,47 +152,31 @@ export default function SettingsScreen({ onBack, onAccessibility }: Props) {
         </section>
 
         {/* ── Notifications ── */}
-        <section>
-          <SectionLabel label="Notifications" icon="○" />
-          <div className="card-pearl rounded-2xl p-5 space-y-3">
-            {Object.keys(NOTIF_DEFAULTS).map((key) => (
-              <div key={key} className="flex items-center justify-between py-2">
-                <div>
-                  <p className="font-sans text-[11px] text-[#1C1C1C] leading-tight">{key}</p>
-                  <p className="font-sans text-[9px] text-[#8A8070] mt-0.5">{NOTIF_DESCS[key]}</p>
+        {onNotifications && (
+          <section>
+            <SectionLabel label="Notifications" icon="○" />
+            <button
+              onClick={onNotifications}
+              aria-label="Accéder aux préférences de notifications"
+              className="card-pearl w-full rounded-2xl p-5 flex items-center justify-between cursor-pointer press-scale transition-all duration-200 hover:opacity-80">
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(11,60,38,0.07)", border: "1px solid rgba(11,60,38,0.12)" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B3C26" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
                 </div>
-                <button
-                  role="switch"
-                  aria-checked={notifs[key]}
-                  aria-label={key}
-                  onClick={() => toggleNotif(key)}
-                  className="cursor-pointer press-scale flex-shrink-0"
-                  style={{ outline: "none" }}>
-                  <div
-                    className="relative transition-all duration-300"
-                    style={{
-                      width: "40px",
-                      height: "22px",
-                      borderRadius: "11px",
-                      background: notifs[key] ? "linear-gradient(145deg, #D4C07A, #C8B06A)" : "rgba(200,176,106,0.15)",
-                      boxShadow: notifs[key] ? "0 2px 8px rgba(200,176,106,0.3)" : "none",
-                    }}>
-                    <div
-                      className="absolute top-[3px] rounded-full transition-all duration-300"
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        background: "white",
-                        left: notifs[key] ? "21px" : "3px",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                      }}
-                    />
-                  </div>
-                </button>
+                <div className="text-left">
+                  <p className="font-sans text-[11px] text-[#1C1C1C] leading-tight">Préférences de Notifications</p>
+                  <p className="font-sans text-[9px] text-[#8A8070] mt-0.5">Muse du Matin, Nouveautés, Rituels</p>
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
+              <span className="font-sans text-[14px] text-[#C8B06A] opacity-60">›</span>
+            </button>
+          </section>
+        )}
 
         {/* ── Accessibilité ── */}
         {onAccessibility && (

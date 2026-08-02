@@ -27,6 +27,7 @@ import NotificationPermissionScreen from "@/components/NotificationPermissionScr
 import FirstMuseRevealScreen from "@/components/FirstMuseRevealScreen";
 import SocialScreen from "@/components/SocialScreen";
 import NotificationsScreen from "@/components/NotificationsScreen";
+import NotificationPreferencesScreen from "@/components/NotificationPreferencesScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import MuseMirrorScreen from "@/components/MuseMirrorScreen";
 import MuseBoxScreen from "@/components/MuseBoxScreen";
@@ -73,6 +74,7 @@ type Screen =
   | "first-muse-reveal"
   | "social"
   | "notifications"
+  | "notification-prefs"
   | "profile"
   | "muse-mirror"
   | "muse-box"
@@ -268,6 +270,9 @@ export default function Home() {
         {screen === "notifications" && (
           <NotificationsScreen onBack={goBack} />
         )}
+        {screen === "notification-prefs" && (
+          <NotificationPreferencesScreen onBack={goBack} />
+        )}
         {screen === "profile" && (
           <ProfileScreen
             onBack={goBack}
@@ -278,7 +283,11 @@ export default function Home() {
           />
         )}
         {screen === "settings" && (
-          <SettingsScreen onBack={goBack} onAccessibility={() => go("accessibility")} />
+          <SettingsScreen
+            onBack={goBack}
+            onAccessibility={() => go("accessibility")}
+            onNotifications={() => go("notification-prefs")}
+          />
         )}
         {screen === "muse-mirror" && (
           <MuseMirrorScreen onBack={goBack} />
