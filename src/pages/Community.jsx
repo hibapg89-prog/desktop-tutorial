@@ -758,7 +758,15 @@ export default function Community() {
                               onClick={(e) => toggleAdore(e, post)}
                               className={`flex items-center gap-1.5 text-[11px] font-light transition-colors ${adoredIds.has(post.id) ? "text-[#C8B06A]" : "text-[#043927]/[0.38]"}`}
                             >
-                              <Sparkles size={13} />
+                              <motion.span
+                                key={adoredIds.has(post.id) ? `a1-${post.id}` : `a0-${post.id}`}
+                                initial={adoredIds.has(post.id) ? { scale: 0.4, rotate: -20 } : { scale: 0.85 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ type: "spring", stiffness: 480, damping: 18 }}
+                                style={{ display: "inline-flex" }}
+                              >
+                                <Sparkles size={13} />
+                              </motion.span>
                               {adoredIds.has(post.id) ? "Adored" : "Adore"}
                               {(post.adore_count || 0) > 0 && (
                                 <span className="text-[9px] opacity-55">{post.adore_count}</span>
@@ -777,7 +785,15 @@ export default function Community() {
                               onClick={(e) => toggleCollect(e, post)}
                               className={`flex items-center gap-1.5 text-[11px] font-light transition-colors ${collectedIds.has(post.id) ? "text-[#043927]" : "text-[#043927]/[0.38]"}`}
                             >
-                              <Bookmark size={13} fill={collectedIds.has(post.id) ? "#043927" : "none"} />
+                              <motion.span
+                                key={collectedIds.has(post.id) ? `c1-${post.id}` : `c0-${post.id}`}
+                                initial={collectedIds.has(post.id) ? { scale: 0.5, y: 3 } : { scale: 0.88 }}
+                                animate={{ scale: 1, y: 0 }}
+                                transition={{ type: "spring", stiffness: 460, damping: 20 }}
+                                style={{ display: "inline-flex" }}
+                              >
+                                <Bookmark size={13} fill={collectedIds.has(post.id) ? "#043927" : "none"} />
+                              </motion.span>
                             </button>
                             <button
                               onClick={(e) => passAlong(e, post)}
