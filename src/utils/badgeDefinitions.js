@@ -73,6 +73,7 @@ export const BADGES = [
     howToEarn: "Awarded upon joining LuxeBeauty",
     earn: () => true,
     icon: "butterfly",
+    progress: null,
   },
   {
     key: "first_bloom",
@@ -82,6 +83,7 @@ export const BADGES = [
     howToEarn: "Share your first post in Le Cercle",
     earn: (d) => d.postCount >= 1,
     icon: "lotus",
+    progress: (d) => ({ current: d.postCount, target: 1, label: "post" }),
   },
   {
     key: "first_drop",
@@ -91,6 +93,7 @@ export const BADGES = [
     howToEarn: "Write your first product review",
     earn: (d) => d.reviewCount >= 1,
     icon: "drop",
+    progress: (d) => ({ current: d.reviewCount, target: 1, label: "review" }),
   },
   {
     key: "the_awakening",
@@ -100,6 +103,7 @@ export const BADGES = [
     howToEarn: "Complete your profile",
     earn: (d) => d.profileComplete,
     icon: "sunrise",
+    progress: null,
   },
 
   // ── SELF-CONNECTION (circle) ─────────────────────────────────────────────
@@ -111,6 +115,7 @@ export const BADGES = [
     howToEarn: "Share 5 posts about your beauty rituals",
     earn: (d) => d.postCount >= 5,
     icon: "mirror",
+    progress: (d) => ({ current: d.postCount, target: 5, label: "posts" }),
   },
   {
     key: "inner_radiance",
@@ -120,6 +125,7 @@ export const BADGES = [
     howToEarn: "Reach 10 community posts",
     earn: (d) => d.postCount >= 10,
     icon: "sunburst",
+    progress: (d) => ({ current: d.postCount, target: 10, label: "posts" }),
   },
   {
     key: "shade_whisperer",
@@ -129,6 +135,7 @@ export const BADGES = [
     howToEarn: "Share 5 shade swatch posts",
     earn: (d) => d.swatchCount >= 5,
     icon: "chalice",
+    progress: (d) => ({ current: d.swatchCount, target: 5, label: "swatch posts" }),
   },
   {
     key: "natural_path",
@@ -138,6 +145,7 @@ export const BADGES = [
     howToEarn: "Share 10 skincare or clean beauty reviews",
     earn: (d) => d.reviewCount >= 10,
     icon: "botanical",
+    progress: (d) => ({ current: d.reviewCount, target: 10, label: "reviews" }),
   },
 
   // ── RITUALS (shield) ─────────────────────────────────────────────────────
@@ -149,6 +157,7 @@ export const BADGES = [
     howToEarn: "Share your first routine post",
     earn: (d) => d.routineCount >= 1,
     icon: "olive",
+    progress: (d) => ({ current: d.routineCount, target: 1, label: "routine post" }),
   },
   {
     key: "consistency_club",
@@ -158,6 +167,7 @@ export const BADGES = [
     howToEarn: "Reach 25 community posts",
     earn: (d) => d.postCount >= 25,
     icon: "sprout",
+    progress: (d) => ({ current: d.postCount, target: 25, label: "posts" }),
   },
   {
     key: "sacred_flame",
@@ -167,6 +177,7 @@ export const BADGES = [
     howToEarn: "Reach 50 community posts",
     earn: (d) => d.postCount >= 50,
     icon: "flame",
+    progress: (d) => ({ current: d.postCount, target: 50, label: "posts" }),
   },
   {
     key: "holy_grail_guardian",
@@ -176,6 +187,7 @@ export const BADGES = [
     howToEarn: "A product you reviewed gains 5 community reviews",
     earn: (d) => d.postCount >= 8,
     icon: "ring",
+    progress: (d) => ({ current: d.postCount, target: 8, label: "posts" }),
   },
 
   // ── EXPERIENCE (hexagon) ─────────────────────────────────────────────────
@@ -187,6 +199,7 @@ export const BADGES = [
     howToEarn: "Be among the first to review a new product",
     earn: (d) => d.reviewCount >= 3,
     icon: "branch",
+    progress: (d) => ({ current: d.reviewCount, target: 3, label: "reviews" }),
   },
   {
     key: "care_traveler",
@@ -196,6 +209,7 @@ export const BADGES = [
     howToEarn: "Share reviews across 5 different product categories",
     earn: (d) => d.reviewCount >= 5,
     icon: "leaf",
+    progress: (d) => ({ current: d.reviewCount, target: 5, label: "reviews" }),
   },
   {
     key: "journey_journal",
@@ -205,6 +219,13 @@ export const BADGES = [
     howToEarn: "Share 3 Before & After posts or 5 GRWM posts",
     earn: (d) => d.beforeAfterCount >= 3 || d.grwmCount >= 5,
     icon: "star",
+    progress: (d) => {
+      const ba = d.beforeAfterCount / 3;
+      const gw = d.grwmCount / 5;
+      return ba >= gw
+        ? { current: d.beforeAfterCount, target: 3, label: "Before & After posts" }
+        : { current: d.grwmCount, target: 5, label: "GRWM posts" };
+    },
   },
   {
     key: "circle_spark",
@@ -214,6 +235,7 @@ export const BADGES = [
     howToEarn: "Reach 20 community posts",
     earn: (d) => d.postCount >= 20,
     icon: "lightning",
+    progress: (d) => ({ current: d.postCount, target: 20, label: "posts" }),
   },
 
   // ── INFLUENCE (medallion) ────────────────────────────────────────────────
@@ -225,6 +247,7 @@ export const BADGES = [
     howToEarn: "Receive 100 Adore reactions across your posts",
     earn: (d) => d.totalAdores >= 100,
     icon: "crown",
+    progress: null,
   },
   {
     key: "eternal_bloom",
@@ -234,6 +257,7 @@ export const BADGES = [
     howToEarn: "Reach 100 community posts",
     earn: (d) => d.postCount >= 100,
     icon: "crown_ornate",
+    progress: (d) => ({ current: d.postCount, target: 100, label: "posts" }),
   },
   {
     key: "la_reference",
@@ -243,6 +267,7 @@ export const BADGES = [
     howToEarn: "Earn 16 of the 20 distinctions",
     earn: (d) => d.earnedCount >= 16,
     icon: "fleur",
+    progress: (d) => ({ current: d.earnedCount, target: 16, label: "distinctions" }),
   },
   {
     key: "la_muse",
@@ -252,6 +277,7 @@ export const BADGES = [
     howToEarn: "Earn all other distinctions",
     earn: (d) => d.earnedCount >= 19,
     icon: "medallion",
+    progress: (d) => ({ current: d.earnedCount, target: 19, label: "distinctions" }),
   },
 ];
 
@@ -280,4 +306,38 @@ export function computeEarned(posts = [], existingKeys = new Set()) {
   });
 
   return newlyEarned;
+}
+
+// Returns the single closest-to-earning unearned badge, or null if none is
+// within 20% of its threshold. Used to drive the feed progress nudge.
+export function computeNudge(posts = [], earnedKeys = new Set()) {
+  const data = {
+    postCount: posts.length,
+    reviewCount: posts.filter((p) => !p.post_type || p.post_type === "review").length,
+    swatchCount: posts.filter((p) => p.post_type === "swatch").length,
+    beforeAfterCount: posts.filter((p) => p.post_type === "before_after").length,
+    routineCount: posts.filter((p) => p.post_type === "routine").length,
+    grwmCount: posts.filter((p) => p.post_type === "grwm").length,
+    totalAdores: 0,
+    earnedCount: earnedKeys.size,
+  };
+
+  let best = null;
+  let bestPct = 0;
+
+  BADGES.forEach((badge) => {
+    if (earnedKeys.has(badge.key)) return;
+    if (!badge.progress) return;
+    const prog = badge.progress(data);
+    if (!prog) return;
+    const pct = prog.target > 0 ? prog.current / prog.target : 0;
+    if (pct >= 1) return;
+    if (pct < 0.2) return;
+    if (pct > bestPct) {
+      bestPct = pct;
+      best = { badge, current: prog.current, target: prog.target, label: prog.label, pct };
+    }
+  });
+
+  return best;
 }

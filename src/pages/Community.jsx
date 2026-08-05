@@ -15,7 +15,7 @@ import ReportModal from "@/components/ReportModal";
 import { parseSegments } from "@/utils/richText";
 import { createNotification } from "@/utils/notifications";
 import BadgePin from "@/components/BadgePin";
-import { BADGES } from "@/utils/badgeDefinitions";
+import { BADGES, computeNudge } from "@/utils/badgeDefinitions";
 
 const FEED_MODES = [
   { key: "trending",  label: "Trending" },
@@ -83,6 +83,8 @@ export default function Community() {
   });
   const [reportingPostId, setReportingPostId] = useState(null);
   const [creatorBadges, setCreatorBadges] = useState({});
+  const [nudge, setNudge] = useState(null);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
 
   const FAMILY_PRIORITY = { influence: 5, experience: 4, rituals: 3, self_connection: 2, foundations: 1 };
 
@@ -152,6 +154,17 @@ export default function Community() {
     base44.auth.me().then(u => { setUser(u); }).catch(() => {});
     load();
   }, []);
+
+  useEffect(() => {
+    if (!user || !posts.length) return;
+    base44.entities.UserBadge.list("-created_date", 500)
+      .then(all => {
+        const myKeys = new Set(all.filter(ub => ub.user_id === user.id).map(ub => ub.badge_key));
+        const myPosts = posts.filter(p => p.created_by_id === user.id);
+        setNudge(computeNudge(myPosts, myKeys));
+      })
+      .catch(() => {});
+  }, [user?.id, posts.length]);
 
   const switchMode = (mode) => {
     setFeedMode(mode);
@@ -347,6 +360,48 @@ export default function Community() {
           </button>
         ))}
       </div>
+
+      {/* Badge progress nudge */}
+      <AnimatePresence>
+        {nudge && !nudgeDismissed && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="mx-5 mb-3 px-3.5 py-3 rounded-2xl flex items-center gap-3"
+            style={{ background: "rgba(200,176,106,0.08)", border: "1px solid rgba(200,176,106,0.22)" }}
+          >
+            <div className="flex-shrink-0 opacity-70">
+              <BadgePin badge={nudge.badge} earned={false} size="xs" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-[#043927]/45 font-light tracking-wide leading-tight">
+                {nudge.target - nudge.current === 1
+                  ? `One more ${nudge.label} to unlock`
+                  : `${nudge.target - nudge.current} more ${nudge.label} to unlock`}
+              </p>
+              <p
+                className="text-[13px] font-light text-[#043927] leading-tight mt-0.5"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              >
+                {nudge.badge.label}
+              </p>
+              <div className="mt-2 h-0.5 rounded-full overflow-hidden bg-[#C8B06A]/15">
+                <div
+                  className="h-full rounded-full bg-[#C8B06A] transition-all duration-700"
+                  style={{ width: `${Math.round(nudge.pct * 100)}%` }}
+                />
+              </div>
+            </div>
+            <button
+              onClick={() => setNudgeDismissed(true)}
+              className="flex-shrink-0 text-[#043927]/20 hover:text-[#043927]/40 transition-colors"
+            >
+              <X size={13} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Beauty Rooms — curated interest communities */}
       <div className="mb-3">
