@@ -88,8 +88,18 @@ export default function Community() {
   const [creatorNudge, setCreatorNudge] = useState({});
   const [banners, setBanners] = useState([]);
   const [activeBanner, setActiveBanner] = useState(0);
+  const [events, setEvents] = useState([]);
 
   const FAMILY_PRIORITY = { influence: 5, experience: 4, rituals: 3, self_connection: 2, foundations: 1 };
+
+  const formatEventDate = (dateStr) => {
+    const d = new Date(dateStr + "T12:00:00");
+    return {
+      day: d.toLocaleDateString("en-GB", { weekday: "short" }).toUpperCase(),
+      date: d.getDate(),
+      month: d.toLocaleDateString("en-GB", { month: "short" }).toUpperCase(),
+    };
+  };
 
   const loadCreatorBadges = async (posts) => {
     const ids = [...new Set(posts.map(p => p.created_by_id).filter(Boolean))];
@@ -133,11 +143,12 @@ export default function Community() {
   };
 
   const load = async () => {
-    const [list, pollList, swapList, bannerList] = await Promise.all([
+    const [list, pollList, swapList, bannerList, eventList] = await Promise.all([
       base44.entities.CommunityPost.list("-created_date", 50),
       base44.entities.Poll.list("-created_date", 20),
       base44.entities.Swap.list("-created_date", 30),
       base44.entities.HeroBanner.list("display_order", 10),
+      base44.entities.CommunityEvent.list("event_date", 20),
     ]);
     setPosts(list);
     setPolls(pollList);
@@ -147,6 +158,12 @@ export default function Community() {
       .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
     setBanners(activeBanners);
     setActiveBanner(0);
+    const today = new Date().toISOString().split("T")[0];
+    setEvents(
+      eventList
+        .filter(e => e.active !== false && e.event_date >= today)
+        .sort((a, b) => a.event_date.localeCompare(b.event_date))
+    );
     setLoading(false);
     loadCreatorBadges(list);
   };
@@ -595,6 +612,69 @@ export default function Community() {
           );
         })()}
       </div>
+
+      {/* Upcoming Events */}
+      {events.length > 0 && (
+        <div className="mb-3">
+          <div className="px-5 flex items-center justify-between mb-2">
+            <p className="text-[10px] tracking-[0.3em] uppercase text-[#043927]/40 font-light">Upcoming Events</p>
+          </div>
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar px-5 pb-1">
+            {events.map(event => {
+              const { day, date, month } = formatEventDate(event.event_date);
+              return (
+                <div
+                  key={event.id}
+                  className="flex-shrink-0 w-44 rounded-2xl overflow-hidden border border-[#E5E4E2] bg-white/70"
+                >
+                  <div
+                    className="px-3 py-2.5 flex items-baseline gap-2.5"
+                    style={{ background: "rgba(200,176,106,0.09)" }}
+                  >
+                    <span
+                      className="text-[30px] font-light text-[#043927] leading-none"
+                      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                    >
+                      {date}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] tracking-[0.2em] uppercase text-[#043927]/55 font-light leading-none">
+                        {day}
+                      </span>
+                      <span className="text-[9px] tracking-[0.15em] uppercase font-light leading-none mt-0.5" style={{ color: "#C8B06A" }}>
+                        {month}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="px-3 py-2.5">
+                    <p className="text-[12px] font-light text-[#043927] leading-tight line-clamp-2">
+                      {event.title}
+                    </p>
+                    {event.start_time && (
+                      <p className="text-[10px] text-[#043927]/45 font-light mt-1 leading-tight">
+                        {event.start_time}{event.end_time ? ` — ${event.end_time}` : ""}
+                      </p>
+                    )}
+                    {event.location && (
+                      <p className="text-[10px] text-[#043927]/35 font-light mt-0.5 truncate">{event.location}</p>
+                    )}
+                    {event.cta_label && (
+                      <Link
+                        to={event.cta_url || "#"}
+                        onClick={e => { if (!event.cta_url) e.preventDefault(); }}
+                        className="inline-flex items-center gap-0.5 mt-2 text-[10px] font-light"
+                        style={{ color: "#C8B06A" }}
+                      >
+                        {event.cta_label} ›
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="px-5 pb-32">
         {loading ? (
