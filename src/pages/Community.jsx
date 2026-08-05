@@ -85,6 +85,7 @@ export default function Community() {
   const [creatorBadges, setCreatorBadges] = useState({});
   const [nudge, setNudge] = useState(null);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  const [creatorNudge, setCreatorNudge] = useState({});
 
   const FAMILY_PRIORITY = { influence: 5, experience: 4, rituals: 3, self_connection: 2, foundations: 1 };
 
@@ -113,6 +114,14 @@ export default function Community() {
         if (best) result[uid] = best;
       });
       setCreatorBadges(result);
+      const nudgeResult = {};
+      ids.forEach(uid => {
+        const myKeys = byUser[uid] || new Set();
+        const myPosts = posts.filter(p => p.created_by_id === uid);
+        const n = computeNudge(myPosts, myKeys);
+        if (n) nudgeResult[uid] = n;
+      });
+      setCreatorNudge(nudgeResult);
     } catch {}
   };
 
@@ -731,6 +740,16 @@ export default function Community() {
                             })()}
                           </div>
                         </div>
+
+                        {/* Author progress toward next distinction */}
+                        {creatorNudge[post.created_by_id] && (
+                          <div className="mx-3 mb-2.5 h-px rounded-full overflow-hidden bg-[#C8B06A]/10">
+                            <div
+                              className="h-full rounded-full bg-[#C8B06A]/50 transition-all duration-700"
+                              style={{ width: `${Math.round(creatorNudge[post.created_by_id].pct * 100)}%` }}
+                            />
+                          </div>
+                        )}
 
                         {/* Interaction row */}
                         <div className="px-3 pb-3 flex items-center justify-between">
