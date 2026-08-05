@@ -23,7 +23,7 @@ const FEED_MODES = [
   { key: "curated",   label: "✦ Curated" },
 ];
 
-const BEAUTY_CIRCLES = [
+const BEAUTY_ROOMS = [
   { key: "skin_rituals", label: "Skin Rituals",    glyph: "✦", color: "#C8A96E" },
   { key: "bold_colour",  label: "Bold Colour",     glyph: "◆", color: "#BC4A6A" },
   { key: "clean_beauty", label: "Clean Beauty",    glyph: "◉", color: "#3D7A5A" },
@@ -32,7 +32,7 @@ const BEAUTY_CIRCLES = [
   { key: "minimalist",   label: "Minimalist",      glyph: "○", color: "#043927" },
 ];
 
-const CIRCLE_ARCHETYPES = {
+const ROOM_ARCHETYPES = {
   skin_rituals: { archetype: "The Alchemist",  tagline: "Ritual as transformation" },
   bold_colour:  { archetype: "The Icon",       tagline: "Beauty as signature" },
   clean_beauty: { archetype: "The Purist",     tagline: "Clarity above all" },
@@ -348,10 +348,10 @@ export default function Community() {
         ))}
       </div>
 
-      {/* Beauty Circles — curated interest communities */}
+      {/* Beauty Rooms — curated interest communities */}
       <div className="mb-3">
         <div className="px-5 flex items-center justify-between mb-2">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-[#043927]/40 font-light">Beauty Circles</p>
+          <p className="text-[10px] tracking-[0.3em] uppercase text-[#043927]/40 font-light">Beauty Rooms</p>
           {activeCircle && (
             <button
               onClick={() => setActiveCircle(null)}
@@ -362,10 +362,10 @@ export default function Community() {
           )}
         </div>
         <div className="flex gap-2 overflow-x-auto hide-scrollbar px-5 pb-1">
-          {BEAUTY_CIRCLES.map(c => {
+          {BEAUTY_ROOMS.map(c => {
             const postCount = posts.filter(p => p.circle === c.key).length;
             const isActive = activeCircle === c.key;
-            const arch = CIRCLE_ARCHETYPES[c.key];
+            const arch = ROOM_ARCHETYPES[c.key];
             return (
               <button
                 key={c.key}
@@ -397,8 +397,8 @@ export default function Community() {
 
         {/* Archetype identity strip — visible when a circle is active */}
         {activeCircle && (() => {
-          const c = BEAUTY_CIRCLES.find(x => x.key === activeCircle);
-          const arch = CIRCLE_ARCHETYPES[activeCircle];
+          const c = BEAUTY_ROOMS.find(x => x.key === activeCircle);
+          const arch = ROOM_ARCHETYPES[activeCircle];
           if (!c || !arch) return null;
           return (
             <div className="mx-5 mt-2 mb-1 px-4 py-2.5 rounded-xl flex items-center justify-between"
@@ -495,7 +495,7 @@ export default function Community() {
                   {query
                       ? "No reviews match your search"
                       : activeCircle
-                      ? `Be the first to share in ${BEAUTY_CIRCLES.find(c => c.key === activeCircle)?.label}`
+                      ? `Be the first to share in ${BEAUTY_ROOMS.find(c => c.key === activeCircle)?.label}`
                       : `Nothing in ${activeCategory} yet`}
                 </p>
               </div>
@@ -605,7 +605,7 @@ export default function Community() {
                             <div className="mt-1 flex items-center flex-wrap gap-1">
                               <TrustBadge post={post} />
                               {post.circle && (() => {
-                                const cc = BEAUTY_CIRCLES.find(c => c.key === post.circle);
+                                const cc = BEAUTY_ROOMS.find(c => c.key === post.circle);
                                 if (!cc) return null;
                                 return (
                                   <span
