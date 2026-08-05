@@ -86,6 +86,8 @@ export default function Community() {
   const [nudge, setNudge] = useState(null);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [creatorNudge, setCreatorNudge] = useState({});
+  const [banners, setBanners] = useState([]);
+  const [activeBanner, setActiveBanner] = useState(0);
 
   const FAMILY_PRIORITY = { influence: 5, experience: 4, rituals: 3, self_connection: 2, foundations: 1 };
 
@@ -131,14 +133,20 @@ export default function Community() {
   };
 
   const load = async () => {
-    const [list, pollList, swapList] = await Promise.all([
+    const [list, pollList, swapList, bannerList] = await Promise.all([
       base44.entities.CommunityPost.list("-created_date", 50),
       base44.entities.Poll.list("-created_date", 20),
       base44.entities.Swap.list("-created_date", 30),
+      base44.entities.HeroBanner.list("display_order", 10),
     ]);
     setPosts(list);
     setPolls(pollList);
     setSwaps(swapList);
+    const activeBanners = bannerList
+      .filter(b => b.active !== false)
+      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    setBanners(activeBanners);
+    setActiveBanner(0);
     setLoading(false);
     loadCreatorBadges(list);
   };
@@ -168,6 +176,14 @@ export default function Community() {
     base44.auth.me().then(u => { setUser(u); }).catch(() => {});
     load();
   }, []);
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveBanner(prev => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [banners.length]);
 
   useEffect(() => {
     if (!user || !posts.length) return;
@@ -375,6 +391,83 @@ export default function Community() {
           )}
         </div>
       </div>
+
+      {/* Hero Banner */}
+      {banners.length > 0 && (() => {
+        const banner = banners[activeBanner];
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeBanner}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mx-5 mb-4 rounded-2xl overflow-hidden relative"
+              style={{ height: "210px" }}
+            >
+              {banner.image_url ? (
+                <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full" style={{ background: "linear-gradient(135deg, #0B3C26 0%, #1D5438 100%)" }} />
+              )}
+              <div
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(to top, rgba(11,60,38,0.88) 0%, rgba(11,60,38,0.18) 60%, transparent 100%)" }}
+              />
+              <div className="absolute inset-0 flex flex-col justify-end p-4">
+                {banner.tag && (
+                  <span
+                    className="text-[9px] tracking-[0.25em] uppercase font-light mb-1.5"
+                    style={{ color: "#C8B06A" }}
+                  >
+                    {banner.tag}
+                  </span>
+                )}
+                <p
+                  className="text-[22px] font-light text-white leading-tight"
+                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                >
+                  {banner.title}
+                </p>
+                {banner.subtitle && (
+                  <p className="text-[11px] font-light text-white/65 leading-relaxed mt-1 max-w-[260px]">
+                    {banner.subtitle}
+                  </p>
+                )}
+                <div className="mt-3 flex items-center justify-between">
+                  {banner.cta_label ? (
+                    <Link
+                      to={banner.cta_url || "#"}
+                      onClick={(e) => { if (!banner.cta_url) e.preventDefault(); }}
+                      className="px-4 py-1.5 rounded-full text-[11px] font-light tracking-wide"
+                      style={{ background: "rgba(200,176,106,0.22)", border: "1px solid rgba(200,176,106,0.45)", color: "#C8B06A" }}
+                    >
+                      {banner.cta_label}
+                    </Link>
+                  ) : <div />}
+                  {banners.length > 1 && (
+                    <div className="flex gap-1.5">
+                      {banners.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setActiveBanner(i)}
+                          className="rounded-full transition-all duration-300"
+                          style={{
+                            width: i === activeBanner ? "14px" : "4px",
+                            height: "4px",
+                            background: i === activeBanner ? "#C8B06A" : "rgba(255,255,255,0.35)",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        );
+      })()}
 
       {/* Feed mode tabs */}
       <div className="px-5 mb-4 flex gap-2">
