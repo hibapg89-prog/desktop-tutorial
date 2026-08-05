@@ -247,7 +247,7 @@ export const BADGES = [
     howToEarn: "Receive 100 Adore reactions across your posts",
     earn: (d) => d.totalAdores >= 100,
     icon: "crown",
-    progress: null,
+    progress: (d) => ({ current: d.totalAdores, target: 100, label: "Adore reactions" }),
   },
   {
     key: "eternal_bloom",
@@ -284,7 +284,7 @@ export const BADGES = [
 export const BADGE_MAP = Object.fromEntries(BADGES.map((b) => [b.key, b]));
 export const FAMILY_MAP = Object.fromEntries(BADGE_FAMILIES.map((f) => [f.key, f]));
 
-export function computeEarned(posts = [], existingKeys = new Set()) {
+export function computeEarned(posts = [], existingKeys = new Set(), totalAdores = 0) {
   const data = {
     postCount: posts.length,
     reviewCount: posts.filter((p) => !p.post_type || p.post_type === "review").length,
@@ -293,7 +293,7 @@ export function computeEarned(posts = [], existingKeys = new Set()) {
     routineCount: posts.filter((p) => p.post_type === "routine").length,
     grwmCount: posts.filter((p) => p.post_type === "grwm").length,
     profileComplete: true,
-    totalAdores: 0,
+    totalAdores,
     earnedCount: existingKeys.size,
   };
 
@@ -310,7 +310,7 @@ export function computeEarned(posts = [], existingKeys = new Set()) {
 
 // Returns the single closest-to-earning unearned badge, or null if none is
 // within 20% of its threshold. Used to drive the feed progress nudge.
-export function computeNudge(posts = [], earnedKeys = new Set()) {
+export function computeNudge(posts = [], earnedKeys = new Set(), totalAdores = 0) {
   const data = {
     postCount: posts.length,
     reviewCount: posts.filter((p) => !p.post_type || p.post_type === "review").length,
@@ -318,7 +318,7 @@ export function computeNudge(posts = [], earnedKeys = new Set()) {
     beforeAfterCount: posts.filter((p) => p.post_type === "before_after").length,
     routineCount: posts.filter((p) => p.post_type === "routine").length,
     grwmCount: posts.filter((p) => p.post_type === "grwm").length,
-    totalAdores: 0,
+    totalAdores,
     earnedCount: earnedKeys.size,
   };
 

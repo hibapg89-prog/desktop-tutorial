@@ -93,7 +93,12 @@ export default function Community() {
     const ids = [...new Set(posts.map(p => p.created_by_id).filter(Boolean))];
     if (!ids.length) return;
     try {
-      const all = await base44.entities.UserBadge.list("-created_date", 500);
+      const [all, allStats] = await Promise.all([
+        base44.entities.UserBadge.list("-created_date", 500),
+        base44.entities.UserStat.list("-created_date", 200),
+      ]);
+      const statByUser = {};
+      allStats.forEach(s => { statByUser[s.user_id] = s.total_adores || 0; });
       const byUser = {};
       all.forEach(ub => {
         if (!ids.includes(ub.user_id)) return;
@@ -118,7 +123,7 @@ export default function Community() {
       ids.forEach(uid => {
         const myKeys = byUser[uid] || new Set();
         const myPosts = posts.filter(p => p.created_by_id === uid);
-        const n = computeNudge(myPosts, myKeys);
+        const n = computeNudge(myPosts, myKeys, statByUser[uid] || 0);
         if (n) nudgeResult[uid] = n;
       });
       setCreatorNudge(nudgeResult);
@@ -166,11 +171,15 @@ export default function Community() {
 
   useEffect(() => {
     if (!user || !posts.length) return;
-    base44.entities.UserBadge.list("-created_date", 500)
-      .then(all => {
-        const myKeys = new Set(all.filter(ub => ub.user_id === user.id).map(ub => ub.badge_key));
+    Promise.all([
+      base44.entities.UserBadge.list("-created_date", 500),
+      base44.entities.UserStat.list("-created_date", 200),
+    ])
+      .then(([allBadges, allStats]) => {
+        const myKeys = new Set(allBadges.filter(ub => ub.user_id === user.id).map(ub => ub.badge_key));
         const myPosts = posts.filter(p => p.created_by_id === user.id);
-        setNudge(computeNudge(myPosts, myKeys));
+        const myStat = allStats.find(s => s.user_id === user.id);
+        setNudge(computeNudge(myPosts, myKeys, myStat?.total_adores || 0));
       })
       .catch(() => {});
   }, [user?.id, posts.length]);
@@ -208,6 +217,20 @@ export default function Community() {
         ...(post.image_url ? { image_url: post.image_url } : {}),
         sender_id: user.id,
       });
+    }
+    // Update running adore total for the post author
+    if (post.created_by_id) {
+      base44.entities.UserStat.list("-created_date", 200)
+        .then(stats => {
+          const existing = stats.find(s => s.user_id === post.created_by_id);
+          const newTotal = Math.max(0, (existing?.total_adores || 0) + delta);
+          if (existing) {
+            return base44.entities.UserStat.update(existing.id, { total_adores: newTotal });
+          } else if (delta > 0) {
+            return base44.entities.UserStat.create({ user_id: post.created_by_id, total_adores: newTotal });
+          }
+        })
+        .catch(() => {});
     }
   };
 
