@@ -33,12 +33,12 @@ const BEAUTY_ROOMS = [
 ];
 
 const ROOM_ARCHETYPES = {
-  skin_rituals: { archetype: "The Alchemist",  tagline: "Ritual as transformation" },
-  bold_colour:  { archetype: "The Icon",       tagline: "Beauty as signature" },
-  clean_beauty: { archetype: "The Purist",     tagline: "Clarity above all" },
-  vintage_glam: { archetype: "The Archivist",  tagline: "Beauty through time" },
-  natural_glow: { archetype: "The Oracle",     tagline: "Intuition, illuminated" },
-  minimalist:   { archetype: "The Engineer",   tagline: "Precision is elegance" },
+  skin_rituals: { archetype: "The Alchemist",  tagline: "Ritual as transformation",  prompt: "What ritual have you been devoted to lately?" },
+  bold_colour:  { archetype: "The Icon",       tagline: "Beauty as signature",        prompt: "Which shade is your signature right now?" },
+  clean_beauty: { archetype: "The Purist",     tagline: "Clarity above all",          prompt: "What does your cleanest, most essential routine look like?" },
+  vintage_glam: { archetype: "The Archivist",  tagline: "Beauty through time",        prompt: "What beauty secret deserves to be remembered?" },
+  natural_glow: { archetype: "The Oracle",     tagline: "Intuition, illuminated",     prompt: "What has your skin been telling you lately?" },
+  minimalist:   { archetype: "The Engineer",   tagline: "Precision is elegance",      prompt: "Which single product carries the whole routine?" },
 };
 
 function TrustBadge({ post }) {
@@ -544,16 +544,44 @@ export default function Community() {
 
             {/* Post list empty state */}
             {!(feedMode === "following" && circleLoading) && displayPosts.length === 0 && feedMode !== "following" && (
-              <div className="flex flex-col items-center py-16 text-center">
-                <SwanLogo size={48} color="#C8B06A" className="mb-4" />
-                <p className="font-serif text-base text-[#043927]/40 italic">
-                  {query
-                      ? "No reviews match your search"
-                      : activeCircle
-                      ? `Be the first to share in ${BEAUTY_ROOMS.find(c => c.key === activeCircle)?.label}`
-                      : `Nothing in ${activeCategory} yet`}
-                </p>
-              </div>
+              activeCircle && !query ? (() => {
+                const c = BEAUTY_ROOMS.find(x => x.key === activeCircle);
+                const arch = ROOM_ARCHETYPES[activeCircle];
+                if (!c || !arch) return null;
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center py-16 text-center px-8"
+                  >
+                    <span
+                      className="text-5xl mb-5 leading-none"
+                      style={{ color: c.color, opacity: 0.18 }}
+                    >
+                      {c.glyph}
+                    </span>
+                    <p
+                      className="text-[22px] font-light text-[#043927] mb-1.5 leading-tight"
+                      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                    >
+                      {arch.archetype}
+                    </p>
+                    <p className="text-[11px] font-light italic text-[#043927]/40 tracking-[0.12em] mb-6">
+                      {arch.tagline}
+                    </p>
+                    <p className="text-[13px] font-light text-[#043927]/35 leading-relaxed max-w-[240px]">
+                      {arch.prompt}
+                    </p>
+                  </motion.div>
+                );
+              })() : (
+                <div className="flex flex-col items-center py-16 text-center">
+                  <SwanLogo size={48} color="#C8B06A" className="mb-4" />
+                  <p className="font-serif text-base text-[#043927]/40 italic">
+                    {query ? "No reviews match your search" : `Nothing in ${activeCategory} yet`}
+                  </p>
+                </div>
+              )
             )}
 
             {!(feedMode === "following" && circleLoading) && displayPosts.length > 0 && (
