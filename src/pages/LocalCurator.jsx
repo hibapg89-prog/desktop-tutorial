@@ -7,6 +7,12 @@ import TranslateToggle from "@/components/TranslateToggle";
 import { formatPrice } from "@/utils/locale";
 import { base44 } from "@/api/base44Client";
 
+const safeVal = (v) => {
+  if (!v && v !== 0) return null;
+  const s = String(v).trim().toLowerCase();
+  return ["null", "none", "n/a", "na", "not applicable", "not available", ""].includes(s) ? null : v;
+};
+
 export default function LocalCurator() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -230,7 +236,7 @@ export default function LocalCurator() {
                       <span className="font-serif text-4xl text-[#BC8F8F]/50 leading-none">
                         {curator.brand?.[0] || "A"}
                       </span>
-                      {curator.image_description && (
+                      {safeVal(curator.image_description) && (
                         <p className="text-[7px] text-[#BC8F8F]/50 font-light italic text-center mt-1.5 leading-relaxed line-clamp-3">
                           {curator.image_description}
                         </p>
@@ -312,7 +318,7 @@ export default function LocalCurator() {
                     className="h-full rounded-full bg-[#043927]"
                   />
                 </div>
-                {curator.sustainability_note && (
+                {safeVal(curator.sustainability_note) && (
                   <p className="text-[11px] text-[#043927]/50 font-light italic leading-relaxed">
                     {curator.sustainability_note}
                   </p>
@@ -320,7 +326,7 @@ export default function LocalCurator() {
               </div>
 
               {/* Comparison table */}
-              {(curator.scent_profile || curator.longevity) && (
+              {(safeVal(curator.scent_profile) || safeVal(curator.longevity)) && (
                 <div className="bg-white/60 rounded-2xl border border-[#E5E4E2] overflow-hidden">
                   <div className="px-5 py-3 border-b border-[#E5E4E2] flex items-center justify-between">
                     <p className="text-[9px] tracking-[0.2em] text-[#043927]/40 uppercase font-light">
@@ -332,8 +338,8 @@ export default function LocalCurator() {
                     </div>
                   </div>
                   {[
-                    curator.scent_profile && ["Scent", "—", curator.scent_profile],
-                    curator.longevity && ["Longevity", "—", curator.longevity],
+                    safeVal(curator.scent_profile) && ["Scent", "—", curator.scent_profile],
+                    safeVal(curator.longevity) && ["Longevity", "—", curator.longevity],
                   ]
                     .filter(Boolean)
                     .map(([label, orig, alt], i) => (
@@ -356,7 +362,7 @@ export default function LocalCurator() {
               )}
 
               {/* Carbon / eco note */}
-              {curator.carbon_note && (
+              {safeVal(curator.carbon_note) && (
                 <div className="bg-[#043927]/[0.05] rounded-2xl p-4 border border-[#043927]/10 flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#043927] flex items-center justify-center flex-shrink-0">
                     <Leaf size={14} color="#FDF5E6" strokeWidth={1.5} />
