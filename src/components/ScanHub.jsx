@@ -197,7 +197,7 @@ export default function ScanHub({ onClose }) {
         }
         prompt = `You are a luxury beauty product identification expert. Analyze this image carefully. Return a JSON object with: identified (boolean — true ONLY if a real, recognisable beauty product is clearly visible), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory for this product from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline like "The Muse shimmer"), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If no beauty product is clearly visible or identifiable, set identified to false and leave other fields empty.`;
       } else if (type === "url") {
-        prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Make a best guess based on the URL; set identified to false only if the URL gives no usable product information.`;
+        prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL text alone (brand name, product name in the URL path), set identified to false — do not fabricate details.`;
       } else if (type === "voice") {
         prompt = `You are a luxury beauty product identification expert. The user said: "${text}". Identify this beauty product. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
       }
@@ -575,16 +575,6 @@ export default function ScanHub({ onClose }) {
                 Back
               </button>
             </div>
-          </div>
-        )}
-
-        {/* ===== GALLERY PICKER ===== */}
-        {activeMode === "gallery" && (
-          <div className="absolute inset-0 z-10">
-            <GalleryPicker
-              onCancel={() => setActiveMode(null)}
-              onNext={(imgUrl) => analyzeProduct({ type: "image", imageUrl: imgUrl })}
-            />
           </div>
         )}
 
