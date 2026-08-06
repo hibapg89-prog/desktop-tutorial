@@ -82,6 +82,7 @@ export default function ScanHub({ onClose }) {
   const [previewFile,  setPreviewFile] = useState(null);
   const [previewUrl,   setPreviewUrl]  = useState(null);
   const [showMuse,     setShowMuse]   = useState(false);
+  const [multiResults, setMultiResults] = useState(null);
 
   const fileInputRef    = useRef(null);
   const cameraInputRef  = useRef(null);
@@ -173,6 +174,50 @@ export default function ScanHub({ onClose }) {
     await analyzeProduct({ type: "url", url: trimmed });
   };
 
+  const selectProduct = async (p, imageUrl) => {
+    setMultiResults(null);
+    setActiveMode("loading");
+    setIsAnalyzing(true);
+    setProgress(0);
+    let prog = 0;
+    const selInterval = setInterval(() => {
+      prog += Math.random() * 15;
+      if (prog > 90) prog = 90;
+      setProgress(Math.floor(prog));
+    }, 400);
+    try {
+      const safeShade = (() => {
+        if (!p.shade) return null;
+        const s = String(p.shade).trim();
+        return ["null", "none", "n/a", "na", "", "no shade", "not applicable"].includes(s.toLowerCase()) ? null : s;
+      })();
+      const product = await base44.entities.Product.create({
+        brand:        p.brand,
+        name:         p.name,
+        shade:        safeShade,
+        category:     p.category || "Makeup",
+        subcategory:  normalizeSubcategory(p.category, p.subcategory),
+        price:        p.price_usd || 0,
+        currency:     "USD",
+        description:  p.description,
+        muse_shimmer: p.muse_shimmer,
+        where_to_buy: JSON.stringify(p.where_to_buy || []),
+        ingredients:  p.ingredients_summary,
+        scan_method:  "image",
+        image_url:    imageUrl || null,
+      });
+      clearInterval(selInterval);
+      setProgress(100);
+      setTimeout(() => { onClose(); navigate(`/product/${product.id}`); }, 500);
+    } catch {
+      clearInterval(selInterval);
+      setScanError("Something went wrong. Please try again.");
+      setActiveMode("error");
+      setIsAnalyzing(false);
+      setProgress(0);
+    }
+  };
+
   const analyzeProduct = async ({ type, file, url, text, imageUrl }) => {
     setScanError(null);
     setActiveMode("loading");
@@ -195,83 +240,122 @@ export default function ScanHub({ onClose }) {
         } else if (imageUrl) {
           file_urls = [imageUrl];
         }
-        prompt = `You are a luxury beauty product identification expert. Analyze this image carefully. Return a JSON object with: identified (boolean — true ONLY if a real, recognisable beauty product is clearly visible), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory for this product from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline like "The Muse shimmer"), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If no beauty product is clearly visible or identifiable, set identified to false and leave other fields empty.`;
+        prompt = `You are a luxury beauty product identification expert. Analyze this image carefully and identify ALL visible beauty products — there may be one, two, or more. Return a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
       } else if (type === "url") {
         prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL text alone (brand name, product name in the URL path), set identified to false — do not fabricate details.`;
       } else if (type === "voice") {
         prompt = `You are a luxury beauty product identification expert. The user said: "${text}". Identify this beauty product. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
       }
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        file_urls,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            identified:          { type: "boolean" },
-            brand:               { type: "string"  },
-            name:                { type: "string"  },
-            shade:               { type: "string"  },
-            category:            { type: "string"  },
-            subcategory:         { type: "string"  },
-            price_usd:           { type: "number"  },
-            description:         { type: "string"  },
-            muse_shimmer:        { type: "string"  },
-            where_to_buy:        { type: "array", items: { type: "string" } },
-            ingredients_summary: { type: "string"  },
-            safety_score:        { type: "number"  },
-          }
-        }
-      });
-
-      clearInterval(interval);
-
       const BAD_BRANDS = [
         "not identified", "unknown", "n/a", "none", "unidentified",
         "unclear", "not available", "not specified", "not determined", "undefined",
       ];
-      const brandLower = (result.brand || "").trim().toLowerCase();
-      const isBadBrand = !result.brand || BAD_BRANDS.includes(brandLower) || brandLower.startsWith("not ");
-      if (result.identified === false || isBadBrand) {
-        setProgress(0);
-        setIsAnalyzing(false);
-        setScanError("The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging.");
-        setActiveMode("error");
-        return;
+      const computeSafeShade = (shade) => {
+        if (!shade) return null;
+        const s = String(shade).trim();
+        return ["null", "none", "n/a", "na", "", "no shade", "not applicable"].includes(s.toLowerCase()) ? null : s;
+      };
+
+      if (type === "image") {
+        const imgResult = await base44.integrations.Core.InvokeLLM({
+          prompt,
+          file_urls,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              products: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    identified:          { type: "boolean" },
+                    brand:               { type: "string"  },
+                    name:                { type: "string"  },
+                    shade:               { type: "string"  },
+                    category:            { type: "string"  },
+                    subcategory:         { type: "string"  },
+                    price_usd:           { type: "number"  },
+                    description:         { type: "string"  },
+                    muse_shimmer:        { type: "string"  },
+                    where_to_buy:        { type: "array", items: { type: "string" } },
+                    ingredients_summary: { type: "string"  },
+                    safety_score:        { type: "number"  },
+                  }
+                }
+              }
+            }
+          }
+        });
+        clearInterval(interval);
+        const validProducts = (imgResult.products || []).filter(p => {
+          const bl = (p.brand || "").trim().toLowerCase();
+          return p.identified !== false && p.brand && !BAD_BRANDS.includes(bl) && !bl.startsWith("not ");
+        });
+        if (validProducts.length === 0) {
+          setProgress(0); setIsAnalyzing(false);
+          setScanError("The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging.");
+          setActiveMode("error");
+          return;
+        }
+        setProgress(100);
+        if (validProducts.length === 1) {
+          const p = validProducts[0];
+          const prod = await base44.entities.Product.create({
+            brand: p.brand, name: p.name, shade: computeSafeShade(p.shade),
+            category: p.category || "Makeup", subcategory: normalizeSubcategory(p.category, p.subcategory),
+            price: p.price_usd || 0, currency: "USD", description: p.description,
+            muse_shimmer: p.muse_shimmer, where_to_buy: JSON.stringify(p.where_to_buy || []),
+            ingredients: p.ingredients_summary, scan_method: type, image_url: file_urls?.[0] || null,
+          });
+          setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
+        } else {
+          setIsAnalyzing(false);
+          setMultiResults({ products: validProducts, imageUrl: file_urls?.[0] || null });
+          setActiveMode("multi");
+        }
+      } else {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt,
+          file_urls,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              identified:          { type: "boolean" },
+              brand:               { type: "string"  },
+              name:                { type: "string"  },
+              shade:               { type: "string"  },
+              category:            { type: "string"  },
+              subcategory:         { type: "string"  },
+              price_usd:           { type: "number"  },
+              description:         { type: "string"  },
+              muse_shimmer:        { type: "string"  },
+              where_to_buy:        { type: "array", items: { type: "string" } },
+              ingredients_summary: { type: "string"  },
+              safety_score:        { type: "number"  },
+            }
+          }
+        });
+        clearInterval(interval);
+        const brandLower = (result.brand || "").trim().toLowerCase();
+        const isBadBrand = !result.brand || BAD_BRANDS.includes(brandLower) || brandLower.startsWith("not ");
+        if (result.identified === false || isBadBrand) {
+          setProgress(0); setIsAnalyzing(false);
+          setScanError("The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging.");
+          setActiveMode("error");
+          return;
+        }
+        setProgress(100);
+        const prod = await base44.entities.Product.create({
+          brand: result.brand, name: result.name, shade: computeSafeShade(result.shade),
+          category: result.category || "Makeup", subcategory: normalizeSubcategory(result.category, result.subcategory),
+          price: result.price_usd || 0, currency: "USD", description: result.description,
+          muse_shimmer: result.muse_shimmer, where_to_buy: JSON.stringify(result.where_to_buy || []),
+          ingredients: result.ingredients_summary, source_url: url || null,
+          scan_method: type, image_url: file_urls?.[0] || null,
+        });
+        setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
       }
-
-      setProgress(100);
-
-      // Sanitize shade — LLM may return the string "null" when there's no shade
-      const safeShade = (() => {
-        if (!result.shade) return null;
-        const s = String(result.shade).trim();
-        return ["null", "none", "n/a", "na", "", "no shade", "not applicable"].includes(s.toLowerCase())
-          ? null
-          : s;
-      })();
-
-      const product = await base44.entities.Product.create({
-        brand:       result.brand,
-        name:        result.name,
-        shade:       safeShade,
-        category:    result.category || "Makeup",
-        subcategory: normalizeSubcategory(result.category, result.subcategory),
-        price:       result.price_usd || 0,
-        currency:    "USD",
-        description: result.description,
-        muse_shimmer: result.muse_shimmer,
-        where_to_buy: JSON.stringify(result.where_to_buy || []),
-        ingredients: result.ingredients_summary,
-        source_url:  url || null,
-        scan_method: type,
-        image_url:   file_urls?.[0] || null,
-      });
-
-      setTimeout(() => {
-        onClose();
-        navigate(`/product/${product.id}`);
-      }, 500);
     } catch {
       clearInterval(interval);
       setScanError("Something went wrong. Please try again.");
@@ -576,6 +660,41 @@ export default function ScanHub({ onClose }) {
               </button>
             </div>
           </div>
+        )}
+
+        {/* ===== MULTI-PRODUCT PICKER ===== */}
+        {activeMode === "multi" && multiResults && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center px-6 w-full max-w-sm"
+          >
+            <h3 className="font-serif text-2xl text-[#1A3A30] text-center mb-1">Multiple products found</h3>
+            <p className="text-sm text-[#8B7355] italic text-center mb-6">Which one would you like to explore?</p>
+            <div className="w-full space-y-3 mb-5">
+              {multiResults.products.map((p, i) => (
+                <button
+                  key={i}
+                  onClick={() => selectProduct(p, multiResults.imageUrl)}
+                  className="w-full text-left px-5 py-4 bg-white/70 border border-[#1A3A30]/15 rounded-2xl flex items-center gap-4 active:bg-[#EFE9DC]/60 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#EFE9DC] flex items-center justify-center flex-shrink-0">
+                    <span className="font-serif text-xl text-[#1A3A30]/50">{p.brand?.[0] || "?"}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-medium text-[#1A3A30] uppercase tracking-wide leading-tight truncate">{p.brand}</p>
+                    <p className="text-sm text-[#1A3A30]/60 font-light leading-tight mt-0.5 line-clamp-2">{p.name}{p.shade ? ` — ${p.shade}` : ""}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => { setActiveMode(null); setMultiResults(null); }}
+              className="text-xs text-[#1A3A30]/40 underline"
+            >
+              Back
+            </button>
+          </motion.div>
         )}
 
         {/* ===== MIRROR — VIRTUAL TRY-ON (coming soon) ===== */}
