@@ -39,7 +39,7 @@ const TRAY_POSITIONS = [
 ];
 
 // ─── Badge detail drawer ──────────────────────────────────────────────────────
-function BadgeDrawer({ badge, earned, earnedAt, onClose }) {
+function BadgeDrawer({ badge, earned, earnedAt, onClose, badgeData }) {
   const family = FAMILY_MAP[badge?.family];
 
   return (
@@ -99,6 +99,29 @@ function BadgeDrawer({ badge, earned, earnedAt, onClose }) {
               <p className="text-sm leading-relaxed font-light text-[#5c7a69]">
                 {badge.howToEarn}
               </p>
+              {badge.progress && badgeData && (() => {
+                const prog = badge.progress(badgeData);
+                if (!prog || prog.target === 0) return null;
+                const pct = Math.min(prog.current / prog.target, 1);
+                return (
+                  <div className="mt-4">
+                    <div className="flex justify-between mb-1.5">
+                      <span className="text-[10px] font-light text-[#043927]/40 tracking-wide">
+                        {prog.current} of {prog.target} {prog.label}
+                      </span>
+                      <span className="text-[10px] font-light text-[#C8B06A]">
+                        {Math.round(pct * 100)}%
+                      </span>
+                    </div>
+                    <div className="h-0.5 rounded-full overflow-hidden bg-[#C8B06A]/15">
+                      <div
+                        className="h-full rounded-full bg-[#C8B06A] transition-all duration-700"
+                        style={{ width: `${Math.round(pct * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -233,6 +256,7 @@ export default function Distinctions() {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [activeFamily,  setActiveFamily]  = useState("all");
   const [toast,         setToast]         = useState(null);
+  const [badgeData, setBadgeData] = useState(null);
   const hasAutoAwarded = useRef(false);
 
   useEffect(() => {
@@ -240,20 +264,37 @@ export default function Distinctions() {
 
     async function load() {
       try {
-        const [badgeRecords, posts] = await Promise.all([
+        const [badgeRecords, posts, statRecords] = await Promise.all([
           base44.entities.UserBadge.filter({ user_id: user.id }),
           base44.entities.CommunityPost.filter({ created_by_id: user.id }),
+          base44.entities.UserStat.list("-created_date", 200),
         ]);
 
         const existingKeys = new Set(badgeRecords.map((b) => b.badge_key));
         const dates = {};
         badgeRecords.forEach((b) => { dates[b.badge_key] = b.earned_at || b.created_date; });
 
-        setPostCount(Array.isArray(posts) ? posts.length : 0);
+        const postList = Array.isArray(posts) ? posts : [];
+        const myStat = statRecords?.find(s => s.user_id === user.id);
+        const adores = myStat?.total_adores || 0;
+
+        const data = {
+          postCount: postList.length,
+          reviewCount: postList.filter(p => !p.post_type || p.post_type === "review").length,
+          swatchCount: postList.filter(p => p.post_type === "swatch").length,
+          beforeAfterCount: postList.filter(p => p.post_type === "before_after").length,
+          routineCount: postList.filter(p => p.post_type === "routine").length,
+          grwmCount: postList.filter(p => p.post_type === "grwm").length,
+          profileComplete: true,
+          totalAdores: adores,
+          earnedCount: existingKeys.size,
+        };
+        setBadgeData(data);
+        setPostCount(postList.length);
 
         if (!hasAutoAwarded.current) {
           hasAutoAwarded.current = true;
-          const newKeys = computeEarned(posts, existingKeys);
+          const newKeys = computeEarned(postList, existingKeys, adores);
 
           for (const key of newKeys) {
             try {
@@ -547,6 +588,24 @@ export default function Distinctions() {
                             <p className="text-[11px] mt-0.5 leading-snug font-light text-[#8a9e92]">
                               {isEarned ? "Earned" : badge.howToEarn}
                             </p>
+                            {!isEarned && badge.progress && badgeData && (() => {
+                              const prog = badge.progress(badgeData);
+                              if (!prog || prog.target === 0) return null;
+                              const pct = Math.min(prog.current / prog.target, 1);
+                              return (
+                                <div className="w-full mt-2">
+                                  <div className="h-0.5 rounded-full overflow-hidden bg-[#C8B06A]/15 w-full">
+                                    <div
+                                      className="h-full rounded-full bg-[#C8B06A] transition-all duration-700"
+                                      style={{ width: `${Math.round(pct * 100)}%` }}
+                                    />
+                                  </div>
+                                  <p className="text-[9px] text-[#043927]/30 font-light mt-0.5 text-center">
+                                    {prog.current}/{prog.target}
+                                  </p>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       );
@@ -575,6 +634,7 @@ export default function Distinctions() {
             earned={earnedKeys.has(selectedBadge.key)}
             earnedAt={earnedDates[selectedBadge.key]}
             onClose={() => setSelectedBadge(null)}
+            badgeData={badgeData}
           />
         )}
       </AnimatePresence>

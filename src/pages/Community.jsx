@@ -89,6 +89,7 @@ export default function Community() {
   const [banners, setBanners] = useState([]);
   const [activeBanner, setActiveBanner] = useState(0);
   const [events, setEvents] = useState([]);
+  const [showEventRsvp, setShowEventRsvp] = useState(false);
 
   const FAMILY_PRIORITY = { influence: 5, experience: 4, rituals: 3, self_connection: 2, foundations: 1 };
 
@@ -659,14 +660,13 @@ export default function Community() {
                       <p className="text-[10px] text-[#043927]/35 font-light mt-0.5 truncate">{event.location}</p>
                     )}
                     {event.cta_label && (
-                      <Link
-                        to={event.cta_url || "#"}
-                        onClick={e => { if (!event.cta_url) e.preventDefault(); }}
+                      <button
+                        onClick={e => { e.stopPropagation(); setShowEventRsvp(true); }}
                         className="inline-flex items-center gap-0.5 mt-2 text-[10px] font-light"
                         style={{ color: "#C8B06A" }}
                       >
                         {event.cta_label} ›
-                      </Link>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -1015,6 +1015,42 @@ export default function Community() {
         )}
       </div>
 
+      {showEventRsvp && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B3C26]/50 backdrop-blur-sm"
+          onClick={() => setShowEventRsvp(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="relative mx-5 w-full max-w-sm bg-[#FFF9E8] rounded-3xl px-8 py-14 flex flex-col items-center text-center"
+            style={{ boxShadow: "0 24px 64px rgba(11,60,38,0.22), 0 0 0 1px rgba(200,176,106,0.18)" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowEventRsvp(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#0B3C26]/[0.08] hover:bg-[#0B3C26]/[0.14] transition-colors"
+              aria-label="Close"
+            >
+              <X size={14} color="#0B3C26" />
+            </button>
+            <div className="mb-8">
+              <SwanLogo size={96} className="opacity-90" />
+            </div>
+            <h1 className="font-serif text-[2rem] leading-tight text-[#0B3C26] font-light tracking-wide mb-3">
+              Reservations Coming Soon
+            </h1>
+            <p className="text-[10px] tracking-[0.35em] uppercase text-[#0B3C26] font-light mb-6">
+              Coming Soon
+            </p>
+            <div className="w-10 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/60 to-transparent mb-6" />
+            <p className="text-[13px] text-[#0B3C26]/45 font-light leading-relaxed max-w-[210px] tracking-wide">
+              You'll be able to reserve your place here soon.
+            </p>
+          </motion.div>
+        </div>
+      )}
       {composing && <CommunityComposer onClose={() => setComposing(false)} onPosted={load} />}
       {reportingPostId && <ReportModal postId={reportingPostId} onClose={() => setReportingPostId(null)} />}
       {composingPoll && <PollComposer onClose={() => setComposingPoll(false)} onPosted={load} />}
