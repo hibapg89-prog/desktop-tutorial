@@ -94,8 +94,8 @@ export default function LocalCurator() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-[#FDF5E6] flex flex-col items-center justify-center">
-      <div className="swan-float"><SwanLogo size={64} color="#043927" /></div>
+    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center">
+      <div className="swan-float"><SwanLogo size={64} color="var(--color-text-primary)" /></div>
     </div>
   );
 
@@ -105,21 +105,21 @@ export default function LocalCurator() {
       : 0;
 
   return (
-    <div className="min-h-screen bg-[#FDF5E6]">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Header */}
       <div className="px-5 pt-14 pb-4">
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full border border-[#E5E4E2] flex items-center justify-center flex-shrink-0"
+            className="w-9 h-9 rounded-full border border-[var(--color-border)] flex items-center justify-center flex-shrink-0"
           >
-            <ArrowLeft size={16} color="#043927" />
+            <ArrowLeft size={16} color="var(--color-text-primary)" />
           </button>
           <div>
-            <p className="text-[9px] tracking-[0.25em] uppercase text-[#043927]/40 font-light">
+            <p className="text-[9px] tracking-[0.25em] uppercase text-primary-40 font-light">
               The Muse
             </p>
-            <h1 className="font-serif text-xl text-[#043927] font-light leading-tight">
+            <h1 className="font-serif text-xl text-[var(--color-text-primary)] font-light leading-tight">
               The Local Curator
             </h1>
           </div>
@@ -163,35 +163,35 @@ export default function LocalCurator() {
           {/* Side-by-side cards */}
           <div className="grid grid-cols-2 gap-3 mb-3">
             {/* ── Original ── */}
-            <div className="rounded-2xl overflow-hidden border border-[#E5E4E2] bg-white/60 cursor-pointer active:opacity-75" onClick={() => navigate(`/product/${id}`)}>
+            <div className="rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-surface)] cursor-pointer active:opacity-75" onClick={() => navigate(`/product/${id}`)}>
               <div
-                className="px-3 py-2.5 border-b border-[#E5E4E2]"
-                style={{ background: "linear-gradient(135deg, #C8B06A18, #FDF5E6)" }}
+                className="px-3 py-2.5 border-b border-[var(--color-border)]"
+                style={{ background: "linear-gradient(135deg, #C8B06A18, var(--color-bg))" }}
               >
-                <p className="text-[8px] tracking-[0.22em] text-[#C8B06A] uppercase font-light">
+                <p className="text-[8px] tracking-[0.22em] text-[var(--color-accent-gold)] uppercase font-light">
                   Classic Luxury
                 </p>
               </div>
               <div className="p-4">
-                <div className="aspect-square rounded-xl bg-[#F5EDD8] flex items-center justify-center mb-3 overflow-hidden">
+                <div className="aspect-square rounded-xl bg-[var(--color-bg-elevated)] flex items-center justify-center mb-3 overflow-hidden">
                   {original.image_url
                     ? <img src={original.image_url} alt="" className="w-full h-full object-contain p-2" />
-                    : <SwanLogo size={36} color="#043927" />
+                    : <SwanLogo size={36} color="var(--color-text-primary)" />
                   }
                 </div>
-                <p className="text-[10px] font-medium text-[#043927] tracking-wide uppercase leading-tight">
+                <p className="text-[10px] font-medium text-[var(--color-text-primary)] tracking-wide uppercase leading-tight">
                   {original.brand}
                 </p>
-                <p className="text-[11px] text-[#043927]/55 font-light leading-tight mt-0.5 line-clamp-2">
+                <p className="text-[11px] text-primary-55 font-light leading-tight mt-0.5 line-clamp-2">
                   {original.name}
                 </p>
                 {original.price > 0 && (
-                  <p className="text-sm font-light text-[#043927] mt-2.5">
+                  <p className="text-sm font-light text-[var(--color-text-primary)] mt-2.5">
                     {formatPrice(original.price)}
                   </p>
                 )}
                 <div className="mt-2.5 px-2 py-1.5 bg-[#C8B06A]/15 rounded-lg text-center">
-                  <p className="text-[8px] text-[#C8B06A] font-light tracking-wide">The Standard</p>
+                  <p className="text-[8px] text-[var(--color-accent-gold)] font-light tracking-wide">The Standard</p>
                 </div>
               </div>
             </div>
@@ -199,13 +199,13 @@ export default function LocalCurator() {
             {/* ── Artisan Alternative ── */}
             <div
               className={`rounded-2xl overflow-hidden border text-left transition-all cursor-pointer active:opacity-75 ${
-                savedArtisan ? "border-[#BC8F8F]/50 bg-[#BC8F8F]/[0.04]" : "border-[#E5E4E2] bg-white/60"
+                savedArtisan ? "border-[#BC8F8F]/50 bg-[#BC8F8F]/[0.04]" : "border-[var(--color-border)] bg-[var(--color-bg-surface)]"
               }`}
               onClick={handleCuratorCardClick}
             >
               <div
-                className="px-3 py-2.5 border-b border-[#E5E4E2] flex items-center justify-between"
-                style={{ background: "linear-gradient(135deg, #BC8F8F18, #FDF5E6)" }}
+                className="px-3 py-2.5 border-b border-[var(--color-border)] flex items-center justify-between"
+                style={{ background: "linear-gradient(135deg, #BC8F8F18, var(--color-bg))" }}
               >
                 <p className="text-[8px] tracking-[0.22em] text-[#BC8F8F] uppercase font-light">
                   Local Curator
@@ -231,7 +231,7 @@ export default function LocalCurator() {
                     {/* Brand monogram + image description */}
                     <div
                       className="aspect-square rounded-xl flex flex-col items-center justify-center mb-3 px-2 overflow-hidden"
-                      style={{ background: "linear-gradient(135deg, #BC8F8F22, #F5EDD8)" }}
+                      style={{ background: "linear-gradient(135deg, #BC8F8F22, var(--color-bg-surface))" }}
                     >
                       <span className="font-serif text-4xl text-[#BC8F8F]/50 leading-none">
                         {curator.brand?.[0] || "A"}
@@ -242,14 +242,14 @@ export default function LocalCurator() {
                         </p>
                       )}
                     </div>
-                    <p className="text-[10px] font-medium text-[#043927] tracking-wide uppercase leading-tight">
+                    <p className="text-[10px] font-medium text-[var(--color-text-primary)] tracking-wide uppercase leading-tight">
                       {curator.brand}
                     </p>
-                    <p className="text-[11px] text-[#043927]/55 font-light leading-tight mt-0.5 line-clamp-2">
+                    <p className="text-[11px] text-primary-55 font-light leading-tight mt-0.5 line-clamp-2">
                       {curator.name}
                     </p>
                     {curator.price_usd > 0 && (
-                      <p className="text-sm font-light text-[#043927] mt-2.5">
+                      <p className="text-sm font-light text-[var(--color-text-primary)] mt-2.5">
                         {formatPrice(curator.price_usd)}
                       </p>
                     )}
@@ -294,23 +294,23 @@ export default function LocalCurator() {
                 </p>
                 <TranslateToggle
                   text={curator.description}
-                  className="font-serif text-[15px] text-[#043927]/70 leading-[1.65]"
+                  className="font-serif text-[15px] text-primary-70 leading-[1.65]"
                   italic
                 />
               </div>
 
               {/* Sustainability score */}
-              <div className="bg-white/60 rounded-2xl p-5 border border-[#E5E4E2]">
+              <div className="bg-[var(--color-bg-surface)] rounded-2xl p-5 border border-[var(--color-border)]">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] tracking-[0.18em] text-[#043927]/50 uppercase font-light">
+                  <p className="text-[10px] tracking-[0.18em] text-primary-50 uppercase font-light">
                     Sustainability
                   </p>
-                  <p className="text-sm font-light text-[#043927]">
+                  <p className="text-sm font-light text-[var(--color-text-primary)]">
                     {curator.sustainability_score}
-                    <span className="text-[10px] text-[#043927]/35">/10</span>
+                    <span className="text-[10px] text-primary-35">/10</span>
                   </p>
                 </div>
-                <div className="h-1.5 rounded-full bg-[#E5E4E2] overflow-hidden mb-3">
+                <div className="h-1.5 rounded-full bg-[var(--color-border)] overflow-hidden mb-3">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(curator.sustainability_score / 10) * 100}%` }}
@@ -319,7 +319,7 @@ export default function LocalCurator() {
                   />
                 </div>
                 {safeVal(curator.sustainability_note) && (
-                  <p className="text-[11px] text-[#043927]/50 font-light italic leading-relaxed">
+                  <p className="text-[11px] text-primary-50 font-light italic leading-relaxed">
                     {curator.sustainability_note}
                   </p>
                 )}
@@ -327,12 +327,12 @@ export default function LocalCurator() {
 
               {/* Comparison table */}
               {(safeVal(curator.scent_profile) || safeVal(curator.longevity)) && (
-                <div className="bg-white/60 rounded-2xl border border-[#E5E4E2] overflow-hidden">
-                  <div className="px-5 py-3 border-b border-[#E5E4E2] flex items-center justify-between">
-                    <p className="text-[9px] tracking-[0.2em] text-[#043927]/40 uppercase font-light">
+                <div className="bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
+                  <div className="px-5 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+                    <p className="text-[9px] tracking-[0.2em] text-primary-40 uppercase font-light">
                       Comparison
                     </p>
-                    <div className="flex gap-4 text-[8px] text-[#043927]/30 font-light uppercase tracking-wide">
+                    <div className="flex gap-4 text-[8px] text-primary-30 font-light uppercase tracking-wide">
                       <span>Classic</span>
                       <span className="text-[#BC8F8F]">Artisan</span>
                     </div>
@@ -345,12 +345,12 @@ export default function LocalCurator() {
                     .map(([label, orig, alt], i) => (
                       <div
                         key={i}
-                        className="px-5 py-3.5 flex items-start border-b border-[#E5E4E2]/50 last:border-0"
+                        className="px-5 py-3.5 flex items-start border-b border-[var(--color-border)] last:border-0"
                       >
-                        <span className="text-[11px] text-[#043927]/40 font-light w-24 flex-shrink-0">
+                        <span className="text-[11px] text-primary-40 font-light w-24 flex-shrink-0">
                           {label}
                         </span>
-                        <span className="text-[11px] text-[#043927]/50 font-light flex-1 text-center">
+                        <span className="text-[11px] text-primary-50 font-light flex-1 text-center">
                           {orig}
                         </span>
                         <span className="text-[11px] text-[#BC8F8F] font-light flex-1 text-right">
@@ -363,11 +363,11 @@ export default function LocalCurator() {
 
               {/* Carbon / eco note */}
               {safeVal(curator.carbon_note) && (
-                <div className="bg-[#043927]/[0.05] rounded-2xl p-4 border border-[#043927]/10 flex items-start gap-3">
+                <div className="bg-[var(--color-bg-surface)] rounded-2xl p-4 border border-[var(--color-border)] flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#043927] flex items-center justify-center flex-shrink-0">
                     <Leaf size={14} color="#FDF5E6" strokeWidth={1.5} />
                   </div>
-                  <p className="text-[11px] text-[#043927]/60 font-light leading-relaxed italic">
+                  <p className="text-[11px] text-primary-60 font-light leading-relaxed italic">
                     {curator.carbon_note}
                   </p>
                 </div>
@@ -397,7 +397,7 @@ export default function LocalCurator() {
 
               {/* CTA */}
               <div className="pt-2 space-y-3">
-                <p className="text-[10px] text-[#043927]/35 font-light tracking-wide text-center leading-relaxed">
+                <p className="text-[10px] text-primary-35 font-light tracking-wide text-center leading-relaxed">
                   The Muse never tells you what to buy.<br />
                   It gives you perspective and lets you decide.
                 </p>
@@ -429,24 +429,24 @@ export default function LocalCurator() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[#FDF5E6] rounded-t-3xl px-5 pt-5 overflow-y-auto max-h-[88vh]"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg)] rounded-t-3xl px-5 pt-5 overflow-y-auto max-h-[88vh]"
               style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 16px) + 96px)" }}
             >
               {/* Handle */}
-              <div className="w-10 h-1 bg-[#E5E4E2] rounded-full mx-auto mb-6" />
+              <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto mb-6" />
 
               <div className="flex items-start justify-between mb-1">
                 <div>
-                  <h2 className="font-serif text-xl text-[#043927] font-light">Your Decision</h2>
-                  <p className="text-[10px] text-[#043927]/40 font-light tracking-wide mt-0.5">
+                  <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light">Your Decision</h2>
+                  <p className="text-[10px] text-primary-40 font-light tracking-wide mt-0.5">
                     The Muse presents both paths. You choose yours.
                   </p>
                 </div>
                 <button
                   onClick={() => setDecideOpen(false)}
-                  className="w-8 h-8 rounded-full bg-[#E5E4E2] flex items-center justify-center flex-shrink-0"
+                  className="w-8 h-8 rounded-full bg-[var(--color-bg-elevated)] flex items-center justify-center flex-shrink-0"
                 >
-                  <X size={14} color="#043927" />
+                  <X size={14} color="var(--color-text-primary)" />
                 </button>
               </div>
 
@@ -455,17 +455,17 @@ export default function LocalCurator() {
               {/* Head-to-head */}
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="rounded-2xl bg-[#C8B06A]/10 border border-[#C8B06A]/30 p-4">
-                  <p className="text-[8px] tracking-[0.22em] text-[#C8B06A] uppercase font-light mb-3">
+                  <p className="text-[8px] tracking-[0.22em] text-[var(--color-accent-gold)] uppercase font-light mb-3">
                     The Classic
                   </p>
-                  <p className="text-[10px] font-medium text-[#043927] uppercase tracking-wide leading-tight">
+                  <p className="text-[10px] font-medium text-[var(--color-text-primary)] uppercase tracking-wide leading-tight">
                     {original?.brand}
                   </p>
-                  <p className="text-[11px] text-[#043927]/50 font-light mt-1 leading-tight line-clamp-2">
+                  <p className="text-[11px] text-primary-50 font-light mt-1 leading-tight line-clamp-2">
                     {original?.name}
                   </p>
                   {original?.price > 0 && (
-                    <p className="text-sm text-[#043927] font-light mt-2.5">
+                    <p className="text-sm text-[var(--color-text-primary)] font-light mt-2.5">
                       {formatPrice(original.price)}
                     </p>
                   )}
@@ -474,14 +474,14 @@ export default function LocalCurator() {
                   <p className="text-[8px] tracking-[0.22em] text-[#BC8F8F] uppercase font-light mb-3">
                     The Artisan
                   </p>
-                  <p className="text-[10px] font-medium text-[#043927] uppercase tracking-wide leading-tight">
+                  <p className="text-[10px] font-medium text-[var(--color-text-primary)] uppercase tracking-wide leading-tight">
                     {curator?.brand}
                   </p>
-                  <p className="text-[11px] text-[#043927]/50 font-light mt-1 leading-tight line-clamp-2">
+                  <p className="text-[11px] text-primary-50 font-light mt-1 leading-tight line-clamp-2">
                     {curator?.name}
                   </p>
                   {curator?.price_usd > 0 && (
-                    <p className="text-sm text-[#043927] font-light mt-2.5">
+                    <p className="text-sm text-[var(--color-text-primary)] font-light mt-2.5">
                       {formatPrice(curator.price_usd)}
                     </p>
                   )}
@@ -490,7 +490,7 @@ export default function LocalCurator() {
 
               {/* Savings hint */}
               {savings > 0 && (
-                <p className="text-[10px] text-[#043927]/40 font-light italic text-center mb-5">
+                <p className="text-[10px] text-primary-40 font-light italic text-center mb-5">
                   Choosing the artisan saves you {formatPrice(savings)}.
                 </p>
               )}
@@ -498,7 +498,7 @@ export default function LocalCurator() {
               <div className="space-y-3">
                 <button
                   onClick={() => { setDecideOpen(false); navigate(-1); }}
-                  className="w-full py-4 rounded-2xl border border-[#C8B06A]/60 text-[#043927] text-[10px] tracking-[0.25em] uppercase font-light"
+                  className="w-full py-4 rounded-2xl border border-[#C8B06A]/60 text-[var(--color-text-primary)] text-[10px] tracking-[0.25em] uppercase font-light"
                 >
                   Keep the Classic
                 </button>

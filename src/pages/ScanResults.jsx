@@ -16,7 +16,7 @@ export default function ScanResults() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "linear-gradient(160deg, #FFF9E8 0%, #EFE9DC 55%, #E5DDD0 100%)" }}
+      style={{ background: "var(--color-page-gradient)" }}
     >
       {/* Marble shimmer overlay */}
       <div
@@ -38,7 +38,7 @@ export default function ScanResults() {
           style={{ background: "rgba(11,60,38,0.07)" }}
           aria-label="Back"
         >
-          <ArrowLeft size={18} color="#0B3C26" />
+          <ArrowLeft size={18} color="var(--color-text-primary)" />
         </button>
         <SwanLogo className="h-8" />
         <div className="w-10" />
@@ -48,17 +48,17 @@ export default function ScanResults() {
       <div className="relative z-10 text-center px-6 mb-6">
         <p
           className="text-[10px] font-semibold tracking-[0.22em] uppercase mb-2"
-          style={{ color: "#C8B06A" }}
+          style={{ color: "var(--color-accent-gold)" }}
         >
           Scan Session
         </p>
         <h1
           className="text-[2rem] leading-tight"
-          style={{ fontFamily: "Cormorant Garamond, serif", color: "#0B3C26", fontWeight: 400 }}
+          style={{ fontFamily: "Cormorant Garamond, serif", color: "var(--color-text-primary)", fontWeight: 400 }}
         >
           Your Finds
         </h1>
-        <p className="text-sm font-light mt-1" style={{ color: "#0B3C26", opacity: 0.45 }}>
+        <p className="text-sm font-light mt-1" style={{ color: "var(--color-text-primary)", opacity: 0.45 }}>
           {products.length} {products.length === 1 ? "product" : "products"} identified
         </p>
       </div>
@@ -87,7 +87,7 @@ export default function ScanResults() {
             <div
               className="rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.985] transition-transform"
               style={{
-                background: "rgba(255,249,232,0.82)",
+                background: "var(--color-bg-surface)",
                 border: "1px solid rgba(200,176,106,0.22)",
                 boxShadow: "0 2px 18px rgba(11,60,38,0.06), 0 1px 4px rgba(200,176,106,0.12)",
                 backdropFilter: "blur(10px)",
@@ -95,9 +95,9 @@ export default function ScanResults() {
             >
               {/* Initial avatar */}
               <div
-                className="w-[52px] h-[52px] rounded-xl flex items-center justify-center flex-shrink-0"
+                className="w-13 h-13 w-[52px] h-[52px] rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{
-                  background: "linear-gradient(135deg, #EFE9DC, #E3DBCC)",
+                  background: "var(--color-bg-elevated)",
                   border: "1px solid rgba(200,176,106,0.28)",
                 }}
               >
@@ -105,7 +105,7 @@ export default function ScanResults() {
                   style={{
                     fontFamily: "Cormorant Garamond, serif",
                     fontSize: "1.5rem",
-                    color: "#C8B06A",
+                    color: "var(--color-accent-gold)",
                     lineHeight: 1,
                   }}
                 >
@@ -117,7 +117,7 @@ export default function ScanResults() {
               <div className="flex-1 min-w-0">
                 <p
                   className="text-[10px] font-semibold tracking-[0.14em] uppercase truncate"
-                  style={{ color: "#0B3C26" }}
+                  style={{ color: "var(--color-text-primary)" }}
                 >
                   {product.brand}
                 </p>
@@ -126,7 +126,7 @@ export default function ScanResults() {
                   style={{
                     fontFamily: "Cormorant Garamond, serif",
                     fontSize: "1.05rem",
-                    color: "#0B3C26",
+                    color: "var(--color-text-primary)",
                     fontWeight: 400,
                   }}
                 >
@@ -136,14 +136,14 @@ export default function ScanResults() {
                 {product.category && (
                   <p
                     className="text-[11px] mt-1 font-light"
-                    style={{ color: "#0B3C26", opacity: 0.42 }}
+                    style={{ color: "var(--color-text-primary)", opacity: 0.42 }}
                   >
                     {product.category}
                   </p>
                 )}
               </div>
 
-              {/* Arrow pill */}
+              {/* Arrow pill — intentional brand CTA */}
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: "#0B3C26" }}
@@ -176,7 +176,7 @@ export default function ScanResults() {
       {/* Footer hint */}
       <p
         className="relative z-10 text-center text-[10px] pb-10 tracking-[0.12em] uppercase"
-        style={{ color: "#0B3C26", opacity: 0.28 }}
+        style={{ color: "var(--color-text-primary)", opacity: 0.28 }}
       >
         Tap a product to explore
       </p>

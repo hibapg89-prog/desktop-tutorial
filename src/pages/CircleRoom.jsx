@@ -80,7 +80,7 @@ function PostBubble({ post, isOwn, badge }) {
                 {(post.author_name || post.created_by_id || "?").slice(0, 1).toUpperCase()}
               </span>
             </div>
-            <span className="text-[10px] text-[#0B3C26]/50 font-light">
+            <span className="text-[10px] text-primary-50 font-light">
               {post.author_name || "Member"}
             </span>
             {badge && (
@@ -110,10 +110,10 @@ function PostBubble({ post, isOwn, badge }) {
             {post.text}
           </a>
         ) : (
-          <p className="text-sm text-[#0B3C26] font-light leading-relaxed">{post.text}</p>
+          <p className="text-sm text-[var(--color-text-primary)] font-light leading-relaxed">{post.text}</p>
         )}
 
-        <p className={`text-[9px] mt-1.5 ${isOwn ? "text-[#0B3C26]/30 text-right" : "text-[#0B3C26]/30"}`}>
+        <p className={`text-[9px] mt-1.5 ${isOwn ? "text-primary-30 text-right" : "text-primary-30"}`}>
           {timeAgo(post.created_date)}
         </p>
       </div>
@@ -177,16 +177,16 @@ function InviteSheet({ room, memberIds, user, onClose, onInvited }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="relative w-full max-w-lg rounded-t-3xl bg-[#FFF9E8] px-6 pt-6 pb-10 shadow-2xl"
+        className="relative w-full max-w-lg rounded-t-3xl bg-[var(--color-bg)] px-6 pt-6 pb-10 shadow-2xl"
         style={{ maxHeight: "70vh", overflowY: "auto" }}
       >
         <div className="flex items-center justify-between mb-2">
-          <h2 className="font-serif text-xl text-[#0B3C26]">Invite to Room</h2>
-          <button onClick={onClose} className="text-[#0B3C26]/40">
+          <h2 className="font-serif text-xl text-[var(--color-text-primary)]">Invite to Room</h2>
+          <button onClick={onClose} className="text-primary-40">
             <X size={20} />
           </button>
         </div>
-        <p className="text-[11px] text-[#0B3C26]/40 font-light mb-4">
+        <p className="text-[11px] text-primary-40 font-light mb-4">
           {remaining > 0
             ? `Up to ${remaining} more ${remaining === 1 ? "person" : "people"} can join.`
             : "This room is at capacity (8 members)."}
@@ -197,7 +197,7 @@ function InviteSheet({ room, memberIds, user, onClose, onInvited }) {
             <div className="swan-float"><SwanLogo size={28} color="#C8B06A" /></div>
           </div>
         ) : contacts.length === 0 ? (
-          <p className="text-sm text-[#0B3C26]/35 font-light py-6 text-center italic">
+          <p className="text-sm text-primary-35 font-light py-6 text-center italic">
             No contacts to invite. Start a conversation in Messages first.
           </p>
         ) : (
@@ -213,7 +213,7 @@ function InviteSheet({ room, memberIds, user, onClose, onInvited }) {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
                     isSelected
                       ? "bg-[#043927] border-[#043927]"
-                      : "bg-white/70 border-[#E5E4E2]"
+                      : "bg-[var(--color-bg-surface)] border-[var(--color-border)]"
                   } ${disabled ? "opacity-30" : ""}`}
                 >
                   <div
@@ -222,7 +222,7 @@ function InviteSheet({ room, memberIds, user, onClose, onInvited }) {
                   >
                     <span className="text-white text-[10px] font-medium">{id.slice(0, 1).toUpperCase()}</span>
                   </div>
-                  <span className={`flex-1 text-left text-sm font-light ${isSelected ? "text-white" : "text-[#0B3C26]"}`}>
+                  <span className={`flex-1 text-left text-sm font-light ${isSelected ? "text-white" : "text-[var(--color-text-primary)]"}`}>
                     {id.slice(0, 8)}…
                   </span>
                   {isSelected && <Check size={14} className="text-white" />}
@@ -358,7 +358,7 @@ export default function CircleRoom() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FFF9E8] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
         <div className="swan-float"><SwanLogo size={40} color="#C8B06A" /></div>
       </div>
     );
@@ -370,7 +370,7 @@ export default function CircleRoom() {
     Date.now() - new Date(room.last_activity) < 86400000;
 
   return (
-    <div className="min-h-screen bg-[#FFF9E8] flex flex-col">
+    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
       {/* Room Header */}
       <div className="relative flex-shrink-0">
         {room.cover_image ? (
@@ -412,7 +412,7 @@ export default function CircleRoom() {
             <div>
               <h1
                 className={`font-serif text-2xl font-light leading-tight ${
-                  room.cover_image ? "text-white" : "text-[#0B3C26]"
+                  room.cover_image ? "text-white" : "text-[var(--color-text-primary)]"
                 }`}
               >
                 {room.name}
@@ -423,7 +423,7 @@ export default function CircleRoom() {
                 )}
                 <span
                   className={`text-[10px] font-light ${
-                    room.cover_image ? "text-white/60" : "text-[#0B3C26]/45"
+                    room.cover_image ? "text-white/60" : "text-primary-45"
                   }`}
                 >
                   {memberIds.length} {memberIds.length === 1 ? "member" : "members"}
@@ -439,10 +439,10 @@ export default function CircleRoom() {
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-2">
         {posts.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-center">
-            <p className="font-serif text-lg text-[#0B3C26]/35 italic">
+            <p className="font-serif text-lg text-primary-35 italic">
               Nothing shared yet.
             </p>
-            <p className="text-sm text-[#0B3C26]/25 font-light mt-1">
+            <p className="text-sm text-primary-30 font-light mt-1">
               Start the conversation below.
             </p>
           </div>
@@ -461,8 +461,8 @@ export default function CircleRoom() {
 
       {/* Compose bar */}
       <div
-        className="flex-shrink-0 px-4 pt-3 pb-8 border-t border-[#0B3C26]/06"
-        style={{ background: "rgba(255,249,232,0.97)", backdropFilter: "blur(12px)" }}
+        className="flex-shrink-0 px-4 pt-3 pb-8 border-t border-[var(--color-text-primary)]/06"
+        style={{ background: "var(--color-bg)", backdropFilter: "blur(12px)" }}
       >
         <AnimatePresence>
           {showImageField && (
@@ -476,7 +476,7 @@ export default function CircleRoom() {
                 value={imageUrl}
                 onChange={e => setImageUrl(e.target.value)}
                 placeholder="Image URL…"
-                className="w-full bg-white/70 border border-[#E5E4E2] rounded-xl px-3 py-2 text-sm text-[#0B3C26] font-light outline-none placeholder:text-[#0B3C26]/30"
+                className="w-full bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30"
               />
             </motion.div>
           )}
@@ -488,7 +488,7 @@ export default function CircleRoom() {
             <button
               onClick={() => { setShowImageField(v => !v); setShowLinkField(false); }}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                showImageField ? "bg-[#C8B06A]/20 text-[#C8B06A]" : "text-[#0B3C26]/35 hover:text-[#0B3C26]/60"
+                showImageField ? "bg-[#C8B06A]/20 text-[#C8B06A]" : "text-primary-35 hover:text-primary-60"
               }`}
             >
               <Image size={16} />
@@ -496,7 +496,7 @@ export default function CircleRoom() {
             <button
               onClick={() => { setShowLinkField(v => !v); setShowImageField(false); }}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                showLinkField ? "bg-[#C8B06A]/20 text-[#C8B06A]" : "text-[#0B3C26]/35 hover:text-[#0B3C26]/60"
+                showLinkField ? "bg-[#C8B06A]/20 text-[#C8B06A]" : "text-primary-35 hover:text-primary-60"
               }`}
             >
               <Link2 size={16} />
@@ -504,7 +504,7 @@ export default function CircleRoom() {
           </div>
 
           {/* Text input */}
-          <div className="flex-1 bg-white/80 border border-[#E5E4E2] rounded-2xl px-3.5 py-2.5 min-h-[42px] flex items-center">
+          <div className="flex-1 bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-3.5 py-2.5 min-h-[42px] flex items-center">
             <textarea
               value={text}
               onChange={e => setText(e.target.value)}
@@ -513,7 +513,7 @@ export default function CircleRoom() {
               }}
               placeholder={showLinkField ? "Paste a link…" : "Share something…"}
               rows={1}
-              className="w-full bg-transparent text-sm text-[#0B3C26] font-light outline-none placeholder:text-[#0B3C26]/30 resize-none leading-snug"
+              className="w-full bg-transparent text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30 resize-none leading-snug"
               style={{ maxHeight: 90, overflowY: "auto" }}
             />
           </div>

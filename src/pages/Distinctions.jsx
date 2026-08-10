@@ -52,7 +52,7 @@ function BadgeDrawer({ badge, earned, earnedAt, onClose, badgeData }) {
     >
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
       <motion.div
-        className="relative w-full max-w-md rounded-t-3xl shadow-2xl px-6 pt-8 pb-10 bg-[#FDF5E6] border border-[#E5E4E2]"
+        className="relative w-full max-w-md rounded-t-3xl shadow-2xl px-6 pt-8 pb-10 bg-[var(--color-bg)] border border-[var(--color-border)]"
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
@@ -69,7 +69,7 @@ function BadgeDrawer({ badge, earned, earnedAt, onClose, badgeData }) {
             <p className="text-xs tracking-[0.18em] uppercase mb-1 font-light font-serif text-[#C8B06A]">
               {family?.label}
             </p>
-            <h3 className="text-xl font-light leading-tight mb-2 font-serif text-[#043927]">
+            <h3 className="text-xl font-light leading-tight mb-2 font-serif text-[var(--color-text-primary)]">
               {badge.label}
             </h3>
             <p className="text-sm leading-relaxed font-light text-[#5c7a69]">
@@ -78,11 +78,11 @@ function BadgeDrawer({ badge, earned, earnedAt, onClose, badgeData }) {
           </div>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-[#E5E4E2]">
+        <div className="mt-6 pt-5 border-t border-[var(--color-border)]">
           {earned ? (
             <div className="flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-[#C8B06A]" />
-              <span className="text-sm font-light text-[#043927]">
+              <span className="text-sm font-light text-[var(--color-text-primary)]">
                 Distinction earned
                 {earnedAt && (
                   <span className="text-[#8a9e92]">
@@ -106,7 +106,7 @@ function BadgeDrawer({ badge, earned, earnedAt, onClose, badgeData }) {
                 return (
                   <div className="mt-4">
                     <div className="flex justify-between mb-1.5">
-                      <span className="text-[10px] font-light text-[#043927]/40 tracking-wide">
+                      <span className="text-[10px] font-light text-primary-40 tracking-wide">
                         {prog.current} of {prog.target} {prog.label}
                       </span>
                       <span className="text-[10px] font-light text-[#C8B06A]">
@@ -131,7 +131,7 @@ function BadgeDrawer({ badge, earned, earnedAt, onClose, badgeData }) {
           className={`mt-6 w-full py-3 rounded-xl text-sm tracking-[0.12em] uppercase font-light transition-all border ${
             earned
               ? "bg-[#043927] text-[#FAF6EF] border-[#043927]"
-              : "bg-transparent text-[#043927] border-[#C8B06A]"
+              : "bg-transparent text-[var(--color-text-primary)] border-[#C8B06A]"
           }`}
         >
           {earned ? "Close" : "Keep going"}
@@ -165,7 +165,7 @@ function TierProgressCard({ postCount, badgeCount }) {
   const nextTier = nextTierKey ? TIER_CONFIG[nextTierKey] : null;
 
   return (
-    <div className="mx-4 mb-5 rounded-2xl px-5 py-4 border border-[#E5E4E2] bg-white/55">
+    <div className="mx-4 mb-5 rounded-2xl px-5 py-4 border border-[var(--color-border)] bg-[var(--color-bg-surface)]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <span
@@ -174,19 +174,19 @@ function TierProgressCard({ postCount, badgeCount }) {
           >
             {tier.label}
           </span>
-          <span className="text-[11px] font-light text-[#043927]/40">
+          <span className="text-[11px] font-light text-primary-40">
             {badgeCount} of 20 distinctions
           </span>
         </div>
         {nextTier && (
-          <span className="text-[9px] font-light italic text-[#043927]/[0.28]">
+          <span className="text-[9px] font-light italic text-primary-30">
             toward {nextTier.label}
           </span>
         )}
       </div>
 
       {tier.key === "patron" ? (
-        <p className="text-[11px] font-light italic text-[#043927]/[0.45]">
+        <p className="text-[11px] font-light italic text-primary-45">
           The highest distinction. You have arrived.
         </p>
       ) : (
@@ -197,10 +197,10 @@ function TierProgressCard({ postCount, badgeCount }) {
               return (
                 <div key={label}>
                   <div className="flex justify-between mb-1">
-                    <span className="text-[9px] font-light uppercase tracking-wider text-[#043927]/[0.38]">
+                    <span className="text-[9px] font-light uppercase tracking-wider text-primary-40">
                       {label}
                     </span>
-                    <span className="text-[9px] font-light text-[#043927]/[0.45]">
+                    <span className="text-[9px] font-light text-primary-45">
                       {Math.min(current, target)}/{target}
                     </span>
                   </div>
@@ -221,14 +221,14 @@ function TierProgressCard({ postCount, badgeCount }) {
           </div>
 
           {tier.key === "seeker" && (
-            <p className="text-[10px] font-light italic mt-2.5 text-[#043927]/[0.32]">
+            <p className="text-[10px] font-light italic mt-2.5 text-primary-35">
               {postCount >= 3 || badgeCount >= 3
                 ? "Almost there — keep sharing your rituals."
                 : `${3 - Math.max(postCount, badgeCount)} more ${postCount >= badgeCount ? "distinctions" : "posts"} to reach The Muse.`}
             </p>
           )}
           {tier.key === "muse" && (
-            <p className="text-[10px] font-light italic mt-2.5 text-[#043927]/[0.32]">
+            <p className="text-[10px] font-light italic mt-2.5 text-primary-35">
               {postCount >= 7 && badgeCount >= 5
                 ? "You have reached the threshold — The Patron awaits."
                 : [
@@ -340,7 +340,7 @@ export default function Distinctions() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDF5E6]">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
         <div className="flex flex-col items-center gap-3">
           <div className="swan-float">
             <SwanLogo size={40} color="#C8B06A" />
@@ -354,7 +354,7 @@ export default function Distinctions() {
   }
 
   return (
-    <div className="min-h-screen pb-28 bg-[#FDF5E6]">
+    <div className="min-h-screen pb-28 bg-[var(--color-bg)]">
 
       {/* ── New-badge toast ─────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -378,13 +378,13 @@ export default function Distinctions() {
           onClick={() => navigate(-1)}
           className="w-9 h-9 flex items-center justify-center rounded-full border border-[#C8B06A]/30 hover:border-[#C8B06A]/60 transition-colors"
         >
-          <ChevronLeft size={18} strokeWidth={1.5} color="#043927" />
+          <ChevronLeft size={18} strokeWidth={1.5} color="var(--color-text-primary)" />
         </button>
         <div className="flex flex-col items-center">
           <p className="text-[10px] tracking-[0.3em] uppercase font-light font-serif text-[#C8B06A]">
             Le Sanctuaire
           </p>
-          <h1 className="text-xl tracking-[0.12em] uppercase font-light font-serif text-[#043927]">
+          <h1 className="text-xl tracking-[0.12em] uppercase font-light font-serif text-[var(--color-text-primary)]">
             Distinctions
           </h1>
         </div>
@@ -396,7 +396,7 @@ export default function Distinctions() {
         <div
           className="relative w-full rounded-3xl overflow-hidden h-[340px]"
           style={{
-            background: "radial-gradient(ellipse at 40% 35%, #f0e8d5 0%, #e8dcc4 40%, #d4c9b0 100%)",
+            background: "var(--color-marble-bg)",
             boxShadow: "inset 0 2px 20px rgba(0,0,0,0.08), 0 4px 24px rgba(0,0,0,0.06)",
           }}
         >
@@ -412,9 +412,9 @@ export default function Distinctions() {
           {/* Progress ribbon */}
           <div
             className="absolute top-4 left-1/2 -translate-x-1/2 px-5 py-1 rounded-full border border-[#C8B06A] backdrop-blur-sm"
-            style={{ background: "rgba(253,245,230,0.85)" }}
+            style={{ background: "var(--color-bg-surface)" }}
           >
-            <span className="text-[11px] tracking-[0.2em] uppercase font-light font-serif text-[#043927]">
+            <span className="text-[11px] tracking-[0.2em] uppercase font-light font-serif text-[var(--color-text-primary)]">
               {earnedCount} of 20 earned
             </span>
           </div>
@@ -468,7 +468,7 @@ export default function Distinctions() {
           <button
             onClick={() => setActiveFamily("all")}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-light transition-all border border-[#043927] tracking-[0.06em] ${
-              activeFamily === "all" ? "bg-[#043927] text-[#FAF6EF]" : "bg-transparent text-[#043927]"
+              activeFamily === "all" ? "bg-[#043927] text-[#FAF6EF]" : "bg-transparent text-[var(--color-text-primary)]"
             }`}
           >
             All
@@ -482,7 +482,7 @@ export default function Distinctions() {
                 key={f.key}
                 onClick={() => setActiveFamily(f.key)}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-light transition-all flex items-center gap-1 border border-[#043927] tracking-[0.06em] ${
-                  isActive ? "bg-[#043927] text-[#FAF6EF]" : "bg-transparent text-[#043927]"
+                  isActive ? "bg-[#043927] text-[#FAF6EF]" : "bg-transparent text-[var(--color-text-primary)]"
                 }`}
               >
                 {f.label}
@@ -516,7 +516,7 @@ export default function Distinctions() {
                 <div key={family.key}>
                   <div className="flex items-baseline justify-between mb-4">
                     <div>
-                      <h2 className="text-base tracking-[0.1em] uppercase font-light font-serif text-[#043927]">
+                      <h2 className="text-base tracking-[0.1em] uppercase font-light font-serif text-[var(--color-text-primary)]">
                         {family.label}
                       </h2>
                       <p className="text-[11px] mt-0.5 font-light text-[#8a9e92]">
@@ -541,7 +541,7 @@ export default function Distinctions() {
                     ))}
                   </div>
 
-                  <div className="mt-4 h-px w-full rounded-full overflow-hidden bg-[#E5E4E2]">
+                  <div className="mt-4 h-px w-full rounded-full overflow-hidden bg-[var(--color-border)]">
                     <div
                       className="h-full rounded-full transition-all duration-700 bg-[#C8B06A]"
                       style={{ width: `${(earned / total) * 100}%` }}
@@ -581,7 +581,7 @@ export default function Distinctions() {
                           <BadgePin badge={badge} earned={isEarned} size="lg" />
                           <div className="text-center">
                             <p className={`text-sm font-light font-serif ${
-                              isEarned ? "text-[#043927]" : "text-[#8a9e92]"
+                              isEarned ? "text-[var(--color-text-primary)]" : "text-[#8a9e92]"
                             }`}>
                               {badge.label}
                             </p>
@@ -600,7 +600,7 @@ export default function Distinctions() {
                                       style={{ width: `${Math.round(pct * 100)}%` }}
                                     />
                                   </div>
-                                  <p className="text-[9px] text-[#043927]/30 font-light mt-0.5 text-center">
+                                  <p className="text-[9px] text-primary-30 font-light mt-0.5 text-center">
                                     {prog.current}/{prog.target}
                                   </p>
                                 </div>
@@ -611,8 +611,8 @@ export default function Distinctions() {
                       );
                     })}
                   </div>
-                  <div className="mt-8 rounded-xl p-4 flex items-center justify-between bg-white/60 border border-[#E5E4E2]">
-                    <span className="text-sm font-light text-[#043927]">
+                  <div className="mt-8 rounded-xl p-4 flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
+                    <span className="text-sm font-light text-[var(--color-text-primary)]">
                       {family?.label} progress
                     </span>
                     <span className="text-sm font-light font-serif text-[#C8B06A]">
