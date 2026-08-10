@@ -19,7 +19,7 @@ import { BADGES, computeNudge } from "@/utils/badgeDefinitions";
 
 const FEED_MODES = [
   { key: "trending",  label: "Trending" },
-  { key: "following", label: "Following" },
+  { key: "following", label: "My Coterie" },
   { key: "curated",   label: "✦ Curated" },
 ];
 
@@ -742,7 +742,7 @@ export default function Community() {
               <div className="flex flex-col items-center py-20 text-center">
                 <SwanLogo size={48} color="#C8B06A" className="mb-4" />
                 <p className="font-serif text-base text-[#043927]/40 italic leading-relaxed px-4">
-                  No one you follow has posted yet — whisper to a member from any review to connect.
+                  Your coterie hasn't posted yet — whisper to a member from any review to connect.
                 </p>
               </div>
             )}

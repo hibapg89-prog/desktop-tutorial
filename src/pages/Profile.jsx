@@ -587,11 +587,11 @@ export default function Profile() {
           <div className="px-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[16px] text-[var(--color-text-primary)] font-light font-serif">
-                Beauty Circles
+                Beauty Rooms
               </h2>
               {isAtelier && (
                 <button onClick={() => navigate("/community")} className="px-3 py-1.5 rounded-full text-[9px] tracking-[0.2em] uppercase font-light text-[#FDF5E6] bg-[#043927]">
-                  Join more circles
+                  Join more rooms
                 </button>
               )}
             </div>
@@ -766,7 +766,7 @@ export default function Profile() {
                   <div className="space-y-2">
                     {[
                       { tier: "PUBLIC",        label: "Public",        desc: "Any visitor may view your profile" },
-                      { tier: "CIRCLE_ONLY",   label: "Circle Only",   desc: "Visible to your Beauty Circle members only" },
+                      { tier: "CIRCLE_ONLY",   label: "Circle Only",   desc: "Visible to your Beauty Room members only" },
                       { tier: "PRIVATE_MUSE",  label: "Private Muse",  desc: "Your sanctuary is yours alone" },
                     ].map(({ tier, label, desc }) => (
                       <button
