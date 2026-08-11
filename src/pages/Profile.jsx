@@ -172,6 +172,7 @@ export default function Profile() {
   const [coterieList, setCoterieList]             = useState([]);
   const [isAdmiring, setIsAdmiring]               = useState(false);
   const [admireLoading, setAdmireLoading]         = useState(false);
+  const [admireError, setAdmireError]             = useState(false);
   const [followListModal, setFollowListModal]     = useState(null);
 
   useEffect(() => {
@@ -195,12 +196,12 @@ export default function Profile() {
           const followers = await base44.entities.UserFollow.filter({ followed_id: u.id });
           setAdmiratricesCount(Array.isArray(followers) ? followers.length : 0);
           setAdmiratricesList(Array.isArray(followers) ? followers : []);
-        } catch {}
+        } catch (e) { console.error("[Profile] Admiratrices load failed:", e); }
         try {
           const following = await base44.entities.UserFollow.filter({ follower_id: u.id });
           setCoterieCount(Array.isArray(following) ? following.length : 0);
           setCoterieList(Array.isArray(following) ? following : []);
-        } catch {}
+        } catch (e) { console.error("[Profile] Coterie load failed:", e); }
       }
     })();
   }, []);
@@ -244,7 +245,11 @@ export default function Profile() {
           sender_id: user.id,
         });
       }
-    } catch {}
+    } catch (e) {
+      console.error("[Profile] Admire action failed:", e);
+      setAdmireError(true);
+      setTimeout(() => setAdmireError(false), 3000);
+    }
     setAdmireLoading(false);
   };
 
@@ -381,6 +386,11 @@ export default function Profile() {
                       {isAdmiring ? "Admiring" : "Admire"}
                     </button>
                   </div>
+                  {admireError && (
+                    <p className="text-right text-[9px] tracking-wider mt-0.5" style={{ color: "#BC8F8F" }}>
+                      Couldn't connect · try again
+                    </p>
+                  )}
                 </div>
               </div>
             )}
