@@ -174,11 +174,9 @@ export default function Community() {
     if (!u) { setCircleIds(new Set()); return; }
     setCircleLoading(true);
     try {
-      const msgs = await base44.entities.Message.list("-created_date", 500);
+      const follows = await base44.entities.UserFollow.filter({ follower_id: u.id });
       const ids = new Set(
-        msgs
-          .map(m => m.sender_id === u.id ? m.recipient_id : m.sender_id)
-          .filter(Boolean)
+        Array.isArray(follows) ? follows.map(f => f.followed_id).filter(Boolean) : []
       );
       setCircleIds(ids);
     } catch {

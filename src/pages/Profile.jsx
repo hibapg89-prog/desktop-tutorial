@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import SwanLogo from "@/components/SwanLogo";
 import ProfileTrends from "@/components/ProfileTrends";
 import { base44 } from "@/api/base44Client";
+import { createNotification } from "@/utils/notifications";
 import { motion, AnimatePresence } from "framer-motion";
 import BadgePin from "@/components/BadgePin";
 import { BADGES } from "@/utils/badgeDefinitions";
@@ -165,6 +166,13 @@ export default function Profile() {
   const [postCount, setPostCount]       = useState(0);
   const [isAtelier, setIsAtelier]       = useState(true);
   const [unreadCount, setUnreadCount]   = useState(0);
+  const [admiratricesCount, setAdmiratricesCount] = useState(0);
+  const [coterieCount, setCoterieCount]           = useState(0);
+  const [admiratricesList, setAdmiratricesList]   = useState([]);
+  const [coterieList, setCoterieList]             = useState([]);
+  const [isAdmiring, setIsAdmiring]               = useState(false);
+  const [admireLoading, setAdmireLoading]         = useState(false);
+  const [followListModal, setFollowListModal]     = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -182,6 +190,16 @@ export default function Profile() {
         try {
           const myPosts = await base44.entities.CommunityPost.filter({ created_by_id: u.id });
           setPostCount(Array.isArray(myPosts) ? myPosts.length : 0);
+        } catch {}
+        try {
+          const followers = await base44.entities.UserFollow.filter({ followed_id: u.id });
+          setAdmiratricesCount(Array.isArray(followers) ? followers.length : 0);
+          setAdmiratricesList(Array.isArray(followers) ? followers : []);
+        } catch {}
+        try {
+          const following = await base44.entities.UserFollow.filter({ follower_id: u.id });
+          setCoterieCount(Array.isArray(following) ? following.length : 0);
+          setCoterieList(Array.isArray(following) ? following : []);
         } catch {}
       }
     })();
@@ -203,6 +221,32 @@ export default function Profile() {
   });
   const earnedCount = earnedKeys.size;
   const tier = computeTier(postCount, earnedCount);
+
+  const handleAdmire = async () => {
+    if (!user || admireLoading) return;
+    setAdmireLoading(true);
+    try {
+      if (isAdmiring) {
+        const records = await base44.entities.UserFollow.filter({ follower_id: user.id, followed_id: user.id });
+        if (Array.isArray(records) && records[0]) {
+          await base44.entities.UserFollow.delete(records[0].id);
+        }
+        setIsAdmiring(false);
+        setAdmiratricesCount(c => Math.max(0, c - 1));
+      } else {
+        await base44.entities.UserFollow.create({ follower_id: user.id, followed_id: user.id });
+        setIsAdmiring(true);
+        setAdmiratricesCount(c => c + 1);
+        createNotification({
+          user_id: user.id,
+          type: "admire",
+          title: (user.full_name || user.email || "A Muse Member") + " now admires you",
+          sender_id: user.id,
+        });
+      }
+    } catch {}
+    setAdmireLoading(false);
+  };
 
   const privateWall = !isAtelier && (glowMode === "GHOST" || privacy === "PRIVATE_MUSE");
   const visitorHidden = !isAtelier && glowMode === "GHOST";
@@ -322,8 +366,20 @@ export default function Profile() {
                   >
                     {tier.label}
                   </span>
-                  <div className="mt-3">
+                  <div className="mt-3 flex items-center justify-between gap-3">
                     <GlowIndicator mode={glowMode} isAtelier={false} />
+                    <button
+                      onClick={handleAdmire}
+                      disabled={admireLoading}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[9px] tracking-[0.2em] uppercase font-light transition-colors disabled:opacity-50 ${
+                        isAdmiring
+                          ? "border border-[#C8B06A] text-[#0B3C26] bg-[#C8B06A]/10"
+                          : "bg-[#043927] text-[#FDF5E6]"
+                      }`}
+                    >
+                      {isAdmiring && <Check size={9} strokeWidth={2.5} />}
+                      {isAdmiring ? "Admiring" : "Admire"}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -424,16 +480,30 @@ export default function Profile() {
                       <span className="font-normal">124</span>
                       {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
                       <span className="text-primary-25 mx-2">·</span>
-                      <span className="font-normal">38</span>
-                      {" "}<span className="text-[var(--color-accent-gold)]">Admiratrices</span>
+                      <button onClick={() => setFollowListModal("admiratrices")} className="hover:opacity-70 transition-opacity">
+                        <span className="font-normal">{admiratricesCount}</span>
+                        {" "}<span className="text-[var(--color-accent-gold)]">Admiratrices</span>
+                      </button>
+                      <span className="text-primary-25 mx-2">·</span>
+                      <button onClick={() => setFollowListModal("coterie")} className="hover:opacity-70 transition-opacity">
+                        <span className="font-normal">{coterieCount}</span>
+                        {" "}<span className="text-[var(--color-accent-gold)]">Coterie</span>
+                      </button>
                     </>
                   ) : (
                     <>
                       <span className="font-normal">124</span>
                       {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
                       <span className="text-primary-25 mx-2">·</span>
-                      <span className="font-normal">38</span>
-                      {" "}<span className="text-[var(--color-accent-gold)]">Admiratrices</span>
+                      <button onClick={() => setFollowListModal("admiratrices")} className="hover:opacity-70 transition-opacity">
+                        <span className="font-normal">{admiratricesCount}</span>
+                        {" "}<span className="text-[var(--color-accent-gold)]">Admiratrices</span>
+                      </button>
+                      <span className="text-primary-25 mx-2">·</span>
+                      <button onClick={() => setFollowListModal("coterie")} className="hover:opacity-70 transition-opacity">
+                        <span className="font-normal">{coterieCount}</span>
+                        {" "}<span className="text-[var(--color-accent-gold)]">Coterie</span>
+                      </button>
                     </>
                   )}
                 </p>
@@ -810,6 +880,57 @@ export default function Profile() {
 
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* ── FOLLOW LIST MODAL ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {followListModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 flex items-end"
+            onClick={() => setFollowListModal(null)}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="w-full bg-[var(--color-bg)] rounded-t-3xl px-5 pt-5 pb-10"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-serif text-[20px] font-light text-[var(--color-text-primary)]">
+                  {followListModal === "admiratrices" ? "Admiratrices" : "My Coterie"}
+                </h3>
+                <button onClick={() => setFollowListModal(null)}>
+                  <X size={18} color="var(--color-text-primary)" strokeWidth={1.5} />
+                </button>
+              </div>
+              {(followListModal === "admiratrices" ? admiratricesList : coterieList).length === 0 ? (
+                <p className="text-center font-serif italic text-[14px] text-primary-40 py-12">
+                  {followListModal === "admiratrices"
+                    ? "No one has admired you yet."
+                    : "You haven't admired anyone yet."}
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                  {(followListModal === "admiratrices" ? admiratricesList : coterieList).map((f, i) => (
+                    <div key={f.id || i} className="flex items-center gap-3 py-2 border-b border-[var(--color-border)]">
+                      <div className="w-9 h-9 rounded-full bg-[#F5EDD8] border border-[#C8B06A]/25 flex items-center justify-center flex-shrink-0">
+                        <SwanLogo size={16} color="var(--color-accent-gold)" />
+                      </div>
+                      <p className="text-[13px] font-light text-[var(--color-text-primary)]">
+                        Muse Member
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
