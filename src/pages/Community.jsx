@@ -47,8 +47,8 @@ function TrustBadge({ post }) {
     <span
       className={`inline-flex items-center gap-0.5 text-[8px] tracking-[0.1em] font-light px-1.5 py-0.5 rounded-full border ${
         isCertified
-          ? "text-[#043927] border-[#043927]/18 bg-[#043927]/5"
-          : "text-[#043927]/38 border-[#E5E4E2] bg-transparent"
+          ? "text-[var(--color-text-primary)] border-[#043927]/18 bg-[#043927]/5"
+          : "text-primary-40 border-[var(--color-border)] bg-transparent"
       }`}
     >
       {isCertified ? "Certified Review" : "Community Voice"}
@@ -351,39 +351,39 @@ export default function Community() {
   const displayPosts = getDisplayPosts();
 
   return (
-    <div className="min-h-screen bg-[#FDF5E6]">
+    <main className="min-h-screen bg-[var(--color-bg)]">
       {/* Header */}
-      <div className="px-5 pt-14 pb-3 flex items-end justify-between">
+      <header className="px-5 pt-14 pb-3 flex items-end justify-between">
         <div>
-          <p className="text-[10px] tracking-[0.35em] text-[#043927]/40 uppercase font-light">The Circle</p>
-          <h1 className="font-serif text-3xl text-[#043927] font-light mt-0.5">Community</h1>
+          <p className="text-[10px] tracking-[0.35em] text-primary-40 uppercase font-light">The Circle</p>
+          <h1 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mt-0.5">Community</h1>
         </div>
         <Link
           to="/circle-rooms"
-          className="flex items-center gap-1 text-[11px] text-[#C8B06A] font-light tracking-wide mb-1.5"
+          className="flex items-center gap-1 text-[11px] text-[var(--color-accent-gold)] font-light tracking-wide mb-1.5"
         >
           Rooms
           <span className="text-[13px] leading-none">›</span>
         </Link>
-      </div>
+      </header>
 
       {/* Action buttons */}
       <div className="px-5 pb-3 flex items-center gap-2">
         <button
           onClick={() => setComposingSwap(true)}
-          className="flex items-center gap-1.5 bg-white/70 border border-[#E5E4E2] text-[#043927] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
+          className="flex items-center gap-1.5 bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
         >
           <Plus size={14} /> Swap
         </button>
         <button
           onClick={() => setComposingPoll(true)}
-          className="flex items-center gap-1.5 bg-white/70 border border-[#E5E4E2] text-[#043927] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
+          className="flex items-center gap-1.5 bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
         >
           <Plus size={14} /> Poll
         </button>
         <button
           onClick={() => setComposing(true)}
-          className="flex items-center gap-1.5 text-[#043927] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
+          className="flex items-center gap-1.5 text-[var(--color-text-primary)] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
           style={{ background: "linear-gradient(135deg, #C8B06A 0%, #E5D4A0 50%, #C8B06A 100%)" }}
         >
           <Plus size={14} /> Post
@@ -392,17 +392,18 @@ export default function Community() {
 
       {/* Search bar */}
       <div className="px-5 mb-3">
-        <div className="flex items-center gap-2 bg-white/70 rounded-2xl border border-[#E5E4E2] px-3.5 py-2.5">
-          <Search size={15} color="#043927" className="opacity-40" />
+        <div className="flex items-center gap-2 bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] px-3.5 py-2.5">
+          <Search size={15} color="var(--color-text-primary)" className="opacity-40" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search brands, products, reviews…"
-            className="flex-1 bg-transparent text-sm text-[#043927] font-light outline-none placeholder:text-[#043927]/30"
+            aria-label="Search brands, products, reviews"
+            className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30"
           />
           {query && (
-            <button onClick={() => setQuery("")} className="text-[#043927]/40">
-              <X size={14} />
+            <button onClick={() => setQuery("")} aria-label="Clear search" className="text-primary-40">
+              <X size={14} aria-hidden={true} />
             </button>
           )}
         </div>
@@ -435,7 +436,7 @@ export default function Community() {
                 {banner.tag && (
                   <span
                     className="text-[9px] tracking-[0.25em] uppercase font-light mb-1.5"
-                    style={{ color: "#C8B06A" }}
+                    style={{ color: "var(--color-accent-gold)" }}
                   >
                     {banner.tag}
                   </span>
@@ -457,7 +458,7 @@ export default function Community() {
                       to={banner.cta_url || "#"}
                       onClick={(e) => { if (!banner.cta_url) e.preventDefault(); }}
                       className="px-4 py-1.5 rounded-full text-[11px] font-light tracking-wide"
-                      style={{ background: "rgba(200,176,106,0.22)", border: "1px solid rgba(200,176,106,0.45)", color: "#C8B06A" }}
+                      style={{ background: "rgba(200,176,106,0.22)", border: "1px solid rgba(200,176,106,0.45)", color: "var(--color-accent-gold)" }}
                     >
                       {banner.cta_label}
                     </Link>
@@ -494,7 +495,7 @@ export default function Community() {
             className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-light tracking-wide transition-all border ${
               feedMode === key
                 ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
-                : "bg-transparent text-[#043927] border-[#E5E4E2]"
+                : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"
             }`}
           >
             {label}
@@ -516,13 +517,13 @@ export default function Community() {
               <BadgePin badge={nudge.badge} earned={false} size="xs" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-[#043927]/45 font-light tracking-wide leading-tight">
+              <p className="text-[10px] text-primary-45 font-light tracking-wide leading-tight">
                 {nudge.target - nudge.current === 1
                   ? `One more ${nudge.label} to unlock`
                   : `${nudge.target - nudge.current} more ${nudge.label} to unlock`}
               </p>
               <p
-                className="text-[13px] font-light text-[#043927] leading-tight mt-0.5"
+                className="text-[13px] font-light text-[var(--color-text-primary)] leading-tight mt-0.5"
                 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
               >
                 {nudge.badge.label}
@@ -536,9 +537,10 @@ export default function Community() {
             </div>
             <button
               onClick={() => setNudgeDismissed(true)}
-              className="flex-shrink-0 text-[#043927]/20 hover:text-[#043927]/40 transition-colors"
+              aria-label="Dismiss"
+              className="flex-shrink-0 text-[var(--color-text-primary)]/20 hover:text-primary-40 transition-colors"
             >
-              <X size={13} />
+              <X size={13} aria-hidden={true} />
             </button>
           </motion.div>
         )}
@@ -547,11 +549,11 @@ export default function Community() {
       {/* Beauty Rooms — curated interest communities */}
       <div className="mb-3">
         <div className="px-5 flex items-center justify-between mb-2">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-[#043927]/40 font-light">Beauty Rooms</p>
+          <p className="text-[10px] tracking-[0.3em] uppercase text-primary-40 font-light">Beauty Rooms</p>
           {activeCircle && (
             <button
               onClick={() => setActiveCircle(null)}
-              className="text-[9px] tracking-[0.15em] uppercase text-[#C8B06A] font-light"
+              className="text-[9px] tracking-[0.15em] uppercase text-[var(--color-accent-gold)] font-light"
             >
               Clear
             </button>
@@ -569,7 +571,7 @@ export default function Community() {
                 className={`flex-shrink-0 flex flex-col items-start px-3.5 py-2 rounded-2xl border transition-all ${
                   isActive
                     ? "text-white border-transparent shadow-sm"
-                    : "bg-white/70 text-[#043927] border-[#E5E4E2] hover:border-[#C8B06A]/40"
+                    : "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[var(--color-border)] hover:border-[#C8B06A]/40"
                 }`}
                 style={isActive ? { background: c.color } : {}}
               >
@@ -577,12 +579,12 @@ export default function Community() {
                   <span className="text-[10px]">{c.glyph}</span>
                   <span className="text-[11px] font-light tracking-wide">{c.label}</span>
                   {postCount > 0 && (
-                    <span className={`text-[8px] ${isActive ? "text-white/70" : "text-[#043927]/35"}`}>
+                    <span className={`text-[8px] ${isActive ? "text-white/70" : "text-primary-35"}`}>
                       {postCount}
                     </span>
                   )}
                 </div>
-                <span className={`text-[9px] font-light italic tracking-wide mt-0.5 ${isActive ? "text-white/70" : "text-[#043927]/40"}`}
+                <span className={`text-[9px] font-light italic tracking-wide mt-0.5 ${isActive ? "text-white/70" : "text-primary-40"}`}
                   style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                   {arch?.archetype}
                 </span>
@@ -601,10 +603,10 @@ export default function Community() {
               style={{ background: c.color + "18", borderLeft: `3px solid ${c.color}` }}>
               <div>
                 <p className="text-[13px] font-light tracking-wide"
-                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: "#0B3C26" }}>
+                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: "var(--color-text-primary)" }}>
                   {arch.archetype}
                 </p>
-                <p className="text-[10px] font-light italic text-[#043927]/50 tracking-wide mt-0.5">{arch.tagline}</p>
+                <p className="text-[10px] font-light italic text-primary-50 tracking-wide mt-0.5">{arch.tagline}</p>
               </div>
               <span className="text-[18px] opacity-40">{c.glyph}</span>
             </div>
@@ -616,7 +618,7 @@ export default function Community() {
       {events.length > 0 && (
         <div className="mb-3">
           <div className="px-5 flex items-center justify-between mb-2">
-            <p className="text-[10px] tracking-[0.3em] uppercase text-[#043927]/40 font-light">Upcoming Events</p>
+            <p className="text-[10px] tracking-[0.3em] uppercase text-primary-40 font-light">Upcoming Events</p>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar px-5 pb-1">
             {events.map(event => {
@@ -624,44 +626,44 @@ export default function Community() {
               return (
                 <div
                   key={event.id}
-                  className="flex-shrink-0 w-44 rounded-2xl overflow-hidden border border-[#E5E4E2] bg-white/70"
+                  className="flex-shrink-0 w-44 rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-surface)]"
                 >
                   <div
                     className="px-3 py-2.5 flex items-baseline gap-2.5"
                     style={{ background: "rgba(200,176,106,0.09)" }}
                   >
                     <span
-                      className="text-[30px] font-light text-[#043927] leading-none"
+                      className="text-[30px] font-light text-[var(--color-text-primary)] leading-none"
                       style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
                     >
                       {date}
                     </span>
                     <div className="flex flex-col">
-                      <span className="text-[9px] tracking-[0.2em] uppercase text-[#043927]/55 font-light leading-none">
+                      <span className="text-[9px] tracking-[0.2em] uppercase text-primary-55 font-light leading-none">
                         {day}
                       </span>
-                      <span className="text-[9px] tracking-[0.15em] uppercase font-light leading-none mt-0.5" style={{ color: "#C8B06A" }}>
+                      <span className="text-[9px] tracking-[0.15em] uppercase font-light leading-none mt-0.5" style={{ color: "var(--color-accent-gold)" }}>
                         {month}
                       </span>
                     </div>
                   </div>
                   <div className="px-3 py-2.5">
-                    <p className="text-[12px] font-light text-[#043927] leading-tight line-clamp-2">
+                    <p className="text-[12px] font-light text-[var(--color-text-primary)] leading-tight line-clamp-2">
                       {event.title}
                     </p>
                     {event.start_time && (
-                      <p className="text-[10px] text-[#043927]/45 font-light mt-1 leading-tight">
+                      <p className="text-[10px] text-primary-45 font-light mt-1 leading-tight">
                         {event.start_time}{event.end_time ? ` — ${event.end_time}` : ""}
                       </p>
                     )}
                     {event.location && (
-                      <p className="text-[10px] text-[#043927]/35 font-light mt-0.5 truncate">{event.location}</p>
+                      <p className="text-[10px] text-primary-35 font-light mt-0.5 truncate">{event.location}</p>
                     )}
                     {event.cta_label && (
                       <button
                         onClick={e => { e.stopPropagation(); setShowEventRsvp(true); }}
                         className="inline-flex items-center gap-0.5 mt-2 text-[10px] font-light"
-                        style={{ color: "#C8B06A" }}
+                        style={{ color: "var(--color-accent-gold)" }}
                       >
                         {event.cta_label} ›
                       </button>
@@ -677,12 +679,12 @@ export default function Community() {
       <div className="px-5 pb-32">
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="swan-float"><SwanLogo size={40} color="#C8B06A" /></div>
+            <div className="swan-float"><SwanLogo size={40} color="var(--color-accent-gold)" /></div>
           </div>
         ) : posts.length === 0 ? (
           <div className="flex flex-col items-center py-20 text-center">
-            <SwanLogo size={56} color="#C8B06A" className="mb-5" />
-            <p className="font-serif text-lg text-[#043927]/40 italic leading-relaxed">
+            <SwanLogo size={56} color="var(--color-accent-gold)" className="mb-5" />
+            <p className="font-serif text-lg text-primary-40 italic leading-relaxed">
               No reviews yet — be the first to share a find.
             </p>
           </div>
@@ -692,7 +694,7 @@ export default function Community() {
 
             {feedMode !== "following" && polls.length > 0 && (
               <div className="space-y-3 mb-5">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-[#043927]/40 font-light">Active Polls</p>
+                <p className="text-[10px] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
                 {polls.map((poll, i) => (
                   <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                     <PollCard poll={poll} user={user} onVoted={load} />
@@ -703,7 +705,7 @@ export default function Community() {
 
             {feedMode !== "following" && swaps.length > 0 && (
               <div className="space-y-3 mb-5">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-[#043927]/40 font-light">Open Swaps</p>
+                <p className="text-[10px] tracking-[0.3em] uppercase text-primary-40 font-light">Open Swaps</p>
                 {swaps.map((swap, i) => (
                   <motion.div key={swap.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                     <SwapCard swap={swap} user={user} onUpdated={load} />
@@ -720,7 +722,7 @@ export default function Community() {
                   className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-light tracking-wide transition-all border ${
                     activeCategory === cat
                       ? "bg-[#C8B06A] text-white border-[#C8B06A]"
-                      : "bg-transparent text-[#043927] border-[#E5E4E2]"
+                      : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"
                   }`}
                 >
                   {cat}
@@ -731,15 +733,15 @@ export default function Community() {
             {/* Following loading */}
             {feedMode === "following" && circleLoading && (
               <div className="flex justify-center py-12">
-                <div className="swan-float"><SwanLogo size={36} color="#C8B06A" /></div>
+                <div className="swan-float"><SwanLogo size={36} color="var(--color-accent-gold)" /></div>
               </div>
             )}
 
             {/* Following empty */}
             {feedMode === "following" && !circleLoading && circleIds !== null && displayPosts.length === 0 && (
               <div className="flex flex-col items-center py-20 text-center">
-                <SwanLogo size={48} color="#C8B06A" className="mb-4" />
-                <p className="font-serif text-base text-[#043927]/40 italic leading-relaxed px-4">
+                <SwanLogo size={48} color="var(--color-accent-gold)" className="mb-4" />
+                <p className="font-serif text-base text-primary-40 italic leading-relaxed px-4">
                   Your coterie hasn't posted yet — whisper to a member from any review to connect.
                 </p>
               </div>
@@ -764,23 +766,23 @@ export default function Community() {
                       {c.glyph}
                     </span>
                     <p
-                      className="text-[22px] font-light text-[#043927] mb-1.5 leading-tight"
+                      className="text-[22px] font-light text-[var(--color-text-primary)] mb-1.5 leading-tight"
                       style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
                     >
                       {arch.archetype}
                     </p>
-                    <p className="text-[11px] font-light italic text-[#043927]/40 tracking-[0.12em] mb-6">
+                    <p className="text-[11px] font-light italic text-primary-40 tracking-[0.12em] mb-6">
                       {arch.tagline}
                     </p>
-                    <p className="text-[13px] font-light text-[#043927]/35 leading-relaxed max-w-[240px]">
+                    <p className="text-[13px] font-light text-primary-35 leading-relaxed max-w-[240px]">
                       {arch.prompt}
                     </p>
                   </motion.div>
                 );
               })() : (
                 <div className="flex flex-col items-center py-16 text-center">
-                  <SwanLogo size={48} color="#C8B06A" className="mb-4" />
-                  <p className="font-serif text-base text-[#043927]/40 italic">
+                  <SwanLogo size={48} color="var(--color-accent-gold)" className="mb-4" />
+                  <p className="font-serif text-base text-primary-40 italic">
                     {query ? "No reviews match your search" : `Nothing in ${activeCategory} yet`}
                   </p>
                 </div>
@@ -806,10 +808,10 @@ export default function Community() {
                     >
                       <Link
                         to={`/community/${post.id}`}
-                        className="block bg-white/70 rounded-2xl border border-[#E5E4E2] overflow-hidden"
+                        className="block bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
                       >
                         <div className="flex gap-3 p-3">
-                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[#F5EDD8] relative">
+                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[var(--color-bg-elevated)] relative">
                             {post.post_type === "before_after" ? (
                               <div className="w-full h-full flex">
                                 {post.image_url && <img src={post.image_url} alt="before" className="w-1/2 h-full object-cover" />}
@@ -823,9 +825,9 @@ export default function Community() {
                               </div>
                             ) : post.post_type === "routine" ? (
                               <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-                                <SwanLogo size={18} color="#043927" className="opacity-40" />
+                                <SwanLogo size={18} color="var(--color-text-primary)" className="opacity-40" />
                                 {post.routine_steps && (
-                                  <span className="text-[9px] text-[#043927]/50 font-light">
+                                  <span className="text-[9px] text-primary-50 font-light">
                                     {(() => { try { return JSON.parse(post.routine_steps).length; } catch { return ""; } })()} steps
                                   </span>
                                 )}
@@ -836,7 +838,7 @@ export default function Community() {
                                   <img src={post.image_url} alt={post.name} className="w-full h-full object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-[#043927]/[0.08]">
-                                    <Play size={24} color="#043927" className="opacity-40" />
+                                    <Play size={24} color="var(--color-text-primary)" className="opacity-40" />
                                   </div>
                                 )}
                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -853,29 +855,29 @@ export default function Community() {
                             ) : post.image_url ? (
                               <img src={post.image_url} alt={post.name} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center"><SwanLogo size={22} color="#043927" /></div>
+                              <div className="w-full h-full flex items-center justify-center"><SwanLogo size={22} color="var(--color-text-primary)" /></div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[9px] tracking-[0.15em] uppercase text-[#BC8F8F] font-light">{post.brand}</p>
-                            <p className="text-sm text-[#043927] font-light truncate">
+                            <p className="text-sm text-[var(--color-text-primary)] font-light truncate">
                               {post.name}{post.shade ? ` · ${post.shade}` : ""}
                             </p>
                             {post.post_type === "swatch" && post.skin_tone && (
                               <div className="flex items-center gap-1 mt-0.5">
-                                <div className="w-3.5 h-3.5 rounded-full border border-[#E5E4E2]" style={{ backgroundColor: post.skin_tone }} />
-                                <span className="text-[9px] text-[#043927]/40 font-light">Skin tone match</span>
+                                <div className="w-3.5 h-3.5 rounded-full border border-[var(--color-border)]" style={{ backgroundColor: post.skin_tone }} />
+                                <span className="text-[9px] text-primary-40 font-light">Skin tone match</span>
                               </div>
                             )}
                             {post.post_type === "before_after" && (
-                              <span className="text-[9px] text-[#043927]/40 font-light">◑ Before &amp; After</span>
+                              <span className="text-[9px] text-primary-40 font-light">◑ Before &amp; After</span>
                             )}
                             {post.post_type === "grwm" && post.grwm_duration && (
-                              <span className="text-[9px] text-[#043927]/40 font-light">{post.grwm_duration} GRWM</span>
+                              <span className="text-[9px] text-primary-40 font-light">{post.grwm_duration} GRWM</span>
                             )}
                             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                               <StarRating value={post.rating || 0} readOnly size={12} />
-                              <span className="text-[10px] text-[#043927]/40 font-light truncate">
+                              <span className="text-[10px] text-primary-40 font-light truncate">
                                 by {post.author_name || "A Muse Member"}
                               </span>
                               {creatorBadges[post.created_by_id] && (
@@ -904,10 +906,10 @@ export default function Community() {
                                 );
                               })()}
                             </div>
-                            <p className="text-xs text-[#043927]/60 font-light mt-1 line-clamp-2">
+                            <p className="text-xs text-primary-60 font-light mt-1 line-clamp-2">
                               {parseSegments(post.review_text).map((seg, i) =>
                                 seg.type === "tag"
-                                  ? <span key={i} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuery("#" + seg.value); }} className="text-[#C8B06A] cursor-pointer">#{seg.value}</span>
+                                  ? <span key={i} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuery("#" + seg.value); }} className="text-[var(--color-accent-gold)] cursor-pointer">#{seg.value}</span>
                                   : seg.type === "mention"
                                   ? <span key={i} className="text-[#BC8F8F]">@{seg.value}</span>
                                   : <span key={i}>{seg.value}</span>
@@ -923,7 +925,7 @@ export default function Community() {
                                       <span
                                         key={tag}
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuery("#" + tag); }}
-                                        className="text-[9px] text-[#C8B06A] font-light cursor-pointer hover:underline"
+                                        className="text-[9px] text-[var(--color-accent-gold)] font-light cursor-pointer hover:underline"
                                       >
                                         #{tag}
                                       </span>
@@ -950,7 +952,7 @@ export default function Community() {
                           <div className="flex items-center gap-4">
                             <button
                               onClick={(e) => toggleAdore(e, post)}
-                              className={`flex items-center gap-1.5 text-[11px] font-light transition-colors ${adoredIds.has(post.id) ? "text-[#C8B06A]" : "text-[#043927]/[0.38]"}`}
+                              className={`flex items-center gap-1.5 text-[11px] font-light transition-colors ${adoredIds.has(post.id) ? "text-[var(--color-accent-gold)]" : "text-primary-40"}`}
                             >
                               <motion.span
                                 key={adoredIds.has(post.id) ? `a1-${post.id}` : `a0-${post.id}`}
@@ -968,16 +970,18 @@ export default function Community() {
                             </button>
                             <button
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/community/${post.id}`); }}
-                              className="flex items-center gap-1.5 text-[11px] text-[#043927]/38 font-light"
+                              aria-label={`View ${post.review_count || 0} comments`}
+                              className="flex items-center gap-1.5 text-[11px] text-primary-40 font-light"
                             >
-                              <MessageCircle size={13} />
+                              <MessageCircle size={13} aria-hidden={true} />
                               {post.review_count || 0}
                             </button>
                           </div>
                           <div className="flex items-center gap-3">
                             <button
                               onClick={(e) => toggleCollect(e, post)}
-                              className={`flex items-center gap-1.5 text-[11px] font-light transition-colors ${collectedIds.has(post.id) ? "text-[#043927]" : "text-[#043927]/[0.38]"}`}
+                              aria-label={collectedIds.has(post.id) ? "Remove from collection" : "Add to collection"}
+                              className={`flex items-center gap-1.5 text-[11px] font-light transition-colors ${collectedIds.has(post.id) ? "text-[var(--color-text-primary)]" : "text-primary-40"}`}
                             >
                               <motion.span
                                 key={collectedIds.has(post.id) ? `c1-${post.id}` : `c0-${post.id}`}
@@ -991,15 +995,17 @@ export default function Community() {
                             </button>
                             <button
                               onClick={(e) => passAlong(e, post)}
-                              className="flex items-center gap-1.5 text-[11px] text-[#043927]/45 font-light hover:text-[#043927] transition-colors"
+                              aria-label="Pass along"
+                              className="flex items-center gap-1.5 text-[11px] text-primary-45 font-light hover:text-[var(--color-text-primary)] transition-colors"
                             >
-                              <Share2 size={13} />
+                              <Share2 size={13} aria-hidden={true} />
                             </button>
                             <button
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setReportingPostId(post.id); }}
-                              className="flex items-center text-[#043927]/18 hover:text-[#BC8F8F] transition-colors"
+                              aria-label="Report post"
+                              className="flex items-center text-primary-25 hover:text-[#BC8F8F] transition-colors"
                             >
-                              <Flag size={12} />
+                              <Flag size={12} aria-hidden={true} />
                             </button>
                           </div>
                         </div>
@@ -1022,7 +1028,7 @@ export default function Community() {
             initial={{ opacity: 0, scale: 0.95, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="relative mx-5 w-full max-w-sm bg-[#FFF9E8] rounded-3xl px-8 py-14 flex flex-col items-center text-center"
+            className="relative mx-5 w-full max-w-sm bg-[var(--color-bg-surface)] rounded-3xl px-8 py-14 flex flex-col items-center text-center"
             style={{ boxShadow: "0 24px 64px rgba(11,60,38,0.22), 0 0 0 1px rgba(200,176,106,0.18)" }}
             onClick={e => e.stopPropagation()}
           >
@@ -1031,19 +1037,19 @@ export default function Community() {
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#0B3C26]/[0.08] hover:bg-[#0B3C26]/[0.14] transition-colors"
               aria-label="Close"
             >
-              <X size={14} color="#0B3C26" />
+              <X size={14} color="var(--color-text-primary)" />
             </button>
             <div className="mb-8">
               <SwanLogo size={96} className="opacity-90" />
             </div>
-            <h1 className="font-serif text-[2rem] leading-tight text-[#0B3C26] font-light tracking-wide mb-3">
+            <h1 className="font-serif text-[2rem] leading-tight text-[var(--color-text-primary)] font-light tracking-wide mb-3">
               Reservations Coming Soon
             </h1>
-            <p className="text-[10px] tracking-[0.35em] uppercase text-[#0B3C26] font-light mb-6">
+            <p className="text-[10px] tracking-[0.35em] uppercase text-[var(--color-text-primary)] font-light mb-6">
               Coming Soon
             </p>
             <div className="w-10 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/60 to-transparent mb-6" />
-            <p className="text-[13px] text-[#0B3C26]/45 font-light leading-relaxed max-w-[210px] tracking-wide">
+            <p className="text-[13px] text-[var(--color-text-primary)]/45 font-light leading-relaxed max-w-[210px] tracking-wide">
               You'll be able to reserve your place here soon.
             </p>
           </motion.div>
@@ -1053,6 +1059,6 @@ export default function Community() {
       {reportingPostId && <ReportModal postId={reportingPostId} onClose={() => setReportingPostId(null)} />}
       {composingPoll && <PollComposer onClose={() => setComposingPoll(false)} onPosted={load} />}
       {composingSwap && <SwapComposer onClose={() => setComposingSwap(false)} onPosted={load} />}
-    </div>
+    </main>
   );
 }

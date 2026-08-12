@@ -257,7 +257,7 @@ export default function Profile() {
   const visitorHidden = !isAtelier && glowMode === "GHOST";
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <main className="min-h-screen bg-[var(--color-bg)]">
 
       {/* ── DEMO TOGGLE (production: remove) ──────────────────────────────────── */}
       <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10">
@@ -388,7 +388,7 @@ export default function Profile() {
                   </div>
                   {admireError && (
                     <p className="text-right text-[9px] tracking-wider mt-0.5" style={{ color: "#BC8F8F" }}>
-                      Couldn't connect · try again
+                      Couldn’t connect · try again
                     </p>
                   )}
                 </div>
@@ -758,10 +758,13 @@ export default function Profile() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 310, damping: 33 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="settings-panel-title"
               className="fixed right-0 top-0 h-full z-50 flex flex-col w-[min(88vw,360px)] bg-[var(--color-bg)] border-l border-[#C8B06A]/[0.22]"
             >
               <div className="flex items-center justify-between px-6 pt-14 pb-5 border-b border-[#C8B06A]/15">
-                <h3 className="text-xl text-[var(--color-text-primary)] font-light font-serif">
+                <h3 id="settings-panel-title" className="text-xl text-[var(--color-text-primary)] font-light font-serif">
                   Sanctuary Settings
                 </h3>
                 <div className="flex items-center gap-3">
@@ -771,13 +774,13 @@ export default function Profile() {
                   >
                     Save
                   </button>
-                  <button onClick={() => setSettingsOpen(false)}>
-                    <X size={18} strokeWidth={1.5} color="var(--color-text-primary)" />
+                  <button onClick={() => setSettingsOpen(false)} aria-label="Close settings">
+                    <X size={18} strokeWidth={1.5} color="var(--color-text-primary)" aria-hidden={true} />
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
+              <div className="flex-1 overflow-y-auto px-6 pt-6 pb-28 space-y-8">
 
                 {/* Appearance — top so it's always visible */}
                 <div>
@@ -882,7 +885,7 @@ export default function Profile() {
                     className="flex items-center justify-between py-3.5 border-b border-[var(--color-border)]"
                   >
                     <span className="text-[13px] text-[var(--color-text-primary)] font-light">{label}</span>
-                    <ChevronRight size={13} strokeWidth={1.5} color="var(--color-text-primary)" />
+                    <ChevronRight size={13} strokeWidth={1.5} color="var(--color-text-primary)" aria-hidden={true} />
                   </Link>
                 ))}
               </div>
@@ -908,6 +911,9 @@ export default function Profile() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={followListModal === "admiratrices" ? "Admiratrices" : "My Coterie"}
               className="w-full bg-[var(--color-bg)] rounded-t-3xl px-5 pt-5 pb-10"
               onClick={e => e.stopPropagation()}
             >
@@ -915,8 +921,8 @@ export default function Profile() {
                 <h3 className="font-serif text-[20px] font-light text-[var(--color-text-primary)]">
                   {followListModal === "admiratrices" ? "Admiratrices" : "My Coterie"}
                 </h3>
-                <button onClick={() => setFollowListModal(null)}>
-                  <X size={18} color="var(--color-text-primary)" strokeWidth={1.5} />
+                <button onClick={() => setFollowListModal(null)} aria-label="Close">
+                  <X size={18} color="var(--color-text-primary)" strokeWidth={1.5} aria-hidden={true} />
                 </button>
               </div>
               {(followListModal === "admiratrices" ? admiratricesList : coterieList).length === 0 ? (
@@ -944,6 +950,6 @@ export default function Profile() {
         )}
       </AnimatePresence>
 
-    </div>
+    </main>
   );
 }

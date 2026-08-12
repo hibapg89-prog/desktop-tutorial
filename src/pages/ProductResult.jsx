@@ -86,20 +86,21 @@ export default function ProductResult() {
     : null;
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <main className="min-h-screen bg-[var(--color-bg)]">
       {/* Hero */}
       <div className="relative min-h-[300px]" style={{ background: "linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg) 100%)" }}>
-        <button onClick={() => navigate(-1)} className="absolute top-14 left-5 z-10 w-9 h-9 rounded-full bg-[var(--color-bg-surface)] flex items-center justify-center shadow-sm">
-          <ArrowLeft size={16} color="var(--color-text-primary)" />
+        <button onClick={() => navigate(-1)} aria-label="Go back" className="absolute top-14 left-5 z-10 w-9 h-9 rounded-full bg-[var(--color-bg-surface)] flex items-center justify-center shadow-sm">
+          <ArrowLeft size={16} color="var(--color-text-primary)" aria-hidden={true} />
         </button>
 
         {/* Wishlist heart */}
         <div className="absolute top-14 right-5 z-10">
           <button
             onClick={handleAddToWishlist}
+            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
             className="w-9 h-9 rounded-full bg-[var(--color-bg-surface)] flex items-center justify-center shadow-sm"
           >
-            <Heart size={16} color={inWishlist ? "#BC8F8F" : "var(--color-text-primary)"} fill={inWishlist ? "#BC8F8F" : "none"} />
+            <Heart size={16} color={inWishlist ? "#BC8F8F" : "var(--color-text-primary)"} fill={inWishlist ? "#BC8F8F" : "none"} aria-hidden={true} />
           </button>
           <AnimatePresence>
             {vanityHint && (
@@ -115,7 +116,7 @@ export default function ProductResult() {
           </AnimatePresence>
         </div>
 
-        <div className="absolute top-16 right-16 opacity-10">
+        <div className="absolute top-16 right-16 opacity-10" aria-hidden={true}>
           <SwanLogo size={100} color="var(--color-text-primary)" />
         </div>
 
@@ -271,6 +272,6 @@ export default function ProductResult() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

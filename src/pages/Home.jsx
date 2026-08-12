@@ -50,10 +50,10 @@ export default function Home() {
     || "Muse";
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <main className="min-h-screen bg-[var(--color-bg)]">
 
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="px-5 pt-14 pb-5 flex items-center justify-between">
+      <header className="px-5 pt-14 pb-5 flex items-center justify-between">
         <div>
           <p className="text-[10px] tracking-[0.3em] uppercase text-primary-35 font-light">
             {timeGreeting()}
@@ -65,6 +65,7 @@ export default function Home() {
         <div className="flex items-center gap-2.5">
           <Link
             to="/profile"
+            aria-label="View profile"
             className="w-9 h-9 rounded-full bg-[#043927] flex items-center justify-center flex-shrink-0"
           >
             <span className="font-serif text-sm leading-none text-[var(--color-accent-gold)]">
@@ -72,7 +73,7 @@ export default function Home() {
             </span>
           </Link>
         </div>
-      </div>
+      </header>
 
       {/* ── Quick links ─────────────────────────────────────────── */}
       <motion.div
@@ -104,8 +105,12 @@ export default function Home() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
+        role="button"
+        tabIndex={0}
+        aria-label="Scan & Discover – Identify any beauty product"
         className="mx-5 mb-8 rounded-2xl overflow-hidden shadow-sm cursor-pointer bg-[#043927]"
         onClick={() => context?.openScan?.()}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); context?.openScan?.(); } }}
       >
         <div className="px-6 py-7 flex items-center justify-between">
           <div>
@@ -136,7 +141,7 @@ export default function Home() {
               to="/discover"
               className="flex items-center gap-0.5 text-[10px] text-primary-40 font-light"
             >
-              All <ChevronRight size={13} className="opacity-50" />
+              All <ChevronRight size={13} className="opacity-50" aria-hidden={true} />
             </Link>
           </div>
 
@@ -197,7 +202,7 @@ export default function Home() {
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mt-0.5">Restock</h2>
             <p className="text-[10px] text-primary-40 font-light mt-0.5 tracking-wide">Your shopping list</p>
           </div>
-          <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" />
+          <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
         </Link>
       </div>
 
@@ -215,7 +220,7 @@ export default function Home() {
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mt-0.5">Cartography</h2>
             <p className="text-[10px] text-primary-40 font-light mt-0.5 tracking-wide">Beauty services near you</p>
           </div>
-          <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" />
+          <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
         </Link>
       </div>
 
@@ -233,7 +238,7 @@ export default function Home() {
               to="/community"
               className="flex items-center gap-0.5 text-[10px] text-primary-40 font-light"
             >
-              All <ChevronRight size={13} className="opacity-50" />
+              All <ChevronRight size={13} className="opacity-50" aria-hidden={true} />
             </Link>
           </div>
           <div className="space-y-2">
@@ -265,7 +270,7 @@ export default function Home() {
                     </p>
                   )}
                 </div>
-                <ChevronRight size={14} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" />
+                <ChevronRight size={14} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
               </Link>
             ))}
           </div>
@@ -283,7 +288,7 @@ export default function Home() {
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mt-0.5">Community</h2>
             <p className="text-[10px] text-primary-40 font-light mt-0.5 tracking-wide">Beauty editorial & exchange</p>
           </div>
-          <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" />
+          <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
         </Link>
       </div>
 
@@ -298,9 +303,9 @@ export default function Home() {
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mt-0.5">Messages</h2>
             <p className="text-[10px] text-primary-40 font-light mt-0.5 tracking-wide">Direct correspondence</p>
           </div>
-          <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" />
+          <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
         </Link>
       </div>
-    </div>
+    </main>
   );
 }
