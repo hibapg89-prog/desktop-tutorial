@@ -102,7 +102,7 @@ function AdnIcon({ type, size = 16 }) {
 
 function Stars({ count }) {
   return (
-    <span className="text-[var(--color-accent-gold)] text-[10px] tracking-tight">
+    <span className="text-[var(--color-accent-gold)] text-[0.625rem] tracking-tight">
       {"★".repeat(count)}{"☆".repeat(5 - count)}
     </span>
   );
@@ -133,7 +133,7 @@ function GlowIndicator({ mode, onTap, isAtelier: atelierView }) {
           <div className="w-2.5 h-2.5 rounded-full bg-[#C8B06A]/45" />
         )}
       </div>
-      <span className="text-[9px] tracking-[0.18em] uppercase font-light text-primary-40">
+      <span className="text-[0.5625rem] tracking-[0.18em] uppercase font-light text-primary-40">
         {label}
       </span>
     </div>
@@ -263,7 +263,7 @@ export default function Profile() {
       <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10">
         <button
           onClick={() => setIsAtelier(v => !v)}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#C8B06A]/25 text-[8px] tracking-[0.2em] uppercase font-light text-primary-35 hover:text-primary-70 transition-colors bg-[var(--color-bg)]/85"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#C8B06A]/25 text-[0.5rem] tracking-[0.2em] uppercase font-light text-primary-35 hover:text-primary-70 transition-colors bg-[var(--color-bg)]/85"
         >
           {isAtelier ? <Eye size={9} strokeWidth={1.5} /> : <EyeOff size={9} strokeWidth={1.5} />}
           {isAtelier ? "Preview visitor view" : "Return to My View"}
@@ -274,10 +274,10 @@ export default function Profile() {
       {privateWall && (
         <div className="flex flex-col items-center justify-center min-h-screen px-10 text-center">
           <div className="opacity-50"><SwanLogo size={52} color="var(--color-accent-gold)" /></div>
-          <p className="text-[var(--color-text-primary)] text-[22px] mt-6 mb-2 font-light font-serif">
+          <p className="text-[var(--color-text-primary)] text-[1.375rem] mt-6 mb-2 font-light font-serif">
             This Muse keeps her sanctuary private.
           </p>
-          <p className="text-[11px] text-primary-40 font-light tracking-wide">
+          <p className="text-[0.6875rem] text-primary-40 font-light tracking-wide">
             Her beauty ritual is hers alone.
           </p>
         </div>
@@ -297,10 +297,10 @@ export default function Profile() {
                     onClick={() => setSettingsOpen(true)}
                     className="flex items-center gap-1.5"
                   >
-                    <span className="text-[9px] tracking-[0.2em] font-light uppercase text-primary-40">
+                    <span className="text-[0.5625rem] tracking-[0.2em] font-light uppercase text-primary-40">
                       Glow Mode:
                     </span>
-                    <span className="text-[9px] tracking-[0.2em] font-light uppercase text-[var(--color-accent-gold)]">
+                    <span className="text-[0.5625rem] tracking-[0.2em] font-light uppercase text-[var(--color-accent-gold)]">
                       {glowMode}
                     </span>
                   </button>
@@ -327,16 +327,16 @@ export default function Profile() {
                       <SwanLogo size={46} color="var(--color-accent-gold)" />
                     )}
                   </div>
-                  <h1 className="text-[var(--color-text-primary)] font-light tracking-wide mb-1 font-serif text-[30px]">
+                  <h1 className="text-[var(--color-text-primary)] font-light tracking-wide mb-1 font-serif text-[1.875rem]">
                     {user?.full_name || "The Seeker"}
                   </h1>
                   <span
-                    className="px-2.5 py-0.5 text-[8px] tracking-[0.22em] uppercase font-light rounded-full mb-2"
+                    className="px-2.5 py-0.5 text-[0.5rem] tracking-[0.22em] uppercase font-light rounded-full mb-2"
                     style={{ color: tier.color, border: `1px solid ${tier.border}`, background: tier.bg }}
                   >
                     {tier.label}
                   </span>
-                  <p className="text-[11px] text-primary-40 font-light italic leading-relaxed max-w-[220px]">
+                  <p className="text-[0.6875rem] text-primary-40 font-light italic leading-relaxed max-w-[220px]">
                     Creating a sanctuary for beauty curation.
                   </p>
                 </div>
@@ -359,14 +359,14 @@ export default function Profile() {
                   )}
                 </div>
                 <div className="flex-1 pt-1">
-                  <h1 className="text-[var(--color-text-primary)] font-light tracking-wide leading-tight mb-1 font-serif text-[28px]">
+                  <h1 className="text-[var(--color-text-primary)] font-light tracking-wide leading-tight mb-1 font-serif text-[1.75rem]">
                     {user?.full_name || "The Seeker"}
                   </h1>
-                  <p className="text-[10px] text-primary-40 font-light italic leading-relaxed mb-2">
+                  <p className="text-[0.625rem] text-primary-40 font-light italic leading-relaxed mb-2">
                     Creating a sanctuary for beauty curation.
                   </p>
                   <span
-                    className="px-2 py-0.5 text-[8px] tracking-[0.2em] uppercase font-light rounded-full"
+                    className="px-2 py-0.5 text-[0.5rem] tracking-[0.2em] uppercase font-light rounded-full"
                     style={{ color: tier.color, border: `1px solid ${tier.border}`, background: tier.bg }}
                   >
                     {tier.label}
@@ -376,7 +376,7 @@ export default function Profile() {
                     <button
                       onClick={handleAdmire}
                       disabled={admireLoading}
-                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[9px] tracking-[0.2em] uppercase font-light transition-colors disabled:opacity-50 ${
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[0.5625rem] tracking-[0.2em] uppercase font-light transition-colors disabled:opacity-50 ${
                         isAdmiring
                           ? "border border-[#C8B06A] text-[#0B3C26] bg-[#C8B06A]/10"
                           : "bg-[#043927] text-[#FDF5E6]"
@@ -387,7 +387,7 @@ export default function Profile() {
                     </button>
                   </div>
                   {admireError && (
-                    <p className="text-right text-[9px] tracking-wider mt-0.5" style={{ color: "#BC8F8F" }}>
+                    <p className="text-right text-[0.5625rem] tracking-wider mt-0.5" style={{ color: "#BC8F8F" }}>
                       Couldn’t connect · try again
                     </p>
                   )}
@@ -412,13 +412,13 @@ export default function Profile() {
                     <MessageCircle size={16} color="var(--color-accent-gold)" />
                   </div>
                   <div>
-                    <p className="text-[9px] tracking-[0.2em] uppercase text-[var(--color-accent-gold)] font-light">The Muse Circle</p>
+                    <p className="text-[0.5625rem] tracking-[0.2em] uppercase text-[var(--color-accent-gold)] font-light">The Muse Circle</p>
                     <p className="text-sm text-[#FDF5E6] font-light">Your Conversations</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
-                    <span className="min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-accent-gold)] text-white text-[10px] flex items-center justify-center font-medium">
+                    <span className="min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-accent-gold)] text-white text-[0.625rem] flex items-center justify-center font-medium">
                       {unreadCount}
                     </span>
                   )}
@@ -432,13 +432,13 @@ export default function Profile() {
           {!visitorHidden && (
             <div className="px-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[16px] text-[var(--color-text-primary)] font-light font-serif">
+                <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
                   Distinctions Preview
                 </h2>
                 {isAtelier && (
                   <Link
                     to="/distinctions"
-                    className="text-[9px] tracking-[0.2em] text-[var(--color-accent-gold)] uppercase font-light"
+                    className="text-[0.5625rem] tracking-[0.2em] text-[var(--color-accent-gold)] uppercase font-light"
                   >
                     Le Sanctuaire →
                   </Link>
@@ -478,10 +478,10 @@ export default function Profile() {
           {!visitorHidden && (
             <div className="px-5">
               <div className="rounded-2xl px-5 py-4 border border-[var(--color-border)] bg-[var(--color-bg-surface)]">
-                <p className="text-[13px] text-primary-45 font-light uppercase tracking-[0.18em] mb-1.5">
+                <p className="text-[0.8125rem] text-primary-45 font-light uppercase tracking-[0.18em] mb-1.5">
                   Murmures
                 </p>
-                <p className="text-[15px] text-[var(--color-text-primary)] font-light font-serif">
+                <p className="text-[0.9375rem] text-[var(--color-text-primary)] font-light font-serif">
                   {isAtelier ? (
                     <>
                       <span className="font-normal">47</span>
@@ -536,11 +536,11 @@ export default function Profile() {
           {!visitorHidden && (
             <div className="px-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[16px] text-[var(--color-text-primary)] font-light font-serif">
+                <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
                   My Edit
                 </h2>
                 {isAtelier && (
-                  <button onClick={() => navigate("/vanity")} className="px-3 py-1.5 rounded-full text-[9px] tracking-[0.2em] uppercase font-light text-[#FDF5E6] bg-[#043927]">
+                  <button onClick={() => navigate("/vanity")} className="px-3 py-1.5 rounded-full text-[0.5625rem] tracking-[0.2em] uppercase font-light text-[#FDF5E6] bg-[#043927]">
                     Edit My Selection
                   </button>
                 )}
@@ -573,10 +573,10 @@ export default function Profile() {
                         )}
                       </div>
                       <div className="px-2 py-1.5">
-                        <p className="text-[7px] text-primary-45 font-light uppercase tracking-wider truncate mb-0.5">
+                        <p className="text-[0.4375rem] text-primary-45 font-light uppercase tracking-wider truncate mb-0.5">
                           {item.brand}
                         </p>
-                        <p className="text-[9px] text-[var(--color-text-primary)] font-light leading-tight truncate">
+                        <p className="text-[0.5625rem] text-[var(--color-text-primary)] font-light leading-tight truncate">
                           {item.name}
                         </p>
                       </div>
@@ -599,14 +599,14 @@ export default function Profile() {
                         />
                       </div>
                       <div className="px-2.5 py-2">
-                        <p className="text-[7px] text-[var(--color-accent-gold)] font-light uppercase tracking-wider truncate mb-0.5">
+                        <p className="text-[0.4375rem] text-[var(--color-accent-gold)] font-light uppercase tracking-wider truncate mb-0.5">
                           {item.brand}
                         </p>
-                        <p className="text-[10px] text-[var(--color-text-primary)] font-light leading-tight truncate mb-1.5">
+                        <p className="text-[0.625rem] text-[var(--color-text-primary)] font-light leading-tight truncate mb-1.5">
                           {item.name}
                         </p>
                         <div className="mb-1.5"><Stars count={item.stars} /></div>
-                        <span className="text-[7px] tracking-[0.12em] uppercase font-light px-2 py-1 rounded-lg text-[#FDF5E6] block text-center bg-[#043927]">
+                        <span className="text-[0.4375rem] tracking-[0.12em] uppercase font-light px-2 py-1 rounded-lg text-[#FDF5E6] block text-center bg-[#043927]">
                           No edit
                         </span>
                       </div>
@@ -623,11 +623,11 @@ export default function Profile() {
           {/* ── SECTION 5: SKIN PROFILE / ADN ────────────────────────────────── */}
           <div className="px-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[16px] text-[var(--color-text-primary)] font-light font-serif">
+              <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
                 Skin Profile / ADN
               </h2>
               {isAtelier && (
-                <button onClick={() => navigate("/onboarding")} className="text-[9px] tracking-[0.2em] text-[var(--color-accent-gold)] uppercase font-light">
+                <button onClick={() => navigate("/onboarding")} className="text-[0.5625rem] tracking-[0.2em] text-[var(--color-accent-gold)] uppercase font-light">
                   Edit →
                 </button>
               )}
@@ -643,7 +643,7 @@ export default function Profile() {
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C8B06A]/10 border border-[#C8B06A]/25">
                       <AdnIcon type={icon} size={15} />
                     </div>
-                    <p className="text-[9px] text-center text-primary-60 font-light leading-tight tracking-wide">
+                    <p className="text-[0.5625rem] text-center text-primary-60 font-light leading-tight tracking-wide">
                       {label}
                     </p>
                   </div>
@@ -652,7 +652,7 @@ export default function Profile() {
             ) : (
               <div className="rounded-xl px-4 py-4 border border-[var(--color-border)] space-y-2 bg-[var(--color-bg-surface)]">
                 {ADN_ATTRS.filter(a => a.aesthetic).map(({ label }) => (
-                  <p key={label} className="text-[12px] text-primary-60 font-light">
+                  <p key={label} className="text-[0.75rem] text-primary-60 font-light">
                     — {label}
                   </p>
                 ))}
@@ -666,11 +666,11 @@ export default function Profile() {
           {/* ── SECTION 6: BEAUTY CIRCLES ─────────────────────────────────────── */}
           <div className="px-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[16px] text-[var(--color-text-primary)] font-light font-serif">
+              <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
                 Beauty Rooms
               </h2>
               {isAtelier && (
-                <button onClick={() => navigate("/community")} className="px-3 py-1.5 rounded-full text-[9px] tracking-[0.2em] uppercase font-light text-[#FDF5E6] bg-[#043927]">
+                <button onClick={() => navigate("/community")} className="px-3 py-1.5 rounded-full text-[0.5625rem] tracking-[0.2em] uppercase font-light text-[#FDF5E6] bg-[#043927]">
                   Join more rooms
                 </button>
               )}
@@ -684,13 +684,13 @@ export default function Profile() {
                     className="rounded-xl px-4 py-3 border border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-elevated)]/35"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-light text-primary-50 flex-shrink-0 bg-[#C8B06A]/12 border border-[#C8B06A]/25">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.625rem] font-light text-primary-50 flex-shrink-0 bg-[#C8B06A]/12 border border-[#C8B06A]/25">
                         {circle.initial}
                       </div>
-                      <span className="text-[13px] text-[var(--color-text-primary)] font-light">{circle.name}</span>
+                      <span className="text-[0.8125rem] text-[var(--color-text-primary)] font-light">{circle.name}</span>
                     </div>
                     {circle.isLeader && (
-                      <span className="text-[8px] tracking-[0.18em] uppercase font-light px-2 py-0.5 rounded-full text-[var(--color-accent-gold)] border border-[#C8B06A]/30 bg-[#C8B06A]/7">
+                      <span className="text-[0.5rem] tracking-[0.18em] uppercase font-light px-2 py-0.5 rounded-full text-[var(--color-accent-gold)] border border-[#C8B06A]/30 bg-[#C8B06A]/7">
                         Leader
                       </span>
                     )}
@@ -705,13 +705,13 @@ export default function Profile() {
                     className="rounded-xl px-4 py-3 border border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-elevated)]/22"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-light text-primary-40 flex-shrink-0 bg-[#C8B06A]/10 border border-[#C8B06A]/20">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.625rem] font-light text-primary-40 flex-shrink-0 bg-[#C8B06A]/10 border border-[#C8B06A]/20">
                         {circle.initial}
                       </div>
-                      <span className="text-[13px] text-[var(--color-text-primary)]/70 font-light">{circle.name}</span>
+                      <span className="text-[0.8125rem] text-[var(--color-text-primary)]/70 font-light">{circle.name}</span>
                     </div>
                     {circle.isLeader && (
-                      <span className="text-[8px] tracking-[0.18em] uppercase font-light px-2 py-0.5 rounded-full text-[var(--color-accent-gold)] border border-[#C8B06A]/30 bg-[#C8B06A]/7">
+                      <span className="text-[0.5rem] tracking-[0.18em] uppercase font-light px-2 py-0.5 rounded-full text-[var(--color-accent-gold)] border border-[#C8B06A]/30 bg-[#C8B06A]/7">
                         Leader
                       </span>
                     )}
@@ -731,7 +731,7 @@ export default function Profile() {
                   className="flex items-center gap-3 py-3"
                 >
                   <LogOut size={14} strokeWidth={1.5} color="#BC8F8F" />
-                  <span className="text-[13px] text-[#BC8F8F] font-light tracking-wide">Sign out</span>
+                  <span className="text-[0.8125rem] text-[#BC8F8F] font-light tracking-wide">Sign out</span>
                 </button>
               </div>
             </>
@@ -770,7 +770,7 @@ export default function Profile() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setSettingsOpen(false)}
-                    className="px-4 py-1.5 rounded-full text-[9px] tracking-[0.2em] uppercase font-light text-[#FDF5E6] bg-[#043927]"
+                    className="px-4 py-1.5 rounded-full text-[0.5625rem] tracking-[0.2em] uppercase font-light text-[#FDF5E6] bg-[#043927]"
                   >
                     Save
                   </button>
@@ -784,7 +784,7 @@ export default function Profile() {
 
                 {/* Appearance — top so it's always visible */}
                 <div>
-                  <p className="text-[9px] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
+                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
                     Appearance
                   </p>
                   <button
@@ -793,8 +793,8 @@ export default function Profile() {
                     style={{ borderColor: "var(--color-border)", background: "var(--color-bg-surface)" }}
                   >
                     <div>
-                      <p className="text-[12px] text-[var(--color-text-primary)] font-light">Dark Mode</p>
-                      <p className="text-[9px] text-primary-40 font-light mt-0.5">Tap to toggle · saves instantly</p>
+                      <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">Dark Mode</p>
+                      <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">Tap to toggle · saves instantly</p>
                     </div>
                     <div
                       className="relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-300"
@@ -813,7 +813,7 @@ export default function Profile() {
 
                 {/* Glow Mode */}
                 <div>
-                  <p className="text-[9px] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
+                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
                     Glow Mode
                   </p>
                   <div className="space-y-2">
@@ -832,8 +832,8 @@ export default function Profile() {
                         }}
                       >
                         <div>
-                          <p className="text-[12px] text-[var(--color-text-primary)] font-light">{label}</p>
-                          <p className="text-[9px] text-primary-40 font-light mt-0.5">{desc}</p>
+                          <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
+                          <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
                         </div>
                         {glowMode === mode && <Check size={12} strokeWidth={1.5} color="var(--color-accent-gold)" />}
                       </button>
@@ -843,7 +843,7 @@ export default function Profile() {
 
                 {/* Privacy Tier */}
                 <div>
-                  <p className="text-[9px] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
+                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
                     Privacy Tier
                   </p>
                   <div className="space-y-2">
@@ -862,8 +862,8 @@ export default function Profile() {
                         }}
                       >
                         <div>
-                          <p className="text-[12px] text-[var(--color-text-primary)] font-light">{label}</p>
-                          <p className="text-[9px] text-primary-40 font-light mt-0.5">{desc}</p>
+                          <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
+                          <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
                         </div>
                         {privacy === tier && <Check size={12} strokeWidth={1.5} color="var(--color-accent-gold)" />}
                       </button>
@@ -884,7 +884,7 @@ export default function Profile() {
                     onClick={() => setSettingsOpen(false)}
                     className="flex items-center justify-between py-3.5 border-b border-[var(--color-border)]"
                   >
-                    <span className="text-[13px] text-[var(--color-text-primary)] font-light">{label}</span>
+                    <span className="text-[0.8125rem] text-[var(--color-text-primary)] font-light">{label}</span>
                     <ChevronRight size={13} strokeWidth={1.5} color="var(--color-text-primary)" aria-hidden={true} />
                   </Link>
                 ))}
@@ -918,7 +918,7 @@ export default function Profile() {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-5">
-                <h3 className="font-serif text-[20px] font-light text-[var(--color-text-primary)]">
+                <h3 className="font-serif text-[1.25rem] font-light text-[var(--color-text-primary)]">
                   {followListModal === "admiratrices" ? "Admiratrices" : "My Coterie"}
                 </h3>
                 <button onClick={() => setFollowListModal(null)} aria-label="Close">
@@ -926,7 +926,7 @@ export default function Profile() {
                 </button>
               </div>
               {(followListModal === "admiratrices" ? admiratricesList : coterieList).length === 0 ? (
-                <p className="text-center font-serif italic text-[14px] text-primary-40 py-12">
+                <p className="text-center font-serif italic text-[0.875rem] text-primary-40 py-12">
                   {followListModal === "admiratrices"
                     ? "No one has admired you yet."
                     : "You haven't admired anyone yet."}
@@ -938,7 +938,7 @@ export default function Profile() {
                       <div className="w-9 h-9 rounded-full bg-[#F5EDD8] border border-[#C8B06A]/25 flex items-center justify-center flex-shrink-0">
                         <SwanLogo size={16} color="var(--color-accent-gold)" />
                       </div>
-                      <p className="text-[13px] font-light text-[var(--color-text-primary)]">
+                      <p className="text-[0.8125rem] font-light text-[var(--color-text-primary)]">
                         Muse Member
                       </p>
                     </div>

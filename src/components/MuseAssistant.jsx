@@ -101,7 +101,7 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
             </div>
             <div>
               <h1 className="font-serif text-lg text-[var(--color-text-primary)] leading-none">The Muse</h1>
-              <p className="text-[9px] tracking-[0.22em] uppercase text-[#C5A070] font-light mt-0.5">Your beauty guide</p>
+              <p className="text-[0.5625rem] tracking-[0.22em] uppercase text-[#C5A070] font-light mt-0.5">Your beauty guide</p>
             </div>
           </div>
           <button onClick={onClose}
@@ -182,7 +182,7 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
               transition={{ delay: 0.75 }}
               className="mt-1 mb-4"
             >
-              <p className="text-[9px] tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-3 ml-0.5 font-light">
+              <p className="text-[0.5625rem] tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-3 ml-0.5 font-light">
                 Quick access
               </p>
               <div className="grid grid-cols-2 gap-2">
@@ -215,7 +215,7 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
         <div className="flex-shrink-0 px-4 pt-3 pb-8"
           style={{ borderTop: "1px solid rgba(229,217,192,0.5)", background: "var(--color-bg-surface)", backdropFilter: "blur(10px)" }}>
           <p
-            className="text-center text-[11px] mb-2"
+            className="text-center text-[0.6875rem] mb-2"
             style={{ color: "rgba(139,115,85,0.42)", fontFamily: "'DM Sans', system-ui, sans-serif" }}
           >
             General beauty guidance only — not medical advice.

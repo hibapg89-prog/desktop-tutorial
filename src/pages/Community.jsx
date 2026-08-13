@@ -45,7 +45,7 @@ function TrustBadge({ post }) {
   const isCertified = Boolean(post.product_id);
   return (
     <span
-      className={`inline-flex items-center gap-0.5 text-[8px] tracking-[0.1em] font-light px-1.5 py-0.5 rounded-full border ${
+      className={`inline-flex items-center gap-0.5 text-[0.5rem] tracking-[0.1em] font-light px-1.5 py-0.5 rounded-full border ${
         isCertified
           ? "text-[var(--color-text-primary)] border-[#043927]/18 bg-[#043927]/5"
           : "text-primary-40 border-[var(--color-border)] bg-transparent"
@@ -355,15 +355,15 @@ export default function Community() {
       {/* Header */}
       <header className="px-5 pt-14 pb-3 flex items-end justify-between">
         <div>
-          <p className="text-[10px] tracking-[0.35em] text-primary-40 uppercase font-light">The Circle</p>
+          <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">The Circle</p>
           <h1 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mt-0.5">Community</h1>
         </div>
         <Link
           to="/circle-rooms"
-          className="flex items-center gap-1 text-[11px] text-[var(--color-accent-gold)] font-light tracking-wide mb-1.5"
+          className="flex items-center gap-1 text-[0.6875rem] text-[var(--color-accent-gold)] font-light tracking-wide mb-1.5"
         >
           Rooms
-          <span className="text-[13px] leading-none">›</span>
+          <span className="text-[0.8125rem] leading-none">›</span>
         </Link>
       </header>
 
@@ -435,20 +435,20 @@ export default function Community() {
               <div className="absolute inset-0 flex flex-col justify-end p-4">
                 {banner.tag && (
                   <span
-                    className="text-[9px] tracking-[0.25em] uppercase font-light mb-1.5"
+                    className="text-[0.5625rem] tracking-[0.25em] uppercase font-light mb-1.5"
                     style={{ color: "var(--color-accent-gold)" }}
                   >
                     {banner.tag}
                   </span>
                 )}
                 <p
-                  className="text-[22px] font-light text-white leading-tight"
+                  className="text-[1.375rem] font-light text-white leading-tight"
                   style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
                 >
                   {banner.title}
                 </p>
                 {banner.subtitle && (
-                  <p className="text-[11px] font-light text-white/65 leading-relaxed mt-1 max-w-[260px]">
+                  <p className="text-[0.6875rem] font-light text-white/65 leading-relaxed mt-1 max-w-[260px]">
                     {banner.subtitle}
                   </p>
                 )}
@@ -457,7 +457,7 @@ export default function Community() {
                     <Link
                       to={banner.cta_url || "#"}
                       onClick={(e) => { if (!banner.cta_url) e.preventDefault(); }}
-                      className="px-4 py-1.5 rounded-full text-[11px] font-light tracking-wide"
+                      className="px-4 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide"
                       style={{ background: "rgba(200,176,106,0.22)", border: "1px solid rgba(200,176,106,0.45)", color: "var(--color-accent-gold)" }}
                     >
                       {banner.cta_label}
@@ -492,7 +492,7 @@ export default function Community() {
           <button
             key={key}
             onClick={() => switchMode(key)}
-            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-light tracking-wide transition-all border ${
+            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide transition-all border ${
               feedMode === key
                 ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
                 : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"
@@ -517,13 +517,13 @@ export default function Community() {
               <BadgePin badge={nudge.badge} earned={false} size="xs" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-primary-45 font-light tracking-wide leading-tight">
+              <p className="text-[0.625rem] text-primary-45 font-light tracking-wide leading-tight">
                 {nudge.target - nudge.current === 1
                   ? `One more ${nudge.label} to unlock`
                   : `${nudge.target - nudge.current} more ${nudge.label} to unlock`}
               </p>
               <p
-                className="text-[13px] font-light text-[var(--color-text-primary)] leading-tight mt-0.5"
+                className="text-[0.8125rem] font-light text-[var(--color-text-primary)] leading-tight mt-0.5"
                 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
               >
                 {nudge.badge.label}
@@ -549,11 +549,11 @@ export default function Community() {
       {/* Beauty Rooms — curated interest communities */}
       <div className="mb-3">
         <div className="px-5 flex items-center justify-between mb-2">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-primary-40 font-light">Beauty Rooms</p>
+          <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Beauty Rooms</p>
           {activeCircle && (
             <button
               onClick={() => setActiveCircle(null)}
-              className="text-[9px] tracking-[0.15em] uppercase text-[var(--color-accent-gold)] font-light"
+              className="text-[0.5625rem] tracking-[0.15em] uppercase text-[var(--color-accent-gold)] font-light"
             >
               Clear
             </button>
@@ -576,15 +576,15 @@ export default function Community() {
                 style={isActive ? { background: c.color } : {}}
               >
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px]">{c.glyph}</span>
-                  <span className="text-[11px] font-light tracking-wide">{c.label}</span>
+                  <span className="text-[0.625rem]">{c.glyph}</span>
+                  <span className="text-[0.6875rem] font-light tracking-wide">{c.label}</span>
                   {postCount > 0 && (
-                    <span className={`text-[8px] ${isActive ? "text-white/70" : "text-primary-35"}`}>
+                    <span className={`text-[0.5rem] ${isActive ? "text-white/70" : "text-primary-35"}`}>
                       {postCount}
                     </span>
                   )}
                 </div>
-                <span className={`text-[9px] font-light italic tracking-wide mt-0.5 ${isActive ? "text-white/70" : "text-primary-40"}`}
+                <span className={`text-[0.5625rem] font-light italic tracking-wide mt-0.5 ${isActive ? "text-white/70" : "text-primary-40"}`}
                   style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                   {arch?.archetype}
                 </span>
@@ -602,13 +602,13 @@ export default function Community() {
             <div className="mx-5 mt-2 mb-1 px-4 py-2.5 rounded-xl flex items-center justify-between"
               style={{ background: c.color + "18", borderLeft: `3px solid ${c.color}` }}>
               <div>
-                <p className="text-[13px] font-light tracking-wide"
+                <p className="text-[0.8125rem] font-light tracking-wide"
                   style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: "var(--color-text-primary)" }}>
                   {arch.archetype}
                 </p>
-                <p className="text-[10px] font-light italic text-primary-50 tracking-wide mt-0.5">{arch.tagline}</p>
+                <p className="text-[0.625rem] font-light italic text-primary-50 tracking-wide mt-0.5">{arch.tagline}</p>
               </div>
-              <span className="text-[18px] opacity-40">{c.glyph}</span>
+              <span className="text-[1.125rem] opacity-40">{c.glyph}</span>
             </div>
           );
         })()}
@@ -618,7 +618,7 @@ export default function Community() {
       {events.length > 0 && (
         <div className="mb-3">
           <div className="px-5 flex items-center justify-between mb-2">
-            <p className="text-[10px] tracking-[0.3em] uppercase text-primary-40 font-light">Upcoming Events</p>
+            <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Upcoming Events</p>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar px-5 pb-1">
             {events.map(event => {
@@ -633,36 +633,36 @@ export default function Community() {
                     style={{ background: "rgba(200,176,106,0.09)" }}
                   >
                     <span
-                      className="text-[30px] font-light text-[var(--color-text-primary)] leading-none"
+                      className="text-[1.875rem] font-light text-[var(--color-text-primary)] leading-none"
                       style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
                     >
                       {date}
                     </span>
                     <div className="flex flex-col">
-                      <span className="text-[9px] tracking-[0.2em] uppercase text-primary-55 font-light leading-none">
+                      <span className="text-[0.5625rem] tracking-[0.2em] uppercase text-primary-55 font-light leading-none">
                         {day}
                       </span>
-                      <span className="text-[9px] tracking-[0.15em] uppercase font-light leading-none mt-0.5" style={{ color: "var(--color-accent-gold)" }}>
+                      <span className="text-[0.5625rem] tracking-[0.15em] uppercase font-light leading-none mt-0.5" style={{ color: "var(--color-accent-gold)" }}>
                         {month}
                       </span>
                     </div>
                   </div>
                   <div className="px-3 py-2.5">
-                    <p className="text-[12px] font-light text-[var(--color-text-primary)] leading-tight line-clamp-2">
+                    <p className="text-[0.75rem] font-light text-[var(--color-text-primary)] leading-tight line-clamp-2">
                       {event.title}
                     </p>
                     {event.start_time && (
-                      <p className="text-[10px] text-primary-45 font-light mt-1 leading-tight">
+                      <p className="text-[0.625rem] text-primary-45 font-light mt-1 leading-tight">
                         {event.start_time}{event.end_time ? ` — ${event.end_time}` : ""}
                       </p>
                     )}
                     {event.location && (
-                      <p className="text-[10px] text-primary-35 font-light mt-0.5 truncate">{event.location}</p>
+                      <p className="text-[0.625rem] text-primary-35 font-light mt-0.5 truncate">{event.location}</p>
                     )}
                     {event.cta_label && (
                       <button
                         onClick={e => { e.stopPropagation(); setShowEventRsvp(true); }}
-                        className="inline-flex items-center gap-0.5 mt-2 text-[10px] font-light"
+                        className="inline-flex items-center gap-0.5 mt-2 text-[0.625rem] font-light"
                         style={{ color: "var(--color-accent-gold)" }}
                       >
                         {event.cta_label} ›
@@ -694,7 +694,7 @@ export default function Community() {
 
             {feedMode !== "following" && polls.length > 0 && (
               <div className="space-y-3 mb-5">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
+                <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
                 {polls.map((poll, i) => (
                   <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                     <PollCard poll={poll} user={user} onVoted={load} />
@@ -705,7 +705,7 @@ export default function Community() {
 
             {feedMode !== "following" && swaps.length > 0 && (
               <div className="space-y-3 mb-5">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-primary-40 font-light">Open Swaps</p>
+                <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Open Swaps</p>
                 {swaps.map((swap, i) => (
                   <motion.div key={swap.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                     <SwapCard swap={swap} user={user} onUpdated={load} />
@@ -719,7 +719,7 @@ export default function Community() {
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-light tracking-wide transition-all border ${
+                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide transition-all border ${
                     activeCategory === cat
                       ? "bg-[#C8B06A] text-white border-[#C8B06A]"
                       : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"
@@ -766,15 +766,15 @@ export default function Community() {
                       {c.glyph}
                     </span>
                     <p
-                      className="text-[22px] font-light text-[var(--color-text-primary)] mb-1.5 leading-tight"
+                      className="text-[1.375rem] font-light text-[var(--color-text-primary)] mb-1.5 leading-tight"
                       style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
                     >
                       {arch.archetype}
                     </p>
-                    <p className="text-[11px] font-light italic text-primary-40 tracking-[0.12em] mb-6">
+                    <p className="text-[0.6875rem] font-light italic text-primary-40 tracking-[0.12em] mb-6">
                       {arch.tagline}
                     </p>
-                    <p className="text-[13px] font-light text-primary-35 leading-relaxed max-w-[240px]">
+                    <p className="text-[0.8125rem] font-light text-primary-35 leading-relaxed max-w-[240px]">
                       {arch.prompt}
                     </p>
                   </motion.div>
@@ -820,14 +820,14 @@ export default function Community() {
                                   <div className="w-full h-full flex items-center justify-center text-2xl">◑</div>
                                 )}
                                 <div className="absolute inset-x-0 bottom-0 flex justify-center pb-0.5">
-                                  <span className="text-[7px] tracking-wide text-white/80 font-light" style={{textShadow:"0 1px 2px rgba(0,0,0,0.4)"}}>BEFORE · AFTER</span>
+                                  <span className="text-[0.4375rem] tracking-wide text-white/80 font-light" style={{textShadow:"0 1px 2px rgba(0,0,0,0.4)"}}>BEFORE · AFTER</span>
                                 </div>
                               </div>
                             ) : post.post_type === "routine" ? (
                               <div className="w-full h-full flex flex-col items-center justify-center gap-1">
                                 <SwanLogo size={18} color="var(--color-text-primary)" className="opacity-40" />
                                 {post.routine_steps && (
-                                  <span className="text-[9px] text-primary-50 font-light">
+                                  <span className="text-[0.5625rem] text-primary-50 font-light">
                                     {(() => { try { return JSON.parse(post.routine_steps).length; } catch { return ""; } })()} steps
                                   </span>
                                 )}
@@ -847,7 +847,7 @@ export default function Community() {
                                   </div>
                                 </div>
                                 {post.grwm_duration && (
-                                  <div className="absolute bottom-1 left-1 bg-[#043927]/70 text-white text-[7px] px-1 py-0.5 rounded font-light">
+                                  <div className="absolute bottom-1 left-1 bg-[#043927]/70 text-white text-[0.4375rem] px-1 py-0.5 rounded font-light">
                                     {post.grwm_duration}
                                   </div>
                                 )}
@@ -859,25 +859,25 @@ export default function Community() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[9px] tracking-[0.15em] uppercase text-[#BC8F8F] font-light">{post.brand}</p>
+                            <p className="text-[0.5625rem] tracking-[0.15em] uppercase text-[#BC8F8F] font-light">{post.brand}</p>
                             <p className="text-sm text-[var(--color-text-primary)] font-light truncate">
                               {post.name}{post.shade ? ` · ${post.shade}` : ""}
                             </p>
                             {post.post_type === "swatch" && post.skin_tone && (
                               <div className="flex items-center gap-1 mt-0.5">
                                 <div className="w-3.5 h-3.5 rounded-full border border-[var(--color-border)]" style={{ backgroundColor: post.skin_tone }} />
-                                <span className="text-[9px] text-primary-40 font-light">Skin tone match</span>
+                                <span className="text-[0.5625rem] text-primary-40 font-light">Skin tone match</span>
                               </div>
                             )}
                             {post.post_type === "before_after" && (
-                              <span className="text-[9px] text-primary-40 font-light">◑ Before &amp; After</span>
+                              <span className="text-[0.5625rem] text-primary-40 font-light">◑ Before &amp; After</span>
                             )}
                             {post.post_type === "grwm" && post.grwm_duration && (
-                              <span className="text-[9px] text-primary-40 font-light">{post.grwm_duration} GRWM</span>
+                              <span className="text-[0.5625rem] text-primary-40 font-light">{post.grwm_duration} GRWM</span>
                             )}
                             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                               <StarRating value={post.rating || 0} readOnly size={12} />
-                              <span className="text-[10px] text-primary-40 font-light truncate">
+                              <span className="text-[0.625rem] text-primary-40 font-light truncate">
                                 by {post.author_name || "A Muse Member"}
                               </span>
                               {creatorBadges[post.created_by_id] && (
@@ -898,7 +898,7 @@ export default function Community() {
                                 return (
                                   <span
                                     key="circle-badge"
-                                    className="inline-flex items-center gap-0.5 text-[8px] tracking-[0.1em] font-light px-1.5 py-0.5 rounded-full"
+                                    className="inline-flex items-center gap-0.5 text-[0.5rem] tracking-[0.1em] font-light px-1.5 py-0.5 rounded-full"
                                     style={{ color: cc.color, border: `1px solid ${cc.color}40`, background: cc.color + "12" }}
                                   >
                                     {cc.glyph} {cc.label}
@@ -925,7 +925,7 @@ export default function Community() {
                                       <span
                                         key={tag}
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuery("#" + tag); }}
-                                        className="text-[9px] text-[var(--color-accent-gold)] font-light cursor-pointer hover:underline"
+                                        className="text-[0.5625rem] text-[var(--color-accent-gold)] font-light cursor-pointer hover:underline"
                                       >
                                         #{tag}
                                       </span>
@@ -952,7 +952,7 @@ export default function Community() {
                           <div className="flex items-center gap-4">
                             <button
                               onClick={(e) => toggleAdore(e, post)}
-                              className={`flex items-center gap-1.5 text-[11px] font-light transition-colors ${adoredIds.has(post.id) ? "text-[var(--color-accent-gold)]" : "text-primary-40"}`}
+                              className={`flex items-center gap-1.5 text-[0.6875rem] font-light transition-colors ${adoredIds.has(post.id) ? "text-[var(--color-accent-gold)]" : "text-primary-40"}`}
                             >
                               <motion.span
                                 key={adoredIds.has(post.id) ? `a1-${post.id}` : `a0-${post.id}`}
@@ -965,13 +965,13 @@ export default function Community() {
                               </motion.span>
                               {adoredIds.has(post.id) ? "Adored" : "Adore"}
                               {(post.adore_count || 0) > 0 && (
-                                <span className="text-[9px] opacity-55">{post.adore_count}</span>
+                                <span className="text-[0.5625rem] opacity-55">{post.adore_count}</span>
                               )}
                             </button>
                             <button
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/community/${post.id}`); }}
                               aria-label={`View ${post.review_count || 0} comments`}
-                              className="flex items-center gap-1.5 text-[11px] text-primary-40 font-light"
+                              className="flex items-center gap-1.5 text-[0.6875rem] text-primary-40 font-light"
                             >
                               <MessageCircle size={13} aria-hidden={true} />
                               {post.review_count || 0}
@@ -981,7 +981,7 @@ export default function Community() {
                             <button
                               onClick={(e) => toggleCollect(e, post)}
                               aria-label={collectedIds.has(post.id) ? "Remove from collection" : "Add to collection"}
-                              className={`flex items-center gap-1.5 text-[11px] font-light transition-colors ${collectedIds.has(post.id) ? "text-[var(--color-text-primary)]" : "text-primary-40"}`}
+                              className={`flex items-center gap-1.5 text-[0.6875rem] font-light transition-colors ${collectedIds.has(post.id) ? "text-[var(--color-text-primary)]" : "text-primary-40"}`}
                             >
                               <motion.span
                                 key={collectedIds.has(post.id) ? `c1-${post.id}` : `c0-${post.id}`}
@@ -996,7 +996,7 @@ export default function Community() {
                             <button
                               onClick={(e) => passAlong(e, post)}
                               aria-label="Pass along"
-                              className="flex items-center gap-1.5 text-[11px] text-primary-45 font-light hover:text-[var(--color-text-primary)] transition-colors"
+                              className="flex items-center gap-1.5 text-[0.6875rem] text-primary-45 font-light hover:text-[var(--color-text-primary)] transition-colors"
                             >
                               <Share2 size={13} aria-hidden={true} />
                             </button>
@@ -1045,11 +1045,11 @@ export default function Community() {
             <h1 className="font-serif text-[2rem] leading-tight text-[var(--color-text-primary)] font-light tracking-wide mb-3">
               Reservations Coming Soon
             </h1>
-            <p className="text-[10px] tracking-[0.35em] uppercase text-[var(--color-text-primary)] font-light mb-6">
+            <p className="text-[0.625rem] tracking-[0.35em] uppercase text-[var(--color-text-primary)] font-light mb-6">
               Coming Soon
             </p>
             <div className="w-10 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/60 to-transparent mb-6" />
-            <p className="text-[13px] text-[var(--color-text-primary)]/45 font-light leading-relaxed max-w-[210px] tracking-wide">
+            <p className="text-[0.8125rem] text-[var(--color-text-primary)]/45 font-light leading-relaxed max-w-[210px] tracking-wide">
               You'll be able to reserve your place here soon.
             </p>
           </motion.div>

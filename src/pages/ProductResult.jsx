@@ -108,7 +108,7 @@ export default function ProductResult() {
                 initial={{ opacity: 0, y: 4, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 4, scale: 0.9 }}
-                className="absolute right-0 top-11 bg-[#043927] text-[#FDF5E6] text-[10px] font-light px-3 py-1.5 rounded-xl whitespace-nowrap shadow-lg"
+                className="absolute right-0 top-11 bg-[#043927] text-[#FDF5E6] text-[0.625rem] font-light px-3 py-1.5 rounded-xl whitespace-nowrap shadow-lg"
               >
                 Already in your vanity
               </motion.div>
@@ -265,7 +265,7 @@ export default function ProductResult() {
               <p className="text-xs tracking-[0.2em] text-primary-50 uppercase font-light">Ingredients</p>
               <button onClick={handleCopyIngredients} className="flex items-center gap-1">
                 {copied ? <Check size={12} color="var(--color-text-primary)" /> : <Copy size={12} color="var(--color-text-primary)" />}
-                <span className="text-[10px] text-primary-40 font-light">{copied ? "Copied" : "Copy"}</span>
+                <span className="text-[0.625rem] text-primary-40 font-light">{copied ? "Copied" : "Copy"}</span>
               </button>
             </div>
             <p className="text-xs text-primary-60 leading-relaxed font-light">{product.ingredients}</p>

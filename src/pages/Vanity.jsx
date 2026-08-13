@@ -55,7 +55,7 @@ function ExpiryBadge({ days }) {
 function SaleBadge({ product }) {
   if (!product.on_sale) return null;
   return (
-    <div className="absolute top-2 left-2 bg-[var(--color-accent-gold)] text-white text-[8px] font-medium px-1.5 py-0.5 rounded-full">
+    <div className="absolute top-2 left-2 bg-[var(--color-accent-gold)] text-white text-[0.5rem] font-medium px-1.5 py-0.5 rounded-full">
       {product.sale_discount_pct > 0 ? `-${Math.round(product.sale_discount_pct)}%` : "SALE"}
     </div>
   );
@@ -78,7 +78,7 @@ function TagChips({ tags }) {
       {tags.map(t => (
         <span
           key={t}
-          className="text-[8px] font-light px-1.5 py-0.5 rounded-full capitalize"
+          className="text-[0.5rem] font-light px-1.5 py-0.5 rounded-full capitalize"
           style={{ color: TAG_ACCENT[t], background: `${TAG_ACCENT[t]}15`, border: `1px solid ${TAG_ACCENT[t]}30` }}
         >
           {t}
@@ -120,7 +120,7 @@ function MuseAlertCard({ alert, onDismiss }) {
             <><span className="font-medium">{product.brand} {product.name}</span> is now on sale — {product.sale_discount_pct > 0 ? `${Math.round(product.sale_discount_pct)}% off` : "check the price"}</>
           )}
         </p>
-        <p className="text-[10px] text-primary-40 font-light mt-0.5 italic">The Muse</p>
+        <p className="text-[0.625rem] text-primary-40 font-light mt-0.5 italic">The Muse</p>
       </div>
       <button onClick={onDismiss} className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-black/5">
         <X size={10} color="var(--color-text-primary)" />
@@ -179,7 +179,7 @@ function DraggableProduct({ product, initPos, onDragEnd }) {
             <SwanLogo size={20} color="var(--color-text-primary)" />
           </div>
         )}
-        <p className="text-[8px] text-primary-50 font-light text-center mt-1 truncate">{product.brand}</p>
+        <p className="text-[0.5rem] text-primary-50 font-light text-center mt-1 truncate">{product.brand}</p>
       </div>
     </motion.div>
   );
@@ -238,7 +238,7 @@ function VanityCanvas({ products }) {
         <BrushHolder />
       </div>
       <div className="absolute bottom-3 left-0 right-0 text-center pointer-events-none">
-        <span className="text-[9px] tracking-[0.3em] text-primary-40 uppercase font-light">DRAG TO REARRANGE · MY VANITY</span>
+        <span className="text-[0.5625rem] tracking-[0.3em] text-primary-40 uppercase font-light">DRAG TO REARRANGE · MY VANITY</span>
       </div>
     </div>
   );
@@ -271,7 +271,7 @@ function PanelProduct({ product, targetRef, onMove }) {
           <SwanLogo size={14} color="var(--color-text-primary)" />
         </div>
       )}
-      <p className="text-[7px] text-primary-45 font-light truncate mt-0.5 text-center leading-none">{product.brand}</p>
+      <p className="text-[0.4375rem] text-primary-45 font-light truncate mt-0.5 text-center leading-none">{product.brand}</p>
     </motion.div>
   );
 }
@@ -288,14 +288,14 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
         {/* Left panel: MY VANITY */}
         <div className="flex-1 flex flex-col min-w-0 border-r border-[var(--color-border)]" ref={leftRef}>
           <div className="bg-[var(--color-bg-elevated)] px-3 py-2.5 border-b border-[var(--color-border)] flex items-center justify-center gap-1.5">
-            <p className="text-[9px] tracking-[0.25em] text-primary-60 uppercase font-light">MY VANITY</p>
-            <span className="text-[8px] text-[var(--color-accent-gold)]">{vanityProducts.length}</span>
+            <p className="text-[0.5625rem] tracking-[0.25em] text-primary-60 uppercase font-light">MY VANITY</p>
+            <span className="text-[0.5rem] text-[var(--color-accent-gold)]">{vanityProducts.length}</span>
           </div>
           <div className="flex-1 bg-[var(--color-bg)] overflow-y-auto p-3">
             {vanityProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10">
                 <SwanLogo size={28} color="var(--color-accent-gold)" />
-                <p className="text-[8px] text-primary-30 font-light mt-2 text-center italic">Drag products here</p>
+                <p className="text-[0.5rem] text-primary-30 font-light mt-2 text-center italic">Drag products here</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2">
@@ -311,14 +311,14 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
         <div className="flex-1 flex flex-col min-w-0" ref={rightRef}>
           <div className="bg-[var(--color-bg-elevated)] px-3 py-2.5 border-b border-[var(--color-border)] flex items-center justify-center gap-1.5">
             <Heart size={9} color="var(--color-text-primary)" className="opacity-50" />
-            <p className="text-[9px] tracking-[0.25em] text-primary-60 uppercase font-light">WISHLIST</p>
-            <span className="text-[8px] text-[var(--color-accent-gold)]">{wishlistProducts.length}</span>
+            <p className="text-[0.5625rem] tracking-[0.25em] text-primary-60 uppercase font-light">WISHLIST</p>
+            <span className="text-[0.5rem] text-[var(--color-accent-gold)]">{wishlistProducts.length}</span>
           </div>
           <div className="flex-1 bg-[var(--color-bg)] overflow-y-auto p-3">
             {wishlistProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10">
                 <SwanLogo size={28} color="var(--color-accent-gold)" />
-                <p className="text-[8px] text-primary-30 font-light mt-2 text-center italic">Drag products here</p>
+                <p className="text-[0.5rem] text-primary-30 font-light mt-2 text-center italic">Drag products here</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2">
@@ -334,7 +334,7 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
       {/* Instruction bar */}
       <div className="bg-[var(--color-bg-elevated)]/80 border-t border-[var(--color-border)] py-2 text-center flex-shrink-0 flex items-center justify-center gap-1.5">
         <ArrowLeftRight size={8} color="var(--color-text-primary)" className="opacity-40" />
-        <span className="text-[8px] tracking-[0.2em] text-primary-40 uppercase font-light">drag to move between collections</span>
+        <span className="text-[0.5rem] tracking-[0.2em] text-primary-40 uppercase font-light">drag to move between collections</span>
       </div>
     </div>
   );
@@ -499,11 +499,11 @@ export default function Vanity() {
     <main className="min-h-screen bg-[var(--color-bg)]">
       {/* Page header */}
       <header className="px-5 pt-6 pb-2">
-        <p className="text-[10px] tracking-[0.35em] text-primary-40 uppercase font-light">La Collection</p>
+        <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">La Collection</p>
         <h1 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mt-0.5">La Vanity</h1>
       </header>
 
-      {/* MY VANITY | WISHLIST tabs */
+      {/* MY VANITY | WISHLIST tabs */}
       <div className="px-5 mt-2 mb-4">
         <div className="flex items-center gap-2">
           <div className="flex-1 flex bg-[var(--color-bg-surface)] rounded-2xl p-1 border border-[var(--color-border)]">
@@ -524,7 +524,7 @@ export default function Vanity() {
               >
                 {tab.key === "wishlist" && <Heart size={11} fill={activeTab === "wishlist" ? "currentColor" : "none"} />}
                 {tab.label}
-                <span className={`text-[10px] rounded-full px-1.5 py-0.5 ${activeTab === tab.key ? "bg-[var(--color-bg-surface)]/20" : "bg-[var(--color-border)]"}`}>
+                <span className={`text-[0.625rem] rounded-full px-1.5 py-0.5 ${activeTab === tab.key ? "bg-[var(--color-bg-surface)]/20" : "bg-[var(--color-border)]"}`}>
                   {tab.count}
                 </span>
               </button>
@@ -588,7 +588,7 @@ export default function Vanity() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-light tracking-wide transition-all border ${activeCategory === cat ? "bg-[#043927] text-[#FDF5E6] border-[#043927]" : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
+                className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide transition-all border ${activeCategory === cat ? "bg-[#043927] text-[#FDF5E6] border-[#043927]" : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
               >
                 {cat}
               </button>
@@ -602,7 +602,7 @@ export default function Vanity() {
             setSelected(new Set());
             if (!bulkMode && (viewMode === "canvas" || viewMode === "split")) setViewMode("grid");
           }}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-light tracking-wide border transition-all ${bulkMode ? "bg-[#043927] text-[#FDF5E6] border-[#043927]" : "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
+          className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide border transition-all ${bulkMode ? "bg-[#043927] text-[#FDF5E6] border-[#043927]" : "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
         >
           <CheckSquare size={13} color={bulkMode ? "#FDF5E6" : "#043927"} />
           {bulkMode ? "Done" : "Bulk"}
@@ -616,7 +616,7 @@ export default function Vanity() {
             <button
               key={tag}
               onClick={() => setActiveTag(tag)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-light tracking-wide transition-all border flex items-center gap-1.5 capitalize ${activeTag === tag ? "text-[#FDF5E6] border-transparent" : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide transition-all border flex items-center gap-1.5 capitalize ${activeTag === tag ? "text-[#FDF5E6] border-transparent" : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
               style={activeTag === tag ? { background: TAG_ACCENT[tag] || "#043927" } : {}}
             >
               {tag !== "All" && <span className="w-1.5 h-1.5 rounded-full" style={{ background: activeTag === tag ? "#FDF5E6" : TAG_ACCENT[tag] }} />}
@@ -628,7 +628,7 @@ export default function Vanity() {
 
       {/* Sort */}
       <div className="px-5 mb-4 flex gap-2 overflow-x-auto hide-scrollbar items-center">
-        <span className="text-[9px] tracking-[0.2em] uppercase text-primary-40 font-light flex-shrink-0">Sort</span>
+        <span className="text-[0.5625rem] tracking-[0.2em] uppercase text-primary-40 font-light flex-shrink-0">Sort</span>
         {[
           { key: "recent",     label: "Recently added" },
           { key: "price-asc",  label: "Price ↑" },
@@ -638,7 +638,7 @@ export default function Vanity() {
           <button
             key={s.key}
             onClick={() => setSortBy(s.key)}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-light tracking-wide transition-all border ${sortBy === s.key ? "bg-[#043927] text-[#FDF5E6] border-[#043927]" : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide transition-all border ${sortBy === s.key ? "bg-[#043927] text-[#FDF5E6] border-[#043927]" : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
           >
             {s.label}
           </button>
@@ -712,7 +712,7 @@ export default function Vanity() {
                             </button>
                           </div>
                         </div>
-                        <p className="text-[9px] tracking-wide text-primary-40 mt-1.5 font-light uppercase truncate px-0.5">{product.brand}</p>
+                        <p className="text-[0.5625rem] tracking-wide text-primary-40 mt-1.5 font-light uppercase truncate px-0.5">{product.brand}</p>
                         <p className="text-xs text-[var(--color-text-primary)] font-light truncate leading-tight px-0.5">{product.name}</p>
                         <div className="px-0.5 mt-1" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
                           <StarRating value={product.rating || 0} onChange={(n) => handleRate(product, n)} size={11} />
@@ -721,7 +721,7 @@ export default function Vanity() {
                         {activeTab === "wishlist" && (
                           <button
                             onClick={e => { e.preventDefault(); handleMoveToVanity(product); }}
-                            className="mt-1 w-full text-[9px] font-light text-[var(--color-text-primary)]/70 bg-[var(--color-border)] rounded-lg py-1 text-center tracking-wide hover:bg-[#043927] hover:text-[#FDF5E6] transition-colors"
+                            className="mt-1 w-full text-[0.5625rem] font-light text-[var(--color-text-primary)]/70 bg-[var(--color-border)] rounded-lg py-1 text-center tracking-wide hover:bg-[#043927] hover:text-[#FDF5E6] transition-colors"
                           >
                             Move to Vanity
                           </button>
@@ -743,8 +743,8 @@ export default function Vanity() {
                   <div key={cat} className="mb-8">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-2 h-2 rounded-full" style={{ background: accent }} />
-                      <p className="text-[10px] tracking-[0.2em] uppercase font-light" style={{ color: accent }}>{cat}</p>
-                      <span className="text-[10px] text-primary-30 font-light">{catProducts.length}</span>
+                      <p className="text-[0.625rem] tracking-[0.2em] uppercase font-light" style={{ color: accent }}>{cat}</p>
+                      <span className="text-[0.625rem] text-primary-30 font-light">{catProducts.length}</span>
                     </div>
                     <div className="flex flex-col gap-3">
                       {catProducts.map(product => {
@@ -771,7 +771,7 @@ export default function Vanity() {
                               <p className="text-sm text-[var(--color-text-primary)] font-light truncate">{product.brand} — {product.name}</p>
                               {product.shade && <p className="text-xs text-primary-40 font-light">{product.shade}</p>}
                               {expDays !== null && expDays >= 0 && expDays <= 90 && (
-                                <p className={`text-[10px] font-light mt-0.5 ${expDays <= 30 ? "text-red-500" : "text-amber-600"}`}>
+                                <p className={`text-[0.625rem] font-light mt-0.5 ${expDays <= 30 ? "text-red-500" : "text-amber-600"}`}>
                                   Expires in {expDays} day{expDays !== 1 ? "s" : ""}
                                 </p>
                               )}
@@ -781,7 +781,7 @@ export default function Vanity() {
                               </div>
                             </div>
                             <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
-                              {product.on_sale && <span className="text-[9px] bg-[var(--color-accent-gold)] text-white rounded-full px-1.5 py-0.5">SALE</span>}
+                              {product.on_sale && <span className="text-[0.5625rem] bg-[var(--color-accent-gold)] text-white rounded-full px-1.5 py-0.5">SALE</span>}
                               {product.price > 0 && <span className="text-xs text-primary-60 font-light">{formatPrice(product.price)}</span>}
                               <button
                                 onClick={e => { e.preventDefault(); e.stopPropagation(); setTaggingProduct(product); }}
@@ -800,7 +800,7 @@ export default function Vanity() {
                       <div className="mt-2 flex justify-end">
                         <button
                           onClick={() => catProducts.forEach(p => handleMoveToWishlist(p))}
-                          className="text-[10px] text-primary-30 font-light underline underline-offset-2"
+                          className="text-[0.625rem] text-primary-30 font-light underline underline-offset-2"
                         >
                           Move all to wishlist
                         </button>
@@ -820,18 +820,18 @@ export default function Vanity() {
           <div className="flex items-center gap-2 max-w-lg mx-auto">
             <span className="text-xs text-primary-60 font-light">{selected.size} selected</span>
             <div className="flex-1" />
-            <button onClick={selectAll} className="text-[11px] text-primary-60 font-light px-2 py-1.5 rounded-full hover:bg-[var(--color-border)]">Select all</button>
+            <button onClick={selectAll} className="text-[0.6875rem] text-primary-60 font-light px-2 py-1.5 rounded-full hover:bg-[var(--color-border)]">Select all</button>
             <button
               onClick={() => setBulkTagOpen(true)}
               disabled={!selected.size}
-              className="flex items-center gap-1 text-[11px] font-light px-3 py-1.5 rounded-full bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-40"
+              className="flex items-center gap-1 text-[0.6875rem] font-light px-3 py-1.5 rounded-full bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] disabled:opacity-40"
             >
               <Tag size={12} /> Tag
             </button>
             <button
               onClick={bulkMove}
               disabled={!selected.size}
-              className="text-[11px] font-light px-3 py-1.5 rounded-full bg-[#043927] text-[#FDF5E6] disabled:opacity-40"
+              className="text-[0.6875rem] font-light px-3 py-1.5 rounded-full bg-[#043927] text-[#FDF5E6] disabled:opacity-40"
             >
               {activeTab === "vanity" ? "To Wishlist" : "To Vanity"}
             </button>

@@ -55,7 +55,7 @@ export default function Home() {
       {/* ── Header ──────────────────────────────────────────────── */}
       <header className="px-5 pt-14 pb-5 flex items-center justify-between">
         <div>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-primary-35 font-light">
+          <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-35 font-light">
             {timeGreeting()}
           </p>
           <h1 className="font-serif text-2xl text-[var(--color-text-primary)] font-light tracking-wide">
@@ -92,7 +92,7 @@ export default function Home() {
               <div className="w-7 h-7 rounded-full bg-[var(--color-bg-elevated)] flex items-center justify-center">
                 <Icon size={14} color="var(--color-text-primary)" />
               </div>
-              <span className="text-[9px] tracking-[0.15em] uppercase text-primary-45 font-light">
+              <span className="text-[0.5625rem] tracking-[0.15em] uppercase text-primary-45 font-light">
                 {label}
               </span>
             </Link>
@@ -114,9 +114,9 @@ export default function Home() {
       >
         <div className="px-6 py-7 flex items-center justify-between">
           <div>
-            <p className="text-[9px] tracking-[0.35em] uppercase text-gold-70 font-light">The Muse</p>
+            <p className="text-[0.5625rem] tracking-[0.35em] uppercase text-gold-70 font-light">The Muse</p>
             <h2 className="font-serif text-2xl text-[#FDF5E6] font-light mt-1">Scan & Discover</h2>
-            <p className="text-[11px] text-[#FDF5E6]/45 font-light mt-1.5 tracking-wide">Identify any beauty product</p>
+            <p className="text-[0.6875rem] text-[#FDF5E6]/45 font-light mt-1.5 tracking-wide">Identify any beauty product</p>
           </div>
           <SwanLogo size={40} color="var(--color-accent-gold)" className="opacity-70 flex-shrink-0" />
         </div>
@@ -132,14 +132,14 @@ export default function Home() {
         >
           <div className="px-5 flex items-center justify-between mb-3">
             <div>
-              <p className="text-[9px] tracking-[0.3em] uppercase font-light text-[var(--color-accent-gold)]">
+              <p className="text-[0.5625rem] tracking-[0.3em] uppercase font-light text-[var(--color-accent-gold)]">
                 Editor's Choice
               </p>
               <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light">Muse Shimmer</h2>
             </div>
             <Link
               to="/discover"
-              className="flex items-center gap-0.5 text-[10px] text-primary-40 font-light"
+              className="flex items-center gap-0.5 text-[0.625rem] text-primary-40 font-light"
             >
               All <ChevronRight size={13} className="opacity-50" aria-hidden={true} />
             </Link>
@@ -165,14 +165,14 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="p-2.5">
-                  <p className="text-[8px] tracking-[0.12em] uppercase text-[#BC8F8F] font-light truncate">
+                  <p className="text-[0.5rem] tracking-[0.12em] uppercase text-[#BC8F8F] font-light truncate">
                     {p.brand}
                   </p>
-                  <p className="text-[11px] text-[var(--color-text-primary)] font-light truncate leading-snug mt-0.5">
+                  <p className="text-[0.6875rem] text-[var(--color-text-primary)] font-light truncate leading-snug mt-0.5">
                     {p.name}
                   </p>
                   {p.price > 0 && (
-                    <p className="text-[10px] text-primary-45 font-light mt-1">
+                    <p className="text-[0.625rem] text-primary-45 font-light mt-1">
                       {formatPrice(p.price)}
                     </p>
                   )}
@@ -198,9 +198,9 @@ export default function Home() {
           className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-5 py-5 hover:border-[#C8B06A]/40 transition-colors"
         >
           <div>
-            <p className="text-[9px] tracking-[0.3em] uppercase text-gold-70 font-light">The Muse</p>
+            <p className="text-[0.5625rem] tracking-[0.3em] uppercase text-gold-70 font-light">The Muse</p>
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mt-0.5">Restock</h2>
-            <p className="text-[10px] text-primary-40 font-light mt-0.5 tracking-wide">Your shopping list</p>
+            <p className="text-[0.625rem] text-primary-40 font-light mt-0.5 tracking-wide">Your shopping list</p>
           </div>
           <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
         </Link>
@@ -216,9 +216,9 @@ export default function Home() {
           className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-5 py-5 hover:border-[#C8B06A]/40 transition-colors"
         >
           <div>
-            <p className="text-[9px] tracking-[0.3em] uppercase text-gold-70 font-light">The Muse</p>
+            <p className="text-[0.5625rem] tracking-[0.3em] uppercase text-gold-70 font-light">The Muse</p>
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mt-0.5">Cartography</h2>
-            <p className="text-[10px] text-primary-40 font-light mt-0.5 tracking-wide">Beauty services near you</p>
+            <p className="text-[0.625rem] text-primary-40 font-light mt-0.5 tracking-wide">Beauty services near you</p>
           </div>
           <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
         </Link>
@@ -236,7 +236,7 @@ export default function Home() {
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light">From the Circle</h2>
             <Link
               to="/community"
-              className="flex items-center gap-0.5 text-[10px] text-primary-40 font-light"
+              className="flex items-center gap-0.5 text-[0.625rem] text-primary-40 font-light"
             >
               All <ChevronRight size={13} className="opacity-50" aria-hidden={true} />
             </Link>
@@ -258,14 +258,14 @@ export default function Home() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[8px] tracking-[0.12em] uppercase text-[#BC8F8F] font-light">
+                  <p className="text-[0.5rem] tracking-[0.12em] uppercase text-[#BC8F8F] font-light">
                     {post.brand}
                   </p>
-                  <p className="text-[12px] text-[var(--color-text-primary)] font-light truncate">
+                  <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light truncate">
                     {post.name}{post.shade ? ` · ${post.shade}` : ""}
                   </p>
                   {post.review_text && (
-                    <p className="text-[10px] text-primary-40 font-light truncate mt-0.5">
+                    <p className="text-[0.625rem] text-primary-40 font-light truncate mt-0.5">
                       {post.review_text}
                     </p>
                   )}
@@ -284,9 +284,9 @@ export default function Home() {
           className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-5 py-5 hover:border-[#C8B06A]/40 transition-colors"
         >
           <div>
-            <p className="text-[9px] tracking-[0.3em] uppercase text-gold-70 font-light">The Circle</p>
+            <p className="text-[0.5625rem] tracking-[0.3em] uppercase text-gold-70 font-light">The Circle</p>
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mt-0.5">Community</h2>
-            <p className="text-[10px] text-primary-40 font-light mt-0.5 tracking-wide">Beauty editorial & exchange</p>
+            <p className="text-[0.625rem] text-primary-40 font-light mt-0.5 tracking-wide">Beauty editorial & exchange</p>
           </div>
           <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
         </Link>
@@ -299,9 +299,9 @@ export default function Home() {
           className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-5 py-5 hover:border-[#C8B06A]/40 transition-colors"
         >
           <div>
-            <p className="text-[9px] tracking-[0.3em] uppercase text-gold-70 font-light">The Circle</p>
+            <p className="text-[0.5625rem] tracking-[0.3em] uppercase text-gold-70 font-light">The Circle</p>
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mt-0.5">Messages</h2>
-            <p className="text-[10px] text-primary-40 font-light mt-0.5 tracking-wide">Direct correspondence</p>
+            <p className="text-[0.625rem] text-primary-40 font-light mt-0.5 tracking-wide">Direct correspondence</p>
           </div>
           <ChevronRight size={18} color="var(--color-text-primary)" className="opacity-20 flex-shrink-0" aria-hidden={true} />
         </Link>
