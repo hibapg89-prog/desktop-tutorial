@@ -19,7 +19,15 @@ export default function AppLayout() {
   useEffect(() => {
     try {
       const prefs = JSON.parse(localStorage.getItem("muse_accessibility") || "{}");
-      if (prefs.largeTypography) document.documentElement.style.fontSize = "20px";
+      if (prefs.largeTypography) {
+        const STYLE_ID = "__muse_large_typography__";
+        if (!document.getElementById(STYLE_ID)) {
+          const tag = document.createElement("style");
+          tag.id = STYLE_ID;
+          tag.textContent = "html { font-size: 20px !important; }";
+          document.head.appendChild(tag);
+        }
+      }
       if (prefs.darkMode) applyTheme(true);
     } catch {}
   }, []);
