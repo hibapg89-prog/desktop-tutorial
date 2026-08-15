@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import MuseNavBar from "./MuseNavBar";
 import FloatingMuseButton from "./FloatingMuseButton";
@@ -16,7 +16,7 @@ export default function AppLayout() {
 
   useEffect(() => { seedWelcomeNotification(); }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
       const prefs = JSON.parse(localStorage.getItem("muse_accessibility") || "{}");
       if (prefs.largeTypography) {
