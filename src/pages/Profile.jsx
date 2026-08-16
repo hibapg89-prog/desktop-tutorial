@@ -165,7 +165,7 @@ export default function Profile() {
           setAdoredCount(Array.isArray(stats) && stats[0] ? (stats[0].total_adores || 0) : 0);
         } catch {}
         try {
-          const tutorials = await base44.entities.Tutorial.filter({ is_collected: true });
+          const tutorials = await base44.entities.Tutorial.filter({ is_collected: true, created_by_id: u.id });
           setRituelsCount(Array.isArray(tutorials) ? tutorials.length : 0);
         } catch {}
         try {
