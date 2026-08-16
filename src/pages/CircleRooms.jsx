@@ -235,7 +235,7 @@ export default function CircleRooms() {
           <h1 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mt-0.5">Rooms</h1>
         </div>
         <button
-          onClick={() => setShowComingSoon(true)}
+          onClick={() => setCreating(true)}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-light text-white"
           style={{ background: "linear-gradient(135deg,#C8B06A 0%,#E5D4A0 50%,#C8B06A 100%)" }}
         >
@@ -262,7 +262,7 @@ export default function CircleRooms() {
               Create one and invite up to 7 others.
             </p>
             <button
-              onClick={() => setShowComingSoon(true)}
+              onClick={() => setCreating(true)}
               className="mt-6 px-6 py-3 rounded-2xl text-sm font-light text-white"
               style={{ background: "linear-gradient(135deg,#C8B06A 0%,#E5D4A0 50%,#C8B06A 100%)" }}
             >

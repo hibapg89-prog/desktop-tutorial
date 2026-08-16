@@ -50,7 +50,7 @@ export default function ForYouServices() {
             transition={{ delay: i * 0.05 }}
             className="flex-shrink-0 w-44"
           >
-            <Link to={`/local-curator/${v.id}`} className="block rounded-2xl overflow-hidden bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
+            <Link to="/map" className="block rounded-2xl overflow-hidden bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
               <div className="h-24 bg-[var(--color-bg-elevated)] relative">
                 {v.image_url && (
                   <img src={v.image_url} alt={v.name} className="w-full h-full object-cover" />

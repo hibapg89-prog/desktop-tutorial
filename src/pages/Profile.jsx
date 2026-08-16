@@ -15,11 +15,36 @@ import { BADGES } from "@/utils/badgeDefinitions";
 import { computeTier } from "@/utils/trustTier";
 
 // ── ADN ATTRIBUTES ──────────────────────────────────────────────────────────────
-const ADN_ATTRS = [
-  { label: "Teint de Porcelaine",   icon: "sun",      aesthetic: true  },
-  { label: "Rituel Hydratation",    icon: "droplet",  aesthetic: false },
-  { label: "Sensibilité de Soie",   icon: "feather",  aesthetic: true  },
-];
+const SKIN_TYPE_MAP = {
+  dry:         { label: "Dry Skin",       icon: "droplet" },
+  oily:        { label: "Oily Skin",      icon: "sun"     },
+  combination: { label: "Combination",    icon: "sun"     },
+  sensitive:   { label: "Sensitive Skin", icon: "feather" },
+  normal:      { label: "Normal Skin",    icon: "sun"     },
+  mature:      { label: "Mature Skin",    icon: "feather" },
+  dehydrated:  { label: "Dehydrated",     icon: "droplet" },
+  acne_prone:  { label: "Acne-Prone",     icon: "feather" },
+};
+const INTENTION_MAP = {
+  hydration:   { label: "Hydration",    icon: "droplet" },
+  anti_aging:  { label: "Anti-Ageing",  icon: "feather" },
+  brightening: { label: "Brightening",  icon: "sun"     },
+  glow:        { label: "Radiance",     icon: "sun"     },
+  acne:        { label: "Clarifying",   icon: "feather" },
+  soothing:    { label: "Soothing",     icon: "feather" },
+  firming:     { label: "Firming",      icon: "feather" },
+  protection:  { label: "Protection",   icon: "sun"     },
+};
+function buildAdnAttrs(user) {
+  const attrs = [];
+  (user?.skin_types || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean).forEach(key => {
+    if (SKIN_TYPE_MAP[key]) attrs.push({ ...SKIN_TYPE_MAP[key], aesthetic: true });
+  });
+  (user?.intention || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean).forEach(key => {
+    if (INTENTION_MAP[key]) attrs.push({ ...INTENTION_MAP[key], aesthetic: false });
+  });
+  return attrs;
+}
 
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
@@ -202,6 +227,7 @@ export default function Profile() {
     setAdmireLoading(false);
   };
 
+  const adnAttrs = buildAdnAttrs(user);
   const privateWall = !isAtelier && (glowMode === "GHOST" || privacy === "PRIVATE_MUSE");
   const visitorHidden = !isAtelier && glowMode === "GHOST";
 
@@ -584,24 +610,33 @@ export default function Profile() {
             </div>
 
             {isAtelier ? (
-              <div className="grid grid-cols-3 gap-3">
-                {ADN_ATTRS.map(({ label, icon }) => (
-                  <div
-                    key={label}
-                    className="rounded-xl p-4 border border-[var(--color-border)] flex flex-col items-center gap-3 bg-[var(--color-bg-surface)]"
-                  >
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C8B06A]/10 border border-[#C8B06A]/25">
-                      <AdnIcon type={icon} size={15} />
+              adnAttrs.length > 0 ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {adnAttrs.map(({ label, icon }) => (
+                    <div
+                      key={label}
+                      className="rounded-xl p-4 border border-[var(--color-border)] flex flex-col items-center gap-3 bg-[var(--color-bg-surface)]"
+                    >
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C8B06A]/10 border border-[#C8B06A]/25">
+                        <AdnIcon type={icon} size={15} />
+                      </div>
+                      <p className="text-[0.5625rem] text-center text-primary-60 font-light leading-tight tracking-wide">
+                        {label}
+                      </p>
                     </div>
-                    <p className="text-[0.5625rem] text-center text-primary-60 font-light leading-tight tracking-wide">
-                      {label}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <button
+                  onClick={() => navigate("/onboarding")}
+                  className="w-full rounded-xl px-4 py-5 border border-dashed border-[#C8B06A]/40 text-center bg-[var(--color-bg-surface)]"
+                >
+                  <p className="text-[0.75rem] text-primary-40 font-light">Complete your skin profile →</p>
+                </button>
+              )
             ) : (
               <div className="rounded-xl px-4 py-4 border border-[var(--color-border)] space-y-2 bg-[var(--color-bg-surface)]">
-                {ADN_ATTRS.filter(a => a.aesthetic).map(({ label }) => (
+                {adnAttrs.filter(a => a.aesthetic).map(({ label }) => (
                   <p key={label} className="text-[0.75rem] text-primary-60 font-light">
                     — {label}
                   </p>
