@@ -21,70 +21,6 @@ const ADN_ATTRS = [
   { label: "Sensibilité de Soie",   icon: "feather",  aesthetic: true  },
 ];
 
-// ── MY EDIT — 6 products, 3×2 in Atelier ───────────────────────────────────────
-const MY_EDIT_ITEMS = [
-  {
-    id: "e1",
-    brand: "NARS",
-    name: "Natural Radiant Foundation",
-    review: "The foundation that never lies.",
-    stars: 5,
-    swanApproved: true,
-    image_url: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&q=80",
-  },
-  {
-    id: "e2",
-    brand: "Dior",
-    name: "Forever Skin Glow",
-    review: "Second-skin perfection.",
-    stars: 5,
-    swanApproved: false,
-    image_url: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
-  },
-  {
-    id: "e3",
-    brand: "Fenty Beauty",
-    name: "Match Stix",
-    review: "The contour of my life.",
-    stars: 5,
-    swanApproved: true,
-    image_url: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&q=80",
-  },
-  {
-    id: "e4",
-    brand: "Charlotte Tilbury",
-    name: "Flawless Filter",
-    review: "Makes skin look lit from within.",
-    stars: 5,
-    swanApproved: true,
-    image_url: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=80",
-  },
-  {
-    id: "e5",
-    brand: "Charlotte Tilbury",
-    name: "Beautiful Skin Bronzer",
-    review: "Sun-kissed without the sun.",
-    stars: 4,
-    swanApproved: true,
-    image_url: "https://images.unsplash.com/photo-1631214524020-3c69b1c66d5a?w=400&q=80",
-  },
-  {
-    id: "e6",
-    brand: "Dior",
-    name: "Backstage Concealer",
-    review: "Conceals everything, reveals nothing.",
-    stars: 5,
-    swanApproved: false,
-    image_url: "https://images.unsplash.com/photo-1596704017234-0e0f4f4b0b7e?w=400&q=80",
-  },
-];
-
-// ── BEAUTY CIRCLES ──────────────────────────────────────────────────────────────
-const CIRCLES = [
-  { id: "c1", name: "The Skincare Devotees", isLeader: false, isPublic: true,  initial: "S" },
-  { id: "c2", name: "Fragrance Addicts",     isLeader: true,  isPublic: true,  initial: "F" },
-  { id: "c3", name: "Muse's Private Circle", isLeader: false, isPublic: false, initial: "M" },
-];
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 function glowShadow(mode) {
@@ -100,13 +36,6 @@ function AdnIcon({ type, size = 16 }) {
   return <Sun {...p} />;
 }
 
-function Stars({ count }) {
-  return (
-    <span className="text-[var(--color-accent-gold)] text-[0.625rem] tracking-tight">
-      {"★".repeat(count)}{"☆".repeat(5 - count)}
-    </span>
-  );
-}
 
 // ── GLOW INDICATOR ─────────────────────────────────────────────────────────────
 function GlowIndicator({ mode, onTap, isAtelier: atelierView }) {
@@ -174,6 +103,10 @@ export default function Profile() {
   const [admireLoading, setAdmireLoading]         = useState(false);
   const [admireError, setAdmireError]             = useState(false);
   const [followListModal, setFollowListModal]     = useState(null);
+  const [adoredCount,    setAdoredCount]    = useState(0);
+  const [rituelsCount,   setRituelsCount]   = useState(0);
+  const [myEditProducts, setMyEditProducts] = useState([]);
+  const [myRooms,        setMyRooms]        = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -202,6 +135,22 @@ export default function Profile() {
           setCoterieCount(Array.isArray(following) ? following.length : 0);
           setCoterieList(Array.isArray(following) ? following : []);
         } catch (e) { console.error("[Profile] Coterie load failed:", e); }
+        try {
+          const stats = await base44.entities.UserStat.filter({ user_id: u.id });
+          setAdoredCount(Array.isArray(stats) && stats[0] ? (stats[0].total_adores || 0) : 0);
+        } catch {}
+        try {
+          const tutorials = await base44.entities.Tutorial.filter({ is_collected: true });
+          setRituelsCount(Array.isArray(tutorials) ? tutorials.length : 0);
+        } catch {}
+        try {
+          const products = await base44.entities.Product.filter({ in_vanity: true });
+          setMyEditProducts(Array.isArray(products) ? products.slice(0, 6) : []);
+        } catch {}
+        try {
+          const allRooms = await base44.entities.CircleRoom.list("-last_activity", 50);
+          setMyRooms(Array.isArray(allRooms) ? allRooms.filter(r => Array.isArray(r.member_ids) && r.member_ids.includes(u.id)) : []);
+        } catch {}
       }
     })();
   }, []);
@@ -484,10 +433,10 @@ export default function Profile() {
                 <p className="text-[0.9375rem] text-[var(--color-text-primary)] font-light font-serif">
                   {isAtelier ? (
                     <>
-                      <span className="font-normal">47</span>
+                      <span className="font-normal">{rituelsCount}</span>
                       {" "}<span className="text-[var(--color-accent-gold)]">Rituels</span>
                       <span className="text-primary-25 mx-2">·</span>
-                      <span className="font-normal">124</span>
+                      <span className="font-normal">{adoredCount}</span>
                       {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
                       <span className="text-primary-25 mx-2">·</span>
                       <button onClick={() => setFollowListModal("admiratrices")} className="hover:opacity-70 transition-opacity">
@@ -502,7 +451,7 @@ export default function Profile() {
                     </>
                   ) : (
                     <>
-                      <span className="font-normal">124</span>
+                      <span className="font-normal">{adoredCount}</span>
                       {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
                       <span className="text-primary-25 mx-2">·</span>
                       <button onClick={() => setFollowListModal("admiratrices")} className="hover:opacity-70 transition-opacity">
@@ -547,72 +496,73 @@ export default function Profile() {
               </div>
 
               {isAtelier ? (
-                /* ── Atelier: 3×2 grid with real product images ── */
-                <div className="grid grid-cols-3 gap-2">
-                  {MY_EDIT_ITEMS.map(item => (
-                    <div
-                      key={item.id}
-                      className="rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-elevated)]/35"
-                    >
-                      <div className="aspect-square overflow-hidden relative">
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                        {item.swanApproved && (
-                          <div
-                            className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center"
-                            style={{
-                              background: "rgba(253,245,230,0.90)",
-                              border: "1px solid rgba(200,176,106,0.45)",
-                            }}
-                          >
-                            <SwanLogo size={8} color="var(--color-accent-gold)" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="px-2 py-1.5">
-                        <p className="text-[0.4375rem] text-primary-45 font-light uppercase tracking-wider truncate mb-0.5">
-                          {item.brand}
-                        </p>
-                        <p className="text-[0.5625rem] text-[var(--color-text-primary)] font-light leading-tight truncate">
-                          {item.name}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                myEditProducts.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {myEditProducts.map(p => (
+                      <Link
+                        key={p.id}
+                        to={`/product/${p.id}`}
+                        className="rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-elevated)]/35"
+                      >
+                        <div className="aspect-square overflow-hidden relative bg-[var(--color-bg-elevated)]">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <SwanLogo size={28} color="var(--color-accent-gold)" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="px-2 py-1.5">
+                          <p className="text-[0.4375rem] text-primary-45 font-light uppercase tracking-wider truncate mb-0.5">
+                            {p.brand}
+                          </p>
+                          <p className="text-[0.5625rem] text-[var(--color-text-primary)] font-light leading-tight truncate">
+                            {p.name}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-[var(--color-border)] px-5 py-8 text-center bg-[var(--color-bg-surface)]">
+                    <p className="text-[0.6875rem] text-primary-40 font-light italic">Your Edit is empty.</p>
+                    <p className="text-[0.5625rem] text-primary-30 font-light mt-1 tracking-wide">Add products to your Vanity to curate your Edit.</p>
+                  </div>
+                )
               ) : (
-                /* ── Éditorial: horizontal scroll cards ── */
-                <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-5 px-5">
-                  {MY_EDIT_ITEMS.slice(0, 4).map(item => (
-                    <div
-                      key={item.id}
-                      className="rounded-xl overflow-hidden border border-[var(--color-border)] flex-shrink-0 w-[132px] bg-[var(--color-bg-surface)]"
-                    >
-                      <div className="aspect-square overflow-hidden">
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="px-2.5 py-2">
-                        <p className="text-[0.4375rem] text-[var(--color-accent-gold)] font-light uppercase tracking-wider truncate mb-0.5">
-                          {item.brand}
-                        </p>
-                        <p className="text-[0.625rem] text-[var(--color-text-primary)] font-light leading-tight truncate mb-1.5">
-                          {item.name}
-                        </p>
-                        <div className="mb-1.5"><Stars count={item.stars} /></div>
-                        <span className="text-[0.4375rem] tracking-[0.12em] uppercase font-light px-2 py-1 rounded-lg text-[#FDF5E6] block text-center bg-[#043927]">
-                          No edit
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                myEditProducts.length > 0 ? (
+                  <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-5 px-5">
+                    {myEditProducts.slice(0, 4).map(p => (
+                      <Link
+                        key={p.id}
+                        to={`/product/${p.id}`}
+                        className="rounded-xl overflow-hidden border border-[var(--color-border)] flex-shrink-0 w-[132px] bg-[var(--color-bg-surface)]"
+                      >
+                        <div className="aspect-square overflow-hidden bg-[var(--color-bg-elevated)]">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <SwanLogo size={24} color="var(--color-accent-gold)" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="px-2.5 py-2">
+                          <p className="text-[0.4375rem] text-[var(--color-accent-gold)] font-light uppercase tracking-wider truncate mb-0.5">
+                            {p.brand}
+                          </p>
+                          <p className="text-[0.625rem] text-[var(--color-text-primary)] font-light leading-tight truncate mb-1.5">
+                            {p.name}
+                          </p>
+                          <span className="text-[0.4375rem] tracking-[0.12em] uppercase font-light px-2 py-1 rounded-lg text-[#FDF5E6] block text-center bg-[#003629]">
+                            View
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : null
               )}
             </div>
           )}
@@ -677,47 +627,51 @@ export default function Profile() {
             </div>
 
             {isAtelier ? (
-              <div className="space-y-2">
-                {CIRCLES.map(circle => (
-                  <div
-                    key={circle.id}
-                    className="rounded-xl px-4 py-3 border border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-elevated)]/35"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.625rem] font-light text-primary-50 flex-shrink-0 bg-[#C8B06A]/12 border border-[#C8B06A]/25">
-                        {circle.initial}
+              myRooms.length > 0 ? (
+                <div className="space-y-2">
+                  {myRooms.map(room => (
+                    <Link
+                      key={room.id}
+                      to={`/circle-rooms/${room.id}`}
+                      className="rounded-xl px-4 py-3 border border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-elevated)]/35"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.625rem] font-light text-primary-50 flex-shrink-0 bg-[#C8B06A]/12 border border-[#C8B06A]/25">
+                          {room.name?.[0]?.toUpperCase() || "R"}
+                        </div>
+                        <span className="text-[0.8125rem] text-[var(--color-text-primary)] font-light">{room.name}</span>
                       </div>
-                      <span className="text-[0.8125rem] text-[var(--color-text-primary)] font-light">{circle.name}</span>
-                    </div>
-                    {circle.isLeader && (
-                      <span className="text-[0.5rem] tracking-[0.18em] uppercase font-light px-2 py-0.5 rounded-full text-[var(--color-accent-gold)] border border-[#C8B06A]/30 bg-[#C8B06A]/7">
-                        Leader
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      {room.created_by_id === user?.id && (
+                        <span className="text-[0.5rem] tracking-[0.18em] uppercase font-light px-2 py-0.5 rounded-full text-[var(--color-accent-gold)] border border-[#C8B06A]/30 bg-[#C8B06A]/7">
+                          Leader
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-[var(--color-border)] px-5 py-6 text-center bg-[var(--color-bg-surface)]">
+                  <p className="text-[0.6875rem] text-primary-40 font-light italic">You haven't joined any rooms yet.</p>
+                </div>
+              )
             ) : (
-              <div className="space-y-2">
-                {CIRCLES.filter(c => c.isPublic).map(circle => (
-                  <div
-                    key={circle.id}
-                    className="rounded-xl px-4 py-3 border border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-elevated)]/22"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.625rem] font-light text-primary-40 flex-shrink-0 bg-[#C8B06A]/10 border border-[#C8B06A]/20">
-                        {circle.initial}
+              myRooms.length > 0 ? (
+                <div className="space-y-2">
+                  {myRooms.map(room => (
+                    <div
+                      key={room.id}
+                      className="rounded-xl px-4 py-3 border border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-elevated)]/22"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.625rem] font-light text-primary-40 flex-shrink-0 bg-[#C8B06A]/10 border border-[#C8B06A]/20">
+                          {room.name?.[0]?.toUpperCase() || "R"}
+                        </div>
+                        <span className="text-[0.8125rem] text-[var(--color-text-primary)]/70 font-light">{room.name}</span>
                       </div>
-                      <span className="text-[0.8125rem] text-[var(--color-text-primary)]/70 font-light">{circle.name}</span>
                     </div>
-                    {circle.isLeader && (
-                      <span className="text-[0.5rem] tracking-[0.18em] uppercase font-light px-2 py-0.5 rounded-full text-[var(--color-accent-gold)] border border-[#C8B06A]/30 bg-[#C8B06A]/7">
-                        Leader
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : null
             )}
           </div>
 

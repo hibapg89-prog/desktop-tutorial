@@ -47,9 +47,6 @@ export default function AccessibilitySettings() {
   const [calmMode,         setCalmMode]         = useState(prefs.calmMode         ?? false);
   const [largeTypography,  setLargeTypography]  = useState(prefs.largeTypography  ?? false);
   const [darkMode,         setDarkMode]         = useState(prefs.darkMode         ?? false);
-  const [debugInlineSize,   setDebugInlineSize]   = useState(() => document.documentElement.style.fontSize || "(not set)");
-  const [debugComputedSize, setDebugComputedSize] = useState(() => getComputedStyle(document.documentElement).fontSize);
-
   // Apply large typography globally when toggled — and persist immediately so
   // AppLayout can restore it on any page load without waiting for Save.
   useEffect(() => {
@@ -68,8 +65,6 @@ export default function AccessibilitySettings() {
     // Persist immediately so navigating to another page restores the setting
     const current = loadPrefs();
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, largeTypography }));
-    setDebugInlineSize(document.documentElement.style.fontSize || "(not set)");
-    setDebugComputedSize(getComputedStyle(document.documentElement).fontSize);
   }, [largeTypography]);
 
   // Apply reduced motion globally when calm mode toggled
@@ -100,13 +95,6 @@ export default function AccessibilitySettings() {
       className="min-h-screen pb-24 bg-[var(--color-bg)]"
       style={{ fontSize: largeTypography ? "20px" : undefined }}
     >
-      {/* ── DEBUG BANNERS — remove before ship ── */}
-      <div style={{ position: "sticky", top: 0, zIndex: 9999, background: "#CC0000", color: "#fff", padding: "10px 16px", fontFamily: "monospace", fontSize: "13px", fontWeight: "bold", lineHeight: "1.6" }}>
-        <div>STATE: largeTypography = {largeTypography ? "✅ TRUE (ON)" : "❌ FALSE (OFF)"}</div>
-        <div>style.fontSize (inline) = "{debugInlineSize}"</div>
-        <div>getComputedStyle.fontSize (ACTUAL) = "{debugComputedSize}"</div>
-      </div>
-
       {/* Header */}
       <div className="px-5 pt-14 pb-6 flex items-center gap-3">
         <button

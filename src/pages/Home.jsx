@@ -28,12 +28,6 @@ export default function Home() {
   const [user,            setUser]            = useState(null);
   const [shimmerProducts, setShimmerProducts] = useState([]);
   const [recentPosts,     setRecentPosts]     = useState([]);
-  const [dbRootSize,      setDbRootSize]      = useState("");
-
-  useEffect(() => {
-    // Read after layout so we capture AppLayout's useLayoutEffect injection
-    setDbRootSize(getComputedStyle(document.documentElement).fontSize);
-  }, []);
 
   useEffect(() => {
     base44.auth.me()
@@ -57,11 +51,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[var(--color-bg)]">
-      {/* ── DEBUG — remove before ship ── */}
-      <div style={{ position: "sticky", top: 0, zIndex: 9999, background: "#CC0000", color: "#fff", padding: "8px 16px", fontFamily: "monospace", fontSize: "13px", fontWeight: "bold" }}>
-        HOME getComputedStyle(html).fontSize = "{dbRootSize}"
-      </div>
-
       {/* ── Header ──────────────────────────────────────────────── */}
       <header className="px-5 pt-14 pb-5 flex items-center justify-between">
         <div>
