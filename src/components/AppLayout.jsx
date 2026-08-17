@@ -24,7 +24,19 @@ export default function AppLayout() {
         if (!document.getElementById(STYLE_ID)) {
           const tag = document.createElement("style");
           tag.id = STYLE_ID;
-          tag.textContent = "html { font-size: 20px !important; }";
+          tag.textContent = [
+            "html { font-size: 20px !important; }",
+            ".text-xs   { font-size: 15px   !important; }",
+            ".text-sm   { font-size: 17.5px !important; }",
+            ".text-base { font-size: 20px   !important; }",
+            ".text-lg   { font-size: 22.5px !important; }",
+            ".text-xl   { font-size: 25px   !important; }",
+            ".text-2xl  { font-size: 30px   !important; }",
+            ".text-3xl  { font-size: 37.5px !important; }",
+            ".text-4xl  { font-size: 45px   !important; }",
+            ".text-5xl  { font-size: 60px   !important; }",
+            ".text-6xl  { font-size: 75px   !important; }",
+          ].join(" ");
           document.head.appendChild(tag);
         }
       }
