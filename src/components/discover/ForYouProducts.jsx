@@ -77,6 +77,7 @@ export default function ForYouProducts() {
 
   const collectToList = async (p, i) => {
     setCollectedIdx(prev => new Set(prev).add(i));
+    const me = await base44.auth.me().catch(() => null);
     await base44.entities.Product.create({
       brand:            p.brand,
       name:             p.name,
@@ -87,6 +88,7 @@ export default function ForYouProducts() {
       muse_shimmer:     p.muse_shimmer,
       in_shopping_list: true,
       shopping_qty:     1,
+      ...(me?.id ? { created_by_id: me.id } : {}),
     }).catch(() => {});
   };
 

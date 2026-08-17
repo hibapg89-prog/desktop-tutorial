@@ -64,6 +64,7 @@ export default function LocalCurator() {
     if (!curator || savedArtisan || savingArtisan) return artisanProductId;
     setSavingArtisan(true);
     try {
+      const me = await base44.auth.me().catch(() => null);
       const created = await base44.entities.Product.create({
         brand: curator.brand,
         name: curator.name,
@@ -74,6 +75,7 @@ export default function LocalCurator() {
         in_wishlist: true,
         muse_shimmer: curator.muse_recommendation_label,
         ingredients: curator.sustainability_note || null,
+        ...(me?.id ? { created_by_id: me.id } : {}),
       });
       setArtisanProductId(created.id);
       setSavedArtisan(true);
