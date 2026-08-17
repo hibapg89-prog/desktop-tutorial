@@ -42,9 +42,15 @@ export default function NotificationToast() {
   useEffect(() => {
     let mounted = true;
 
-    // Silently seed existing IDs — never toast on initial load
-    base44.entities.Notification.list("-created_date", 200)
-      .then((items) => {
+    // Fetch current user once; seed existing IDs so they never toast on load
+    let me = null;
+    base44.auth.me()
+      .then(async (user) => {
+        if (!mounted) return;
+        me = user;
+        const items = await base44.entities.Notification.filter(
+          { user_id: me.id }, "-created_date", 200
+        ).catch(() => []);
         if (!mounted) return;
         if (Array.isArray(items)) items.forEach((n) => seenIdsRef.current.add(n.id));
         initialDoneRef.current = true;
@@ -57,10 +63,10 @@ export default function NotificationToast() {
     let unsub = null;
     try {
       unsub = base44.entities.Notification.subscribe(async () => {
-        if (!mounted || !initialDoneRef.current) return;
+        if (!mounted || !initialDoneRef.current || !me) return;
         try {
           const fresh = await base44.entities.Notification.filter(
-            { read: false },
+            { read: false, user_id: me.id },
             "-created_date",
             20
           );

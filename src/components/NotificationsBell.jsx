@@ -11,7 +11,8 @@ export default function NotificationsBell() {
     let mounted = true;
     const load = async () => {
       try {
-        const items = await base44.entities.Notification.filter({ read: false }, "-created_date", 50);
+        const me = await base44.auth.me();
+        const items = await base44.entities.Notification.filter({ read: false, user_id: me.id }, "-created_date", 50);
         if (mounted) setUnread(Array.isArray(items) ? items.length : 0);
       } catch {
         if (mounted) setUnread(0);

@@ -359,10 +359,10 @@ export default function Vanity() {
   const [sortBy, setSortBy] = useState("recent");
 
   useEffect(() => {
-    Promise.all([
-      base44.entities.Product.filter({ in_vanity: true }),
-      base44.entities.Product.filter({ in_wishlist: true }),
-    ]).then(([vanity, wishlist]) => {
+    base44.auth.me().then(me => Promise.all([
+      base44.entities.Product.filter({ in_vanity: true, created_by_id: me.id }),
+      base44.entities.Product.filter({ in_wishlist: true, created_by_id: me.id }),
+    ])).then(([vanity, wishlist]) => {
       setVanityProducts(vanity);
       setWishlistProducts(wishlist);
       try {

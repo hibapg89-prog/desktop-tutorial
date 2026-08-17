@@ -61,7 +61,8 @@ export default function VanityDashboard() {
   const [copied,   setCopied]   = useState(false);
 
   useEffect(() => {
-    base44.entities.Product.filter({ in_vanity: true })
+    base44.auth.me()
+      .then(me => base44.entities.Product.filter({ in_vanity: true, created_by_id: me.id }))
       .then(setProducts)
       .catch(() => {})
       .finally(() => setLoading(false));

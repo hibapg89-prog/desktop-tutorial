@@ -139,8 +139,8 @@ export default function Profile() {
       setUser(u);
       if (u) {
         try {
-          const msgs = await base44.entities.Message.list("-created_date", 500);
-          setUnreadCount(msgs.filter(m => m.recipient_id === u.id && !m.read).length);
+          const msgs = await base44.entities.Message.filter({ recipient_id: u.id, read: false });
+          setUnreadCount(msgs.length);
         } catch {}
         try {
           const ub = await base44.entities.UserBadge.filter({ user_id: u.id });
@@ -169,7 +169,7 @@ export default function Profile() {
           setRituelsCount(Array.isArray(tutorials) ? tutorials.length : 0);
         } catch {}
         try {
-          const products = await base44.entities.Product.filter({ in_vanity: true });
+          const products = await base44.entities.Product.filter({ in_vanity: true, created_by_id: u.id });
           setMyEditProducts(Array.isArray(products) ? products.slice(0, 6) : []);
         } catch {}
         try {

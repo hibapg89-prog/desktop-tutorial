@@ -130,7 +130,11 @@ function InviteSheet({ room, memberIds, user, onClose, onInvited }) {
   useEffect(() => {
     (async () => {
       try {
-        const msgs = await base44.entities.Message.list("-created_date", 500);
+        const [sent, received] = await Promise.all([
+          base44.entities.Message.filter({ sender_id: user.id }),
+          base44.entities.Message.filter({ recipient_id: user.id }),
+        ]);
+        const msgs = [...sent, ...received];
         const idSet = new Set(
           msgs
             .map(m => m.sender_id === user.id ? m.recipient_id : m.sender_id)
