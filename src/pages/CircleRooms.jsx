@@ -109,28 +109,7 @@ function RoomCard({ room, onPress }) {
   );
 }
 
-function CreateModal({ user, onClose, onCreate }) {
-  const [name, setName] = useState("");
-  const [coverUrl, setCoverUrl] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const handleCreate = async () => {
-    if (!name.trim()) return;
-    setSaving(true);
-    try {
-      const memberIds = user ? [user.id] : [];
-      const room = await base44.entities.CircleRoom.create({
-        name: name.trim(),
-        cover_image: coverUrl.trim() || undefined,
-        member_ids: JSON.stringify(memberIds),
-        last_activity: new Date().toISOString(),
-      });
-      onCreate(room);
-    } catch {
-      setSaving(false);
-    }
-  };
-
+function ComingSoonModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <div
@@ -142,49 +121,32 @@ function CreateModal({ user, onClose, onCreate }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="relative w-full max-w-lg rounded-t-3xl bg-[var(--color-bg)] px-6 pt-6 pb-10 shadow-2xl"
+        className="relative w-full max-w-lg rounded-t-3xl bg-[var(--color-bg)] px-8 pt-8 pb-32 shadow-2xl"
       >
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-serif text-xl text-[var(--color-text-primary)]">New Room</h2>
-          <button onClick={onClose} className="text-primary-40">
-            <X size={20} />
-          </button>
-        </div>
-
-        <label className="block text-[10px] tracking-[0.25em] uppercase text-primary-45 mb-1.5 font-light">
-          Room Name
-        </label>
-        <input
-          value={name}
-          onChange={e => setName(e.target.value)}
-          maxLength={40}
-          placeholder="e.g. Morning Rituals"
-          className="w-full bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3 text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30 mb-4"
-          autoFocus
-        />
-
-        <label className="block text-[10px] tracking-[0.25em] uppercase text-primary-45 mb-1.5 font-light">
-          Cover Image URL <span className="normal-case text-[9px] opacity-60">(optional)</span>
-        </label>
-        <input
-          value={coverUrl}
-          onChange={e => setCoverUrl(e.target.value)}
-          placeholder="https://…"
-          className="w-full bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3 text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30 mb-5"
-        />
-
-        <p className="text-[10px] text-primary-40 font-light mb-5">
-          Invite-only · 2–8 members · Your picks, rituals, and finds — shared privately.
-        </p>
-
         <button
-          onClick={handleCreate}
-          disabled={!name.trim() || saving}
-          className="w-full py-3.5 rounded-2xl text-sm font-light tracking-wide text-white disabled:opacity-40 transition-opacity"
-          style={{ background: "linear-gradient(135deg,#C8B06A 0%,#E5D4A0 50%,#C8B06A 100%)" }}
+          onClick={onClose}
+          className="absolute top-5 right-5 text-primary-40"
+          aria-label="Close"
         >
-          {saving ? "Creating…" : "Create Room"}
+          <X size={20} />
         </button>
+
+        <div className="flex flex-col items-center text-center pt-2">
+          <div className="w-16 h-16 rounded-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] flex items-center justify-center mb-5 shadow-sm">
+            <SwanLogo size={30} color="var(--color-text-primary)" />
+          </div>
+
+          <h2 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mb-2">
+            Private Rooms
+          </h2>
+          <p className="text-[10px] tracking-[0.3em] text-primary-50 uppercase font-light mb-4">
+            Coming Soon
+          </p>
+          <div className="w-8 h-px bg-[var(--color-accent-gold)] mb-5" />
+          <p className="text-sm text-primary-45 font-light leading-relaxed max-w-[260px]">
+            Your intimate circle is being prepared. Invite-only rooms are on their way.
+          </p>
+        </div>
       </motion.div>
     </div>
   );
@@ -193,17 +155,13 @@ function CreateModal({ user, onClose, onCreate }) {
 export default function CircleRooms() {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   const load = async () => {
     try {
-      const [u, allRooms] = await Promise.all([
-        base44.auth.me(),
-        base44.entities.CircleRoom.list("-last_activity", 100),
-      ]);
-      setUser(u);
+      const u = await base44.auth.me();
+      const allRooms = await base44.entities.CircleRoom.list("-last_activity", 100);
       const myRooms = allRooms.filter(r => {
         try {
           const ids = JSON.parse(r.member_ids || "[]");
@@ -220,11 +178,6 @@ export default function CircleRooms() {
 
   useEffect(() => { load(); }, []);
 
-  const handleCreated = (room) => {
-    setCreating(false);
-    navigate(`/circle-rooms/${room.id}`);
-  };
-
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Header */}
@@ -234,7 +187,7 @@ export default function CircleRooms() {
           <h1 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mt-0.5">Rooms</h1>
         </div>
         <button
-          onClick={() => setCreating(true)}
+          onClick={() => setShowComingSoon(true)}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-light text-white"
           style={{ background: "linear-gradient(135deg,#C8B06A 0%,#E5D4A0 50%,#C8B06A 100%)" }}
         >
@@ -258,14 +211,14 @@ export default function CircleRooms() {
               No rooms yet.
             </p>
             <p className="text-sm text-primary-30 font-light mt-1">
-              Create one and invite up to 7 others.
+              Your private circle is on its way.
             </p>
             <button
-              onClick={() => setCreating(true)}
+              onClick={() => setShowComingSoon(true)}
               className="mt-6 px-6 py-3 rounded-2xl text-sm font-light text-white"
               style={{ background: "linear-gradient(135deg,#C8B06A 0%,#E5D4A0 50%,#C8B06A 100%)" }}
             >
-              Create a Room
+              Learn More
             </button>
           </div>
         ) : (
@@ -280,12 +233,8 @@ export default function CircleRooms() {
       </div>
 
       <AnimatePresence>
-        {creating && (
-          <CreateModal
-            user={user}
-            onClose={() => setCreating(false)}
-            onCreate={handleCreated}
-          />
+        {showComingSoon && (
+          <ComingSoonModal onClose={() => setShowComingSoon(false)} />
         )}
       </AnimatePresence>
     </div>
