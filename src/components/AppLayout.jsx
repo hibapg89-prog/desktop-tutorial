@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
 import MuseNavBar from "./MuseNavBar";
 import FloatingMuseButton from "./FloatingMuseButton";
 import ScanHub from "./ScanHub";
@@ -13,6 +14,25 @@ import { applyTheme } from "@/lib/theme";
 export default function AppLayout() {
   const [museOpen, setMuseOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+
+  const [prefersCalm, setPrefersCalm] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("muse_accessibility") || "{}").calmMode ?? false; }
+    catch { return false; }
+  });
+
+  useEffect(() => {
+    const onCustom = (e) => setPrefersCalm(e.detail?.calmMode ?? false);
+    const onStorage = (e) => {
+      if (e.key !== "muse_accessibility") return;
+      try { setPrefersCalm(JSON.parse(e.newValue || "{}").calmMode ?? false); } catch {}
+    };
+    window.addEventListener("musePrefsCalmChange", onCustom);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("musePrefsCalmChange", onCustom);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   useEffect(() => { seedWelcomeNotification(); }, []);
 
@@ -56,21 +76,23 @@ export default function AppLayout() {
   const hideNav = isConversation || isRoomDetail;
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
-      <Outlet context={{ openScan, openMuse }} />
-      {!hideNav && <div className="h-24" />}
-      <NotificationsBell />
-      <NotificationToast />
-      {!hideNav && <MuseNavBar />}
-      {!overlayOpen && !hideNav && <FloatingMuseButton onTap={openMuse} />}
-      {!overlayOpen && !hideNav && <SoundscapePlayer />}
-      {museOpen && (
-        <MuseAssistant
-          onClose={() => setMuseOpen(false)}
-          onOpenScan={openScan}
-        />
-      )}
-      {scanOpen && <ScanHub onClose={() => setScanOpen(false)} />}
-    </div>
+    <MotionConfig reducedMotion={prefersCalm ? "always" : "user"}>
+      <div className="min-h-screen bg-[var(--color-bg)]">
+        <Outlet context={{ openScan, openMuse }} />
+        {!hideNav && <div className="h-24" />}
+        <NotificationsBell />
+        <NotificationToast />
+        {!hideNav && <MuseNavBar />}
+        {!overlayOpen && !hideNav && <FloatingMuseButton onTap={openMuse} />}
+        {!overlayOpen && !hideNav && <SoundscapePlayer calmMode={prefersCalm} />}
+        {museOpen && (
+          <MuseAssistant
+            onClose={() => setMuseOpen(false)}
+            onOpenScan={openScan}
+          />
+        )}
+        {scanOpen && <ScanHub onClose={() => setScanOpen(false)} />}
+      </div>
+    </MotionConfig>
   );
 }

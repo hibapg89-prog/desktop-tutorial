@@ -79,13 +79,17 @@ export default function AccessibilitySettings() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, largeTypography }));
   }, [largeTypography]);
 
-  // Apply reduced motion globally when calm mode toggled
+  // Apply reduced motion globally when calm mode toggled, persist immediately,
+  // and notify AppLayout's MotionConfig via a custom event (same-tab).
   useEffect(() => {
     if (calmMode) {
       document.documentElement.style.setProperty("--motion-duration", "0ms");
     } else {
       document.documentElement.style.removeProperty("--motion-duration");
     }
+    const current = loadPrefs();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, calmMode }));
+    window.dispatchEvent(new CustomEvent("musePrefsCalmChange", { detail: { calmMode } }));
   }, [calmMode]);
 
   useEffect(() => {
