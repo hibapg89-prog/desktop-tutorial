@@ -382,10 +382,10 @@ export default function Distinctions() {
         </button>
         <div className="flex flex-col items-center">
           <p className="text-[10px] tracking-[0.3em] uppercase font-light font-serif text-[#C8B06A]">
-            Le Sanctuaire
+            L'Écrin
           </p>
           <h1 className="text-xl tracking-[0.12em] uppercase font-light font-serif text-[var(--color-text-primary)]">
-            Distinctions
+            Your Collection of 20 Distinctions
           </h1>
         </div>
         <div className="w-9" />

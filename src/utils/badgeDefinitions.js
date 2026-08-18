@@ -272,8 +272,8 @@ export const BADGES = [
   {
     key: "la_muse",
     family: "influence",
-    label: "La Muse",
-    subtitle: "The Muse herself",
+    label: "L'Icône",
+    subtitle: "The pinnacle of distinction",
     howToEarn: "Earn all other distinctions",
     earn: (d) => d.earnedCount >= 19,
     icon: "medallion",
