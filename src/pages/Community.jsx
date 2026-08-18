@@ -89,8 +89,23 @@ export default function Community() {
   const [banners, setBanners] = useState([]);
   const [activeBanner, setActiveBanner] = useState(0);
   const [events, setEvents] = useState([]);
+  const [joinedRooms, setJoinedRooms] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("muse_beauty_rooms") || "[]")); }
+    catch { return new Set(); }
+  });
 
   const FAMILY_PRIORITY = { influence: 5, experience: 4, rituals: 3, self_connection: 2, foundations: 1 };
+
+  const toggleJoinRoom = (key) => {
+    setJoinedRooms(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      const arr = [...next];
+      localStorage.setItem("muse_beauty_rooms", JSON.stringify(arr));
+      base44.auth.updateMe({ beauty_rooms: JSON.stringify(arr) }).catch(() => {});
+      return next;
+    });
+  };
 
   const formatEventDate = (dateStr) => {
     const d = new Date(dateStr + "T12:00:00");
@@ -561,35 +576,52 @@ export default function Community() {
           )}
         </div>
         <div className="flex gap-2 overflow-x-auto hide-scrollbar px-5 pb-1">
-          {BEAUTY_ROOMS.map(c => {
+          {[...BEAUTY_ROOMS].sort((a, b) => (joinedRooms.has(b.key) ? 1 : 0) - (joinedRooms.has(a.key) ? 1 : 0)).map(c => {
             const postCount = posts.filter(p => p.circle === c.key).length;
             const isActive = activeCircle === c.key;
+            const isJoined = joinedRooms.has(c.key);
             const arch = ROOM_ARCHETYPES[c.key];
             return (
-              <button
+              <div
                 key={c.key}
-                onClick={() => setActiveCircle(isActive ? null : c.key)}
                 className={`flex-shrink-0 flex flex-col items-start px-3.5 py-2 rounded-2xl border transition-all ${
                   isActive
                     ? "text-white border-transparent shadow-sm"
-                    : "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[var(--color-border)] hover:border-[#C8B06A]/40"
+                    : isJoined
+                    ? "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[#C8B06A]/45"
+                    : "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[var(--color-border)]"
                 }`}
                 style={isActive ? { background: c.color } : {}}
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[0.625rem]">{c.glyph}</span>
-                  <span className="text-[0.6875rem] font-light tracking-wide">{c.label}</span>
-                  {postCount > 0 && (
-                    <span className={`text-[0.5rem] ${isActive ? "text-white/70" : "text-primary-35"}`}>
-                      {postCount}
-                    </span>
-                  )}
-                </div>
-                <span className={`text-[0.5625rem] font-light italic tracking-wide mt-0.5 ${isActive ? "text-white/70" : "text-primary-40"}`}
-                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                  {arch?.archetype}
-                </span>
-              </button>
+                <button
+                  onClick={() => setActiveCircle(isActive ? null : c.key)}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[0.625rem]">{c.glyph}</span>
+                    <span className="text-[0.6875rem] font-light tracking-wide">{c.label}</span>
+                    {postCount > 0 && (
+                      <span className={`text-[0.5rem] ${isActive ? "text-white/70" : "text-primary-35"}`}>
+                        {postCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[0.5625rem] font-light italic tracking-wide mt-0.5 ${isActive ? "text-white/70" : "text-primary-40"}`}
+                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                    {arch?.archetype}
+                  </span>
+                </button>
+                <button
+                  onClick={() => toggleJoinRoom(c.key)}
+                  className={`mt-1.5 text-[0.5rem] tracking-[0.14em] uppercase font-light px-2 py-0.5 rounded-full transition-all ${
+                    isJoined
+                      ? isActive ? "bg-white/20 text-white" : "bg-[#C8B06A]/15 text-[var(--color-accent-gold)]"
+                      : isActive ? "bg-white/15 text-white/75 hover:bg-white/25" : "bg-[var(--color-bg-elevated)] text-primary-45 hover:text-primary-60"
+                  }`}
+                >
+                  {isJoined ? "✦ Member" : "Join"}
+                </button>
+              </div>
             );
           })}
         </div>

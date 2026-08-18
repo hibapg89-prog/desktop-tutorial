@@ -14,6 +14,15 @@ import BadgePin from "@/components/BadgePin";
 import { BADGES } from "@/utils/badgeDefinitions";
 import { computeTier } from "@/utils/trustTier";
 
+const BEAUTY_ROOM_META = {
+  skin_rituals: { label: "Skin Rituals",    glyph: "✦", color: "#C8A96E", archetype: "The Alchemist"  },
+  bold_colour:  { label: "Bold Colour",     glyph: "◆", color: "#BC4A6A", archetype: "The Icon"       },
+  clean_beauty: { label: "Clean Beauty",    glyph: "◉", color: "#3D7A5A", archetype: "The Purist"     },
+  vintage_glam: { label: "Vintage Glamour", glyph: "◈", color: "#7A4E7A", archetype: "The Archivist"  },
+  natural_glow: { label: "Natural Glow",    glyph: "◇", color: "#C47B3A", archetype: "The Oracle"     },
+  minimalist:   { label: "Minimalist",      glyph: "○", color: "#043927", archetype: "The Engineer"   },
+};
+
 // ── ADN ATTRIBUTES ──────────────────────────────────────────────────────────────
 const SKIN_TYPE_MAP = {
   dry:         { label: "Dry Skin",       icon: "droplet" },
@@ -132,6 +141,7 @@ export default function Profile() {
   const [rituelsCount,   setRituelsCount]   = useState(0);
   const [myEditProducts, setMyEditProducts] = useState([]);
   const [myRooms,        setMyRooms]        = useState([]);
+  const [myBeautyRooms,  setMyBeautyRooms]  = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -175,6 +185,11 @@ export default function Profile() {
         try {
           const allRooms = await base44.entities.CircleRoom.list("-last_activity", 50);
           setMyRooms(Array.isArray(allRooms) ? allRooms.filter(r => Array.isArray(r.member_ids) && r.member_ids.includes(u.id)) : []);
+        } catch {}
+        try {
+          const stored = JSON.parse(localStorage.getItem("muse_beauty_rooms") || "[]");
+          const serverKeys = u?.beauty_rooms ? JSON.parse(u.beauty_rooms) : [];
+          setMyBeautyRooms([...new Set([...stored, ...serverKeys])]);
         } catch {}
       }
     })();
@@ -648,17 +663,56 @@ export default function Profile() {
           {/* ── DIVIDER ───────────────────────────────────────────────────────── */}
           <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
 
-          {/* ── SECTION 6: BEAUTY CIRCLES ─────────────────────────────────────── */}
+          {/* ── SECTION 6: BEAUTY ROOMS (community themed rooms) ─────────────── */}
           <div className="px-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
                 Beauty Rooms
               </h2>
               {isAtelier && (
-                <button onClick={() => navigate("/community")} className="px-3 py-1.5 rounded-full text-[0.5625rem] tracking-[0.2em] uppercase font-light text-[#FDF5E6] bg-[#043927]">
-                  Join more rooms
+                <button onClick={() => navigate("/community")} className="text-[0.5625rem] tracking-[0.2em] text-[var(--color-accent-gold)] uppercase font-light">
+                  Explore →
                 </button>
               )}
+            </div>
+
+            {myBeautyRooms.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {myBeautyRooms.map(key => {
+                  const meta = BEAUTY_ROOM_META[key];
+                  if (!meta) return null;
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)]"
+                    >
+                      <span className="text-[0.5625rem]" style={{ color: meta.color }}>{meta.glyph}</span>
+                      <span className="text-[0.625rem] font-light text-[var(--color-text-primary)] tracking-wide">{meta.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              isAtelier ? (
+                <button
+                  onClick={() => navigate("/community")}
+                  className="w-full rounded-xl px-4 py-5 border border-dashed border-[#C8B06A]/40 text-center bg-[var(--color-bg-surface)]"
+                >
+                  <p className="text-[0.75rem] text-primary-40 font-light">Join beauty rooms in Community →</p>
+                </button>
+              ) : null
+            )}
+          </div>
+
+          {/* ── DIVIDER ───────────────────────────────────────────────────────── */}
+          <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
+
+          {/* ── SECTION 7: PRIVATE ROOMS ──────────────────────────────────────── */}
+          <div className="px-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
+                Private Rooms
+              </h2>
             </div>
 
             {isAtelier ? (
