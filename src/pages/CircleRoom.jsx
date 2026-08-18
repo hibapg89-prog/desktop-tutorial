@@ -273,7 +273,8 @@ export default function CircleRoom() {
     const ids = [...new Set(posts.map(p => p.created_by_id).filter(Boolean))];
     if (!ids.length) return;
     try {
-      const all = await base44.entities.UserBadge.list("-created_date", 500);
+      const badgeArrays = await Promise.all(ids.map(uid => base44.entities.UserBadge.filter({ user_id: uid }).catch(() => [])));
+      const all = badgeArrays.flat();
       const byUser = {};
       all.forEach(ub => {
         if (!ids.includes(ub.user_id)) return;

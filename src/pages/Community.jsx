@@ -106,10 +106,12 @@ export default function Community() {
     const ids = [...new Set(posts.map(p => p.created_by_id).filter(Boolean))];
     if (!ids.length) return;
     try {
-      const [all, allStats] = await Promise.all([
-        base44.entities.UserBadge.list("-created_date", 500),
-        base44.entities.UserStat.list("-created_date", 200),
+      const [badgeArrays, statArrays] = await Promise.all([
+        Promise.all(ids.map(uid => base44.entities.UserBadge.filter({ user_id: uid }).catch(() => []))),
+        Promise.all(ids.map(uid => base44.entities.UserStat.filter({ user_id: uid }).catch(() => []))),
       ]);
+      const all = badgeArrays.flat();
+      const allStats = statArrays.flat();
       const statByUser = {};
       allStats.forEach(s => { statByUser[s.user_id] = s.total_adores || 0; });
       const byUser = {};
@@ -204,13 +206,13 @@ export default function Community() {
   useEffect(() => {
     if (!user || !posts.length) return;
     Promise.all([
-      base44.entities.UserBadge.list("-created_date", 500),
-      base44.entities.UserStat.list("-created_date", 200),
+      base44.entities.UserBadge.filter({ user_id: user.id }),
+      base44.entities.UserStat.filter({ user_id: user.id }),
     ])
       .then(([allBadges, allStats]) => {
-        const myKeys = new Set(allBadges.filter(ub => ub.user_id === user.id).map(ub => ub.badge_key));
+        const myKeys = new Set(allBadges.map(ub => ub.badge_key));
         const myPosts = posts.filter(p => p.created_by_id === user.id);
-        const myStat = allStats.find(s => s.user_id === user.id);
+        const myStat = allStats[0];
         setNudge(computeNudge(myPosts, myKeys, myStat?.total_adores || 0));
       })
       .catch(() => {});
@@ -252,9 +254,9 @@ export default function Community() {
     }
     // Update running adore total for the post author
     if (post.created_by_id) {
-      base44.entities.UserStat.list("-created_date", 200)
+      base44.entities.UserStat.filter({ user_id: post.created_by_id })
         .then(stats => {
-          const existing = stats.find(s => s.user_id === post.created_by_id);
+          const existing = stats[0];
           const newTotal = Math.max(0, (existing?.total_adores || 0) + delta);
           if (existing) {
             return base44.entities.UserStat.update(existing.id, { total_adores: newTotal });

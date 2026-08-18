@@ -267,7 +267,7 @@ export default function Distinctions() {
         const [badgeRecords, posts, statRecords] = await Promise.all([
           base44.entities.UserBadge.filter({ user_id: user.id }),
           base44.entities.CommunityPost.filter({ created_by_id: user.id }),
-          base44.entities.UserStat.list("-created_date", 200),
+          base44.entities.UserStat.filter({ user_id: user.id }),
         ]);
 
         const existingKeys = new Set(badgeRecords.map((b) => b.badge_key));
