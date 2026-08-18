@@ -196,7 +196,6 @@ export default function CircleRooms() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
 
   const load = async () => {
     try {
@@ -287,46 +286,6 @@ export default function CircleRooms() {
             onClose={() => setCreating(false)}
             onCreate={handleCreated}
           />
-        )}
-        {showComingSoon && (
-          <motion.div
-            key="rooms-coming-soon"
-            className="fixed inset-0 z-50 flex items-end justify-center"
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-              onClick={() => setShowComingSoon(false)}
-            />
-            <motion.div
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ type: "spring", damping: 28, stiffness: 260 }}
-              className="relative w-full max-w-lg rounded-t-3xl bg-[var(--color-bg)] px-8 pt-8 pb-14 shadow-2xl flex flex-col items-center text-center"
-            >
-              <button
-                onClick={() => setShowComingSoon(false)}
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--color-text-primary)]/[0.08] hover:bg-[var(--color-text-primary)]/[0.13] transition-colors"
-                aria-label="Close"
-              >
-                <X size={14} color="var(--color-text-primary)" />
-              </button>
-              <SwanLogo size={64} className="opacity-85 mb-6" />
-              <h2 className="font-serif text-3xl text-[var(--color-text-primary)] font-light tracking-wide mb-2">
-                Private Rooms
-              </h2>
-              <p className="text-[10px] tracking-[0.35em] uppercase text-[var(--color-text-primary)] font-light mb-5">
-                Coming Soon
-              </p>
-              <div className="w-8 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/60 to-transparent mb-5" />
-              <p className="text-[13px] text-primary-45 font-light leading-relaxed max-w-[220px] tracking-wide">
-                Your intimate circle is being prepared. Invite-only rooms are on their way.
-              </p>
-            </motion.div>
-          </motion.div>
         )}
       </AnimatePresence>
     </div>
