@@ -48,6 +48,7 @@
     --color-border-subtle: #EDE7DA;
     --color-text-primary-rgb: 4, 57, 39;
     --color-text-gold-rgb: 200, 176, 106;
+    --color-body-font-weight: 400;
     --color-pill-bg-playing: rgba(253,245,230,0.96);
     --color-pill-bg-external: rgba(245,237,216,0.88);
     --color-pill-bg-idle: rgba(253,245,230,0.82);
@@ -100,6 +101,27 @@
     --color-scrim-loading: rgba(13,26,20,0.72);
   }
 
+  /* ── High Contrast Text — light mode (in-app toggle only) ── */
+  [data-high-contrast="true"]:not([data-theme="dark"]) {
+    --color-body-font-weight: 500;
+    --color-border: rgba(4, 57, 39, 0.22);
+    --color-border-subtle: rgba(4, 57, 39, 0.14);
+  }
+
+  /* ── High Contrast Text — dark mode (both toggles active) ── */
+  [data-theme="dark"][data-high-contrast="true"] {
+    --color-accent-gold: #E8CC8A;
+    --color-text-gold-rgb: 232, 204, 138;
+  }
+
+  /* ── High Contrast Text — OS dark auto-mode ── */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"])[data-high-contrast="true"] {
+      --color-accent-gold: #E8CC8A;
+      --color-text-gold-rgb: 232, 204, 138;
+    }
+  }
+
   /* In-app override — force light (wins over OS dark) */
   [data-theme="light"] {
     --color-bg: #FDF5E6;
@@ -131,6 +153,7 @@
     background-color: var(--color-bg);
     color: var(--color-text-primary);
     font-family: 'Inter', sans-serif;
+    font-weight: var(--color-body-font-weight);
   }
 
   h1, h2, h3, .font-serif {
@@ -287,6 +310,13 @@
   transition-property: background-color, border-color, color, fill, stroke;
   transition-duration: 200ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* High Contrast Text — button / toggle ring in light mode */
+[data-high-contrast="true"]:not([data-theme="dark"]) button:not(:focus-visible),
+[data-high-contrast="true"]:not([data-theme="dark"]) [role="switch"] {
+  outline: 1px solid rgba(var(--color-text-primary-rgb), 0.22);
+  outline-offset: -1px;
 }
 
 @layer utilities {

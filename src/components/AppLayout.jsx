@@ -61,6 +61,9 @@ export default function AppLayout() {
         }
       }
       if (prefs.darkMode) applyTheme(true);
+      if (prefs.highContrastText) {
+        document.documentElement.setAttribute("data-high-contrast", "true");
+      }
     } catch {}
   }, []);
 

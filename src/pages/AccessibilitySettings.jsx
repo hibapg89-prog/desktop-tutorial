@@ -44,9 +44,10 @@ export default function AccessibilitySettings() {
   const [saved, setSaved] = useState(false);
 
   const prefs = loadPrefs();
-  const [calmMode,         setCalmMode]         = useState(prefs.calmMode         ?? false);
-  const [largeTypography,  setLargeTypography]  = useState(prefs.largeTypography  ?? false);
-  const [darkMode,         setDarkMode]         = useState(prefs.darkMode         ?? false);
+  const [calmMode,          setCalmMode]          = useState(prefs.calmMode          ?? false);
+  const [largeTypography,   setLargeTypography]   = useState(prefs.largeTypography   ?? false);
+  const [darkMode,          setDarkMode]          = useState(prefs.darkMode          ?? false);
+  const [highContrastText,  setHighContrastText]  = useState(prefs.highContrastText  ?? false);
   // Apply large typography globally when toggled — and persist immediately so
   // AppLayout can restore it on any page load without waiting for Save.
   useEffect(() => {
@@ -96,8 +97,18 @@ export default function AccessibilitySettings() {
     applyTheme(darkMode);
   }, [darkMode]);
 
+  useEffect(() => {
+    if (highContrastText) {
+      document.documentElement.setAttribute("data-high-contrast", "true");
+    } else {
+      document.documentElement.removeAttribute("data-high-contrast");
+    }
+    const current = loadPrefs();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, highContrastText }));
+  }, [highContrastText]);
+
   const handleSave = async () => {
-    const data = { darkMode, calmMode, largeTypography };
+    const data = { darkMode, calmMode, largeTypography, highContrastText };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     try {
       await base44.auth.updateMe({ accessibility_prefs: JSON.stringify(data) });
@@ -185,6 +196,21 @@ export default function AccessibilitySettings() {
               <Toggle enabled={largeTypography} onToggle={() => setLargeTypography(v => !v)} />
             </div>
 
+            {/* Row: High Contrast Text */}
+            <div className="px-5 py-4 flex items-start justify-between gap-4">
+              <div>
+                <p
+                  className="text-[var(--color-text-primary)] font-light"
+                  style={{ fontSize: largeTypography ? "15px" : "13px" }}
+                >
+                  High Contrast Text
+                </p>
+                <p className="text-[10px] text-primary-45 font-light mt-0.5 leading-relaxed max-w-[220px]">
+                  Strengthens text weight and borders. In dark mode, brightens accent gold.
+                </p>
+              </div>
+              <Toggle enabled={highContrastText} onToggle={() => setHighContrastText(v => !v)} />
+            </div>
 
           </div>
         </div>
