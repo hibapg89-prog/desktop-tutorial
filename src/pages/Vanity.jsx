@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Grid3X3, List, Layers, AlertTriangle, Sparkles, X, Heart, Tag, Check, CheckSquare, BarChart3, ArrowLeftRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
 import { base44 } from "@/api/base44Client";
@@ -343,7 +343,9 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
 // ── main page ──────────────────────────────────────────────────────────────
 
 export default function Vanity() {
-  const [activeTab, setActiveTab] = useState("vanity");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "vanity";
+  const setActiveTab = (tab) => setSearchParams(tab === "vanity" ? {} : { tab }, { replace: true });
   const [activeCategory, setActiveCategory] = useState("All");
   const [viewMode, setViewMode] = useState("grid");
   const [vanityProducts, setVanityProducts] = useState([]);
@@ -519,6 +521,7 @@ export default function Vanity() {
                   setActiveTag("All");
                   setSelected(new Set());
                   if (tab.key === "wishlist") setViewMode(v => v === "canvas" ? "grid" : v);
+                  // tab is now in the URL — navigate(-1) from a product will restore it
                 }}
                 className={`flex-1 py-2.5 rounded-xl text-xs tracking-[0.15em] font-light transition-all flex items-center justify-center gap-2 ${activeTab === tab.key ? "bg-[#043927] text-[#FDF5E6]" : "text-primary-50"}`}
               >
