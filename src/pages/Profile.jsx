@@ -854,12 +854,17 @@ export default function Profile() {
                   </button>
                 </div>
 
-                {/* Glow Mode */}
+                {/* Glow Mode — not yet enforced, locked until backend ships */}
                 <div>
-                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
-                    Glow Mode
-                  </p>
-                  <div className="space-y-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light">
+                      Glow Mode
+                    </p>
+                    <span className="text-[0.5rem] tracking-[0.15em] uppercase font-light text-[#C8B06A] border border-[#C8B06A]/40 rounded-full px-2 py-0.5">
+                      Coming Soon
+                    </span>
+                  </div>
+                  <div className="space-y-2 opacity-40 pointer-events-none select-none">
                     {[
                       { mode: "PUBLIC", label: "Public Glow",  desc: "Everything visible to visitors" },
                       { mode: "SOFT",   label: "Soft Glow",    desc: "Partial visibility — intimate but present" },
@@ -867,29 +872,33 @@ export default function Profile() {
                     ].map(({ mode, label, desc }) => (
                       <button
                         key={mode}
-                        onClick={() => setGlowMode(mode)}
+                        tabIndex={-1}
                         className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left"
                         style={{
-                          borderColor: glowMode === mode ? "#C8B06A" : "var(--color-border)",
-                          background: glowMode === mode ? "rgba(200,176,106,0.08)" : "var(--color-bg-surface)",
+                          borderColor: "var(--color-border)",
+                          background: "var(--color-bg-surface)",
                         }}
                       >
                         <div>
                           <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
                           <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
                         </div>
-                        {glowMode === mode && <Check size={12} strokeWidth={1.5} color="var(--color-accent-gold)" />}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Privacy Tier */}
+                {/* Privacy Tier — not yet enforced, locked until backend ships */}
                 <div>
-                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
-                    Privacy Tier
-                  </p>
-                  <div className="space-y-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light">
+                      Privacy Tier
+                    </p>
+                    <span className="text-[0.5rem] tracking-[0.15em] uppercase font-light text-[#C8B06A] border border-[#C8B06A]/40 rounded-full px-2 py-0.5">
+                      Coming Soon
+                    </span>
+                  </div>
+                  <div className="space-y-2 opacity-40 pointer-events-none select-none">
                     {[
                       { tier: "PUBLIC",        label: "Public",        desc: "Any visitor may view your profile" },
                       { tier: "CIRCLE_ONLY",   label: "Circle Only",   desc: "Visible to your Beauty Room members only" },
@@ -897,18 +906,17 @@ export default function Profile() {
                     ].map(({ tier, label, desc }) => (
                       <button
                         key={tier}
-                        onClick={() => setPrivacy(tier)}
+                        tabIndex={-1}
                         className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left"
                         style={{
-                          borderColor: privacy === tier ? "#C8B06A" : "var(--color-border)",
-                          background: privacy === tier ? "rgba(200,176,106,0.08)" : "var(--color-bg-surface)",
+                          borderColor: "var(--color-border)",
+                          background: "var(--color-bg-surface)",
                         }}
                       >
                         <div>
                           <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
                           <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
                         </div>
-                        {privacy === tier && <Check size={12} strokeWidth={1.5} color="var(--color-accent-gold)" />}
                       </button>
                     ))}
                   </div>
