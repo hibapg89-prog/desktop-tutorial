@@ -19,6 +19,7 @@ export default function ProductResult() {
   const [copied, setCopied] = useState(false);
   const [vanityHint, setVanityHint] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -32,6 +33,10 @@ export default function ProductResult() {
       }).catch(() => setLoading(false));
     }
   }, [id]);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const handleAddToVanity = async () => {
     await base44.entities.Product.update(product.id, { in_vanity: true, in_wishlist: false });
@@ -197,7 +202,7 @@ export default function ProductResult() {
           {inVanity ? "In My Vanity" : "Add to My Vanity"}
         </button>
 
-        {inVanity && (
+        {currentUser && product.created_by_id === currentUser.id && (
           <div className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3">
             <div>
               <p className="text-xs text-[var(--color-text-primary)] font-light">Visible in Discovery</p>
