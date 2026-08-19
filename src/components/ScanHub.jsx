@@ -140,6 +140,20 @@ export default function ScanHub({ onClose }) {
     setIsListening(false);
   };
 
+  // Fire-and-forget: call the backend function that fetches a verified product
+  // image URL (validated via real HTTP fetch) and stores it as image_url,
+  // replacing any user-uploaded scan photo with a proper product stock photo.
+  const enrichProductImage = (productId, brand, name, shade) => {
+    if (!productId || !brand) return;
+    (async () => {
+      try {
+        await base44.functions.invoke('fetchProductImage', {
+          product_id: productId, brand, name, shade,
+        });
+      } catch {}
+    })();
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -212,7 +226,7 @@ export default function ScanHub({ onClose }) {
         return ["null", "none", "n/a", "na", "", "no shade", "not applicable"].includes(s.toLowerCase()) ? null : s;
       };
 
-      if (type === "image") {
+if (type === "image") {
         const imgResult = await base44.integrations.Core.InvokeLLM({
           prompt,
           file_urls,
@@ -263,6 +277,7 @@ export default function ScanHub({ onClose }) {
             muse_shimmer: p.muse_shimmer, where_to_buy: JSON.stringify(p.where_to_buy || []),
             ingredients: p.ingredients_summary, scan_method: type, image_url: file_urls?.[0] || null,
           });
+          enrichProductImage(prod.id, p.brand, p.name, p.shade);
           setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
         } else {
           const createdProducts = await Promise.all(
@@ -276,6 +291,9 @@ export default function ScanHub({ onClose }) {
               })
             )
           );
+          createdProducts.forEach((prod, i) => {
+            enrichProductImage(prod.id, validProducts[i].brand, validProducts[i].name, validProducts[i].shade);
+          });
           setIsAnalyzing(false);
           setProgress(100);
           setTimeout(() => {
@@ -334,6 +352,7 @@ export default function ScanHub({ onClose }) {
           ingredients: result.ingredients_summary, source_url: url || null,
           scan_method: type, image_url: file_urls?.[0] || null,
         });
+        enrichProductImage(prod.id, result.brand, result.name, result.shade);
         setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
       }
     } catch {
