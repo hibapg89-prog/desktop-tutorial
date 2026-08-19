@@ -19,6 +19,7 @@ export default function ProductResult() {
   const [copied, setCopied] = useState(false);
   const [vanityHint, setVanityHint] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [visibleError, setVisibleError] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -61,8 +62,14 @@ export default function ProductResult() {
 
   const handleToggleVisible = async () => {
     const next = !isVisible;
-    await base44.entities.Product.update(product.id, { is_profile_visible: next });
-    setIsVisible(next);
+    try {
+      await base44.entities.Product.update(product.id, { is_profile_visible: next });
+      setIsVisible(next);
+    } catch (err) {
+      console.error("[ProductResult] is_profile_visible update failed:", err);
+      setVisibleError(true);
+      setTimeout(() => setVisibleError(false), 2500);
+    }
   };
 
   const handleCopyIngredients = () => {
@@ -203,18 +210,32 @@ export default function ProductResult() {
         </button>
 
         {currentUser && product.created_by_id === currentUser.id && (
-          <div className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3">
-            <div>
-              <p className="text-xs text-[var(--color-text-primary)] font-light">Visible in Discovery</p>
-              <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">Let others find this product</p>
+          <div>
+            <div className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3">
+              <div>
+                <p className="text-xs text-[var(--color-text-primary)] font-light">Visible in Discovery</p>
+                <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">Let others find this product</p>
+              </div>
+              <button
+                onClick={handleToggleVisible}
+                aria-label={isVisible ? "Hide from Discovery" : "Show in Discovery"}
+                className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${isVisible ? "bg-[#C8B06A]" : "bg-[var(--color-border)]"}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200 ${isVisible ? "left-[calc(100%-18px)]" : "left-0.5"}`} />
+              </button>
             </div>
-            <button
-              onClick={handleToggleVisible}
-              aria-label={isVisible ? "Hide from Discovery" : "Show in Discovery"}
-              className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${isVisible ? "bg-[#C8B06A]" : "bg-[var(--color-border)]"}`}
-            >
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200 ${isVisible ? "left-[calc(100%-18px)]" : "left-0.5"}`} />
-            </button>
+            <AnimatePresence>
+              {visibleError && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-[0.5625rem] text-[#BC8F8F] font-light text-right px-1 mt-1"
+                >
+                  Couldn't save — try again
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
