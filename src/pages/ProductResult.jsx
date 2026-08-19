@@ -18,6 +18,7 @@ export default function ProductResult() {
   const [inShoppingList, setInShoppingList] = useState(false);
   const [copied, setCopied] = useState(false);
   const [vanityHint, setVanityHint] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -26,6 +27,7 @@ export default function ProductResult() {
         setInVanity(p.in_vanity || false);
         setInWishlist(p.in_wishlist || false);
         setInShoppingList(p.in_shopping_list || false);
+        setIsVisible(p.is_profile_visible || false);
         setLoading(false);
       }).catch(() => setLoading(false));
     }
@@ -50,6 +52,12 @@ export default function ProductResult() {
   const handleAddToShoppingList = async () => {
     await base44.entities.Product.update(product.id, { in_shopping_list: !inShoppingList, shopping_qty: 1 });
     setInShoppingList(s => !s);
+  };
+
+  const handleToggleVisible = async () => {
+    const next = !isVisible;
+    await base44.entities.Product.update(product.id, { is_profile_visible: next });
+    setIsVisible(next);
   };
 
   const handleCopyIngredients = () => {
@@ -188,6 +196,22 @@ export default function ProductResult() {
         >
           {inVanity ? "In My Vanity" : "Add to My Vanity"}
         </button>
+
+        {inVanity && (
+          <div className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3">
+            <div>
+              <p className="text-xs text-[var(--color-text-primary)] font-light">Visible in Discovery</p>
+              <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">Let others find this product</p>
+            </div>
+            <button
+              onClick={handleToggleVisible}
+              aria-label={isVisible ? "Hide from Discovery" : "Show in Discovery"}
+              className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${isVisible ? "bg-[#C8B06A]" : "bg-[var(--color-border)]"}`}
+            >
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200 ${isVisible ? "left-[calc(100%-18px)]" : "left-0.5"}`} />
+            </button>
+          </div>
+        )}
 
         {!inVanity && (
           <button
