@@ -1,18 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Grid3X3, List, Layers, AlertTriangle, Sparkles, X, Heart, Tag, Check, CheckSquare, BarChart3, ArrowLeftRight } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
+import { Image } from "@/components/ui/image";
+import ProductImage from "@/components/ProductImage";
 import { base44 } from "@/api/base44Client";
 import { formatPrice } from "@/utils/locale";
 import VanityExport from "@/components/VanityExport";
 import ShareButton from "@/components/ShareButton";
+import ProductImageControls from "@/components/ProductImageControls";
 import VanitySummary from "@/components/VanitySummary";
 import ProductTagSheet, { TAGS, TAG_ACCENT } from "@/components/ProductTagSheet";
 import BulkTagSheet from "@/components/BulkTagSheet";
 import StarRating from "@/components/StarRating";
 
 const CATEGORIES = ["Makeup", "Fragrance", "Skincare", "Haircare", "Body", "Nails", "Devices", "Accessories", "Men's Grooming", "Pet Care", "Intimate Hygiene"];
+
+const BAD_BRANDS = ["not identified", "unknown", "n/a", "none", "unidentified"];
+const isIdentified = (p) => p.brand && !BAD_BRANDS.includes(p.brand.trim().toLowerCase()) && !p.brand.trim().toLowerCase().startsWith("not ");
+
+const VANITY_BANNER_URL = "https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/ad9ca50a5_generated_image.png";
 
 const CAT_ACCENT = {
   Makeup: "#BC8F8F",
@@ -62,12 +70,8 @@ function SaleBadge({ product }) {
 }
 
 function ProductThumb({ product }) {
-  return product.image_url ? (
-    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-  ) : (
-    <div className="w-full h-full bg-[var(--color-bg-elevated)] flex items-center justify-center">
-      <SwanLogo size={22} color="var(--color-text-primary)" />
-    </div>
+  return (
+    <ProductImage product={product} className="w-full h-full" alt={product.name} />
   );
 }
 
@@ -100,30 +104,66 @@ function MuseAlertCard({ alert, onDismiss }) {
   if (!alert) return null;
   const { type, product, days } = alert;
   const isUrgent = type === "expiry" && days <= 30;
+
+  const headline = type === "expiry"
+    ? (days <= 0 ? "A gentle farewell" : days <= 30 ? "A gentle nudge" : "A quiet reminder")
+    : "A new whisper";
+
+  const body = type === "expiry"
+    ? (days <= 0
+        ? `${product.brand} ${product.name} has expired — time to let it go`
+        : days <= 30
+        ? `${product.brand} ${product.name} expires in ${days} day${days !== 1 ? "s" : ""} — use it soon`
+        : `${product.brand} ${product.name} expires in ${days} days`)
+    : `${product.brand} ${product.name} is now on sale — ${product.sale_discount_pct > 0 ? `${Math.round(product.sale_discount_pct)}% off` : "check the price"}`;
+
+  // Hardcoded colors — the light gradient bg must never inherit dark-mode text tokens
+  const accent = isUrgent ? "#B85450" : type === "expiry" ? "#B8862A" : "#C8B06A";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className={`mx-5 mb-4 rounded-2xl p-4 flex items-start gap-3 border ${isUrgent ? "bg-red-50 border-red-200" : type === "expiry" ? "bg-amber-50 border-amber-200" : "bg-[#FDF0D5] border-[#C8B06A]/30"}`}
+      className="mx-5 mb-4 rounded-full pl-2 pr-2 py-2 flex items-center gap-2.5"
+      style={{
+        background: isUrgent
+          ? "linear-gradient(135deg, #F5E8E6 0%, #FBF2F0 100%)"
+          : "linear-gradient(135deg, #F5F2EA 0%, #FBF9F2 100%)",
+        border: `1px solid ${accent}40`,
+      }}
     >
-      <Sparkles size={16} color={isUrgent ? "#ef4444" : type === "expiry" ? "#d97706" : "#C8B06A"} className="flex-shrink-0 mt-0.5" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-light text-[var(--color-text-primary)] leading-relaxed">
-          {type === "expiry" ? (
-            days <= 0
-              ? <><span className="font-medium">{product.brand} {product.name}</span> has expired — time to let it go</>
-              : days <= 30
-              ? <><span className="font-medium">{product.brand} {product.name}</span> expires in {days} day{days !== 1 ? "s" : ""} — use it soon</>
-              : <><span className="font-medium">{product.brand} {product.name}</span> expires in {days} days</>
-          ) : (
-            <><span className="font-medium">{product.brand} {product.name}</span> is now on sale — {product.sale_discount_pct > 0 ? `${Math.round(product.sale_discount_pct)}% off` : "check the price"}</>
-          )}
-        </p>
-        <p className="text-[0.625rem] text-primary-40 font-light mt-0.5 italic">The Muse</p>
+      {/* Swan icon — circular with gold border */}
+      <div
+        className="flex-shrink-0 w-9 h-9 rounded-full overflow-hidden flex items-center justify-center"
+        style={{ border: `1.5px solid ${accent}`, background: "#0D1A14" }}
+      >
+        <SwanLogo size={20} />
       </div>
-      <button onClick={onDismiss} className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-black/5">
-        <X size={10} color="var(--color-text-primary)" />
+
+      {/* Text content */}
+      <div className="flex-1 min-w-0">
+        <p className="font-serif text-[0.8125rem] leading-tight" style={{ color: "#1B3A25", fontWeight: 500 }}>
+          {headline}
+        </p>
+        <p className="text-[0.6875rem] leading-snug mt-0.5 truncate" style={{ color: "#3A3A3A", fontWeight: 400 }}>
+          {body}
+        </p>
+      </div>
+
+      {/* Gold line + sparkle */}
+      <div className="flex-shrink-0 flex items-center gap-0.5">
+        <div className="w-6 h-px" style={{ background: `linear-gradient(to right, transparent, ${accent})` }} />
+        <Sparkles size={11} color={accent} />
+      </div>
+
+      {/* Dismiss */}
+      <button
+        onClick={onDismiss}
+        className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors"
+        aria-label="Dismiss"
+      >
+        <X size={11} color="#1B3A25" />
       </button>
     </motion.div>
   );
@@ -343,9 +383,7 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
 // ── main page ──────────────────────────────────────────────────────────────
 
 export default function Vanity() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "vanity";
-  const setActiveTab = (tab) => setSearchParams(tab === "vanity" ? {} : { tab }, { replace: true });
+  const [activeTab, setActiveTab] = useState("vanity");
   const [activeCategory, setActiveCategory] = useState("All");
   const [viewMode, setViewMode] = useState("grid");
   const [vanityProducts, setVanityProducts] = useState([]);
@@ -365,22 +403,43 @@ export default function Vanity() {
       base44.entities.Product.filter({ in_vanity: true, created_by_id: me.id }),
       base44.entities.Product.filter({ in_wishlist: true, created_by_id: me.id }),
     ])).then(([vanity, wishlist]) => {
-      setVanityProducts(vanity);
-      setWishlistProducts(wishlist);
+      const goodVanity = vanity.filter(isIdentified);
+      const goodWishlist = wishlist.filter(isIdentified);
+      setVanityProducts(goodVanity);
+      setWishlistProducts(goodWishlist);
       try {
         const saved = JSON.parse(localStorage.getItem("luxe_vanity_order") || "[]");
         const savedSet = new Set(saved);
         const merged = [
-          ...saved.filter(id => vanity.find(p => p.id === id)),
-          ...vanity.filter(p => !savedSet.has(p.id)).map(p => p.id),
+          ...saved.filter(id => goodVanity.find(p => p.id === id)),
+          ...goodVanity.filter(p => !savedSet.has(p.id)).map(p => p.id),
         ];
         setDrawerOrder(merged);
       } catch {
-        setDrawerOrder(vanity.map(p => p.id));
+        setDrawerOrder(goodVanity.map(p => p.id));
       }
       setLoading(false);
     });
   }, []);
+
+  // Realtime: flip image + status chip live when the background fetcher
+  // (or a manual re-fetch) updates a product.
+  useEffect(() => {
+    const unsubscribe = base44.entities.Product.subscribe((event) => {
+      if (event.type !== "update" || !event.data) return;
+      const updated = event.data;
+      const apply = (prev) => prev.map(p => (p.id === updated.id ? { ...p, ...updated } : p)).filter(isIdentified);
+      setVanityProducts(apply);
+      setWishlistProducts(apply);
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleImageUpdated = (updated) => {
+    const apply = (prev) => prev.map(p => (p.id === updated.id ? { ...p, ...updated } : p));
+    setVanityProducts(apply);
+    setWishlistProducts(apply);
+  };
 
   const persistOrder = useCallback((order) => {
     setDrawerOrder(order);
@@ -427,16 +486,14 @@ export default function Vanity() {
     }
   })();
 
-  const BAD_ALERT_BRANDS = ["not identified", "unknown", "n/a", "none", "unidentified"];
-  const hasGoodBrand = (p) => p.brand && !BAD_ALERT_BRANDS.includes(p.brand.trim().toLowerCase()) && !p.brand.trim().toLowerCase().startsWith("not ");
   const allAlerts = [
     ...vanityProducts
-      .filter(hasGoodBrand)
+      .filter(isIdentified)
       .map(p => { const d = daysUntil(p.expiry_date); return d !== null && d >= 0 && d <= 90 ? { type: "expiry", product: p, days: d } : null; })
       .filter(Boolean)
       .sort((a, b) => a.days - b.days),
     ...[...vanityProducts, ...wishlistProducts]
-      .filter(p => p.on_sale && hasGoodBrand(p))
+      .filter(p => p.on_sale && isIdentified(p))
       .map(p => ({ type: "sale", product: p })),
   ];
   const currentAlert = allAlerts[alertIdx] || null;
@@ -499,48 +556,70 @@ export default function Vanity() {
 
   return (
     <main className="min-h-screen bg-[var(--color-bg)]">
-      {/* Page header */}
-      <header className="px-5 pt-6 pb-2">
-        <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">La Collection</p>
-        <h1 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mt-0.5">La Vanity</h1>
-      </header>
-
-      {/* MY VANITY | WISHLIST tabs */}
-      <div className="px-5 mt-2 mb-4">
-        <div className="flex items-center gap-2">
-          <div className="flex-1 flex bg-[var(--color-bg-surface)] rounded-2xl p-1 border border-[var(--color-border)]">
-            {[
-              { key: "vanity", label: "MY VANITY", count: vanityProducts.length },
-              { key: "wishlist", label: "WISHLIST", count: wishlistProducts.length },
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setActiveTab(tab.key);
-                  setActiveCategory("All");
-                  setActiveTag("All");
-                  setSelected(new Set());
-                  if (tab.key === "wishlist") setViewMode(v => v === "canvas" ? "grid" : v);
-                  // tab is now in the URL — navigate(-1) from a product will restore it
-                }}
-                className={`flex-1 py-2.5 rounded-xl text-xs tracking-[0.15em] font-light transition-all flex items-center justify-center gap-2 ${activeTab === tab.key ? "bg-[#043927] text-[#FDF5E6]" : "text-primary-50"}`}
-              >
-                {tab.key === "wishlist" && <Heart size={11} fill={activeTab === "wishlist" ? "currentColor" : "none"} />}
-                {tab.label}
-                <span className={`text-[0.625rem] rounded-full px-1.5 py-0.5 ${activeTab === tab.key ? "bg-[var(--color-bg-surface)]/20" : "bg-[var(--color-border)]"}`}>
-                  {tab.count}
-                </span>
-              </button>
-            ))}
+      {/* ── Vanity header — framed banner block ─────────────────────── */}
+      <div className="px-5 pt-6 pb-4">
+        <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid rgba(200,176,106,0.45)" }}>
+          {/* Top bar — title + centered toggle */}
+          <div className="px-4 pt-4 pb-3" style={{ background: "#F7F3E8" }}>
+            <div>
+              <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">La Collection</p>
+              <h1 className="font-serif text-2xl text-[#1E352B] font-light mt-0.5 flex items-baseline gap-2">
+                La Vanity
+                {(vanityProducts.length + wishlistProducts.length) > 0 && (
+                  <span className="text-sm font-light text-primary-40 italic">
+                    {activeTab === "vanity" ? vanityProducts.length : wishlistProducts.length}
+                  </span>
+                )}
+              </h1>
+            </div>
+            {/* Centered toggle */}
+            <div className="flex justify-center mt-3">
+              <div className="flex bg-white/50 rounded-full p-1 border border-white/80">
+                {[
+                  { key: "vanity", label: "MY VANITY", count: vanityProducts.length },
+                  { key: "wishlist", label: "WISHLIST", count: wishlistProducts.length },
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => {
+                      setActiveTab(tab.key);
+                      setActiveCategory("All");
+                      setActiveTag("All");
+                      setSelected(new Set());
+                      if (tab.key === "wishlist") setViewMode(v => v === "canvas" ? "grid" : v);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] tracking-[0.1em] font-light transition-all whitespace-nowrap ${activeTab === tab.key ? "bg-[#1E352B] text-white" : "text-[#7D8B84]"}`}
+                  >
+                    {tab.key === "wishlist" && <Heart size={10} fill={activeTab === "wishlist" ? "currentColor" : "none"} />}
+                    {tab.label}
+                    <span className={`text-[0.5625rem] rounded-full px-1.5 py-0.5 ${activeTab === tab.key ? "bg-white/20" : "bg-[#1E352B]/10"}`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <VanityExport products={vanityProducts} />
-          <Link
-            to="/vanity/insights"
-            className="flex-shrink-0 w-10 h-10 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)] flex items-center justify-center shadow-sm hover:bg-[var(--color-bg-surface)] transition-colors"
-            aria-label="Vanity insights"
-          >
-            <BarChart3 size={16} color="var(--color-text-primary)" />
-          </Link>
+
+          {/* Banner image with overlaid action buttons */}
+          <div className="relative" style={{ height: "200px" }}>
+            <Image
+              src={VANITY_BANNER_URL}
+              alt="La Vanity — luxury beauty flat-lay"
+              fittingType="fill"
+              className="w-full h-full"
+            />
+            <div className="absolute bottom-3 right-3 flex items-center gap-2">
+              <VanityExport products={vanityProducts} />
+              <Link
+                to="/vanity/insights"
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-bg-elevated)] flex items-center justify-center shadow-sm"
+                aria-label="Vanity insights"
+              >
+                <BarChart3 size={16} color="var(--color-text-primary)" />
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -555,7 +634,7 @@ export default function Vanity() {
 
       {/* View mode + category filter */}
       <div className="px-5 mb-4 flex items-center gap-3">
-        <div className="flex bg-[var(--color-bg-surface)] rounded-xl border border-[var(--color-border)] p-0.5 flex-shrink-0">
+        <div className="flex bg-[var(--color-bg-surface)] rounded-xl border border-[var(--color-border)] p-1 flex-shrink-0 shadow-sm">
           {[
             { mode: "grid",   Icon: Grid3X3 },
             { mode: "canvas", Icon: Layers },
@@ -576,9 +655,9 @@ export default function Vanity() {
                 disabled={disabled}
                 aria-label={`${mode} view`}
                 aria-pressed={viewMode === mode}
-                className={`w-8 h-7 rounded-lg flex items-center justify-center transition-all ${disabled ? "opacity-25 cursor-not-allowed" : ""} ${viewMode === mode ? "bg-[#043927]" : "transparent"}`}
+                className={`w-9 h-8 rounded-lg flex items-center justify-center transition-all ${disabled ? "opacity-25 cursor-not-allowed" : ""} ${viewMode === mode ? "bg-[#1E352B] shadow-sm" : "bg-[var(--color-bg-elevated)]/50 hover:bg-[var(--color-bg-elevated)]"}`}
               >
-                <Icon size={13} color={viewMode === mode ? "#FDF5E6" : "#043927"} aria-hidden={true} />
+                <Icon size={15} color={viewMode === mode ? "#FDF5E6" : "var(--color-text-primary)"} aria-hidden={true} />
               </button>
             );
           })}
@@ -607,7 +686,7 @@ export default function Vanity() {
           }}
           className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide border transition-all ${bulkMode ? "bg-[#043927] text-[#FDF5E6] border-[#043927]" : "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[var(--color-border)]"}`}
         >
-          <CheckSquare size={13} color={bulkMode ? "#FDF5E6" : "#043927"} />
+          <CheckSquare size={13} color={bulkMode ? "#FDF5E6" : "var(--color-text-primary)"} />
           {bulkMode ? "Done" : "Bulk"}
         </button>
       </div>
@@ -714,6 +793,11 @@ export default function Vanity() {
                               <Tag size={13} color={product.tags && product.tags[0] ? TAG_ACCENT[product.tags[0]] : "#043927"} />
                             </button>
                           </div>
+                          {!bulkMode && (
+                            <div className="absolute top-1.5 left-1/2 -translate-x-1/2" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                              <ProductImageControls product={product} onUpdated={handleImageUpdated} size="xs" />
+                            </div>
+                          )}
                         </div>
                         <p className="text-[0.5625rem] tracking-wide text-primary-40 mt-1.5 font-light uppercase truncate px-0.5">{product.brand}</p>
                         <p className="text-xs text-[var(--color-text-primary)] font-light truncate leading-tight px-0.5">{product.name}</p>
@@ -794,6 +878,7 @@ export default function Vanity() {
                                 <Tag size={13} color={product.tags && product.tags[0] ? TAG_ACCENT[product.tags[0]] : "#043927"} />
                               </button>
                               <ShareButton product={product} className="w-7 h-7 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-border)]" />
+                              <ProductImageControls product={product} onUpdated={handleImageUpdated} size="xs" />
                             </div>
                           </Link>
                         );

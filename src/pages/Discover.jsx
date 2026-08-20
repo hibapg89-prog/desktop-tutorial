@@ -79,43 +79,46 @@ export default function Discover() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
 
-      {/* Header */}
-      <div className="px-5 pt-14 pb-4">
-        <p className="text-[0.5625rem] tracking-[0.22em] uppercase text-primary-40 font-light">
-          The Muse
-        </p>
-        <h1 className="font-serif text-xl text-[var(--color-text-primary)] leading-tight">Pour Vous</h1>
-        <p className="text-[0.5rem] tracking-[0.3em] uppercase text-primary-25 font-light mt-1.5">
-          La Sélection · Été 2026 · Beauty Elevated
-        </p>
-      </div>
-
-      {/* Divider */}
-      <div className="mx-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/30 to-transparent mb-5" />
-
-      {/* Search bar */}
-      <div className="px-5 mb-5">
-        <div className="flex items-center gap-2 bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3">
-          <Search
-            size={14}
-            color="var(--color-text-primary)"
-            strokeWidth={1.5}
-            className={`flex-shrink-0 transition-opacity ${searching ? "opacity-30" : "opacity-100"}`}
-          />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search brands, products, shades…"
-            className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              className="text-primary-30 hover:text-[var(--color-text-primary)]/60 transition-colors"
-            >
-              <X size={14} />
-            </button>
-          )}
+      {/* Editorial banner with integrated search */}
+      <div className="px-5 pt-14 pb-5">
+        <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid rgba(200,176,106,0.45)" }}>
+          {/* Banner image (contains "For you" + "Discover" + search bar baked-in) */}
+          <div className="relative" style={{ aspectRatio: "5 / 6" }}>
+            <img
+              src="https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/ff8a8a622_IMG_5361.jpeg"
+              alt="The Muse Edit — Discover"
+              className="absolute inset-0 w-full h-full object-cover"
+              draggable={false}
+            />
+            {/* Functional opaque input covering baked-in search bar */}
+            <div className="absolute bottom-5 left-5 right-5">
+              <div
+                className="flex items-center gap-2 rounded-full px-4 py-2.5 shadow-sm"
+                style={{ background: "linear-gradient(135deg, #D4C592 0%, #C5B374 50%, #9A8B70 100%)", border: "1px solid #4A4438" }}
+              >
+                <Search
+                  size={14}
+                  color="#2C2B26"
+                  strokeWidth={1.5}
+                  className={`flex-shrink-0 transition-opacity ${searching ? "opacity-30" : "opacity-100"}`}
+                />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search brands, products, reviews..."
+                  className="flex-1 bg-transparent text-sm text-[#2C2B26] font-light outline-none placeholder:text-[#2C2B26]"
+                />
+                {query && (
+                  <button
+                    onClick={() => setQuery("")}
+                    className="text-[#2C2B26] hover:opacity-70 transition-opacity"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
         {searching && (
           <p className="text-[0.625rem] text-primary-30 font-light mt-1.5 px-1 tracking-wide">

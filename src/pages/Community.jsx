@@ -4,6 +4,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import SwanLogo from "@/components/SwanLogo";
+import { Image } from "@/components/ui/image";
+import { CategoryGradient } from "@/components/ProductImage";
 import StarRating from "@/components/StarRating";
 import CommunityComposer from "@/components/CommunityComposer";
 import ReviewerLeaderboard from "@/components/ReviewerLeaderboard";
@@ -19,9 +21,11 @@ import { BADGES, computeNudge } from "@/utils/badgeDefinitions";
 
 const FEED_MODES = [
   { key: "trending",  label: "Trending" },
-  { key: "following", label: "My Coterie" },
-  { key: "curated",   label: "✦ Curated" },
+  { key: "following", label: "Following" },
+  { key: "curated",   label: "Curated", icon: Sparkles },
 ];
+
+const COMMUNITY_BANNER_URL = "https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/80345aa08_generated_image.png";
 
 const BEAUTY_ROOMS = [
   { key: "skin_rituals", label: "Skin Rituals",    glyph: "✦", color: "#C8A96E" },
@@ -130,7 +134,6 @@ export default function Community() {
       allStats.forEach(s => { statByUser[s.user_id] = s.total_adores || 0; });
       const byUser = {};
       all.forEach(ub => {
-        if (!ids.includes(ub.user_id)) return;
         if (!byUser[ub.user_id]) byUser[ub.user_id] = new Set();
         byUser[ub.user_id].add(ub.badge_key);
       });
@@ -368,155 +371,100 @@ export default function Community() {
 
   return (
     <main className="min-h-screen bg-[var(--color-bg)]">
-      {/* Header */}
-      <header className="px-5 pt-14 pb-3 flex items-end justify-between">
-        <div>
-          <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">The Circle</p>
-          <h1 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mt-0.5">Community</h1>
-        </div>
-        <Link
-          to="/circle-rooms"
-          className="flex items-center gap-1 text-[0.6875rem] text-[var(--color-accent-gold)] font-light tracking-wide mb-1.5"
+      {/* ── Community header — framed banner block ─────────────────────── */}
+      <div className="px-5 pt-14 pb-4">
+        <div
+          className="rounded-3xl overflow-hidden"
+          style={{ border: "1px solid rgba(200,176,106,0.45)" }}
         >
-          Rooms
-          <span className="text-[0.8125rem] leading-none">›</span>
-        </Link>
-      </header>
-
-      {/* Action buttons */}
-      <div className="px-5 pb-3 flex items-center gap-2">
-        <button
-          onClick={() => setComposingSwap(true)}
-          className="flex items-center gap-1.5 bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
-        >
-          <Plus size={14} /> Swap
-        </button>
-        <button
-          onClick={() => setComposingPoll(true)}
-          className="flex items-center gap-1.5 bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
-        >
-          <Plus size={14} /> Poll
-        </button>
-        <button
-          onClick={() => setComposing(true)}
-          className="flex items-center gap-1.5 text-[var(--color-text-primary)] text-xs tracking-[0.12em] font-light px-4 py-2.5 rounded-2xl"
-          style={{ background: "linear-gradient(135deg, #C8B06A 0%, #E5D4A0 50%, #C8B06A 100%)" }}
-        >
-          <Plus size={14} /> Post
-        </button>
-      </div>
-
-      {/* Search bar */}
-      <div className="px-5 mb-3">
-        <div className="flex items-center gap-2 bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] px-3.5 py-2.5">
-          <Search size={15} color="var(--color-text-primary)" className="opacity-40" />
-          <input
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search brands, products, reviews…"
-            aria-label="Search brands, products, reviews"
-            className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30"
-          />
-          {query && (
-            <button onClick={() => setQuery("")} aria-label="Clear search" className="text-primary-40">
-              <X size={14} aria-hidden={true} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Hero Banner */}
-      {banners.length > 0 && (() => {
-        const banner = banners[activeBanner];
-        return (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeBanner}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="mx-5 mb-4 rounded-2xl overflow-hidden relative"
-              style={{ height: "210px" }}
-            >
-              {banner.image_url ? (
-                <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full" style={{ background: "linear-gradient(135deg, #0B3C26 0%, #1D5438 100%)" }} />
-              )}
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(to top, rgba(11,60,38,0.88) 0%, rgba(11,60,38,0.18) 60%, transparent 100%)" }}
-              />
-              <div className="absolute inset-0 flex flex-col justify-end p-4">
-                {banner.tag && (
-                  <span
-                    className="text-[0.5625rem] tracking-[0.25em] uppercase font-light mb-1.5"
-                    style={{ color: "var(--color-accent-gold)" }}
-                  >
-                    {banner.tag}
-                  </span>
+          {/* Top bar — title + action buttons */}
+          <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3" style={{ background: "#F8F3E6" }}>
+            <div className="flex-shrink-0">
+              <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">The Circle</p>
+              <h1 className="font-serif text-2xl text-[#1C2E24] font-light mt-0.5 leading-tight flex items-baseline gap-2">
+                Community
+                {posts.length > 0 && (
+                  <span className="text-sm font-light text-primary-40 italic">{posts.length}</span>
                 )}
-                <p
-                  className="text-[1.375rem] font-light text-white leading-tight"
-                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              </h1>
+            </div>
+            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setComposingSwap(true)}
+                  className="flex items-center gap-0.5 bg-white border border-[#D3CDBE] text-[#1C2E24] text-[0.6875rem] tracking-[0.1em] font-light px-2.5 py-1.5 rounded-full whitespace-nowrap"
                 >
-                  {banner.title}
-                </p>
-                {banner.subtitle && (
-                  <p className="text-[0.6875rem] font-light text-white/65 leading-relaxed mt-1 max-w-[260px]">
-                    {banner.subtitle}
-                  </p>
-                )}
-                <div className="mt-3 flex items-center justify-between">
-                  {banner.cta_label ? (
-                    <Link
-                      to={banner.cta_url || "#"}
-                      onClick={(e) => { if (!banner.cta_url) e.preventDefault(); }}
-                      className="px-4 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide"
-                      style={{ background: "rgba(200,176,106,0.22)", border: "1px solid rgba(200,176,106,0.45)", color: "var(--color-accent-gold)" }}
-                    >
-                      {banner.cta_label}
-                    </Link>
-                  ) : <div />}
-                  {banners.length > 1 && (
-                    <div className="flex gap-1.5">
-                      {banners.map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setActiveBanner(i)}
-                          className="rounded-full transition-all duration-300"
-                          style={{
-                            width: i === activeBanner ? "14px" : "4px",
-                            height: "4px",
-                            background: i === activeBanner ? "#C8B06A" : "rgba(255,255,255,0.35)",
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
+                  <Plus size={11} /> Swap
+                </button>
+                <button
+                  onClick={() => setComposingPoll(true)}
+                  className="flex items-center gap-0.5 bg-white border border-[#D3CDBE] text-[#1C2E24] text-[0.6875rem] tracking-[0.1em] font-light px-2.5 py-1.5 rounded-full whitespace-nowrap"
+                >
+                  <Plus size={11} /> Poll
+                </button>
+                <button
+                  onClick={() => setComposing(true)}
+                  className="flex items-center gap-0.5 text-[#1C2E24] text-[0.6875rem] tracking-[0.1em] font-medium px-2.5 py-1.5 rounded-full whitespace-nowrap"
+                  style={{ background: "linear-gradient(135deg, #C4B47B 0%, #DED098 100%)" }}
+                >
+                  <Plus size={11} /> Post
+                </button>
               </div>
-            </motion.div>
-          </AnimatePresence>
-        );
-      })()}
+              <Link
+                to="/circle-rooms"
+                className="inline-flex items-center gap-1 text-[0.6875rem] text-[#1C2E24] font-light tracking-wide"
+              >
+                Beauty rooms
+                <span className="text-[0.8125rem] leading-none">›</span>
+              </Link>
+            </div>
+          </div>
 
-      {/* Feed mode tabs */}
-      <div className="px-5 mb-4 flex gap-2">
-        {FEED_MODES.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => switchMode(key)}
-            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide transition-all border ${
-              feedMode === key
-                ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
-                : "bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+          {/* Banner image with overlaid search + filter pills */}
+          <div className="relative" style={{ height: "230px" }}>
+            <Image
+              src={COMMUNITY_BANNER_URL}
+              alt="The Circle — luxury beauty flat-lay"
+              fittingType="fill"
+              className="w-full h-full"
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-5">
+              {/* Search bar */}
+              <div className="w-full max-w-[320px] flex items-center gap-2 bg-white rounded-full border border-[#D3CDBE] px-4 py-2.5 shadow-sm">
+                <Search size={15} color="#9C9482" />
+                <input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="Search brands, products, reviews..."
+                  aria-label="Search brands, products, reviews"
+                  className="flex-1 bg-transparent text-sm text-[#1C2E24] font-light outline-none placeholder:text-[#9C9482]"
+                />
+                {query && (
+                  <button onClick={() => setQuery("")} aria-label="Clear search" className="text-[#9C9482]">
+                    <X size={14} aria-hidden={true} />
+                  </button>
+                )}
+              </div>
+              {/* Filter pills */}
+              <div className="flex gap-2 mt-3">
+                {FEED_MODES.map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => switchMode(key)}
+                    className={`flex items-center gap-1 flex-shrink-0 px-4 py-1.5 rounded-full text-[0.6875rem] font-light tracking-wide transition-all border ${
+                      feedMode === key
+                        ? "bg-[#0B3828] text-white border-[#0B3828]"
+                        : "bg-white text-[#1C2E24] border-[#D3CDBE]"
+                    }`}
+                  >
+                    {Icon && <Icon size={11} />}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Badge progress nudge */}
@@ -564,8 +512,16 @@ export default function Community() {
 
       {/* Beauty Rooms — curated interest communities */}
       <div className="mb-3">
-        <div className="px-5 flex items-center justify-between mb-2">
-          <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Beauty Rooms</p>
+        <div className="px-5 flex items-center justify-between mb-2.5">
+          <Link
+            to="/circle-rooms"
+            className="flex items-center gap-1 group"
+          >
+            <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light group-hover:text-[var(--color-text-primary)] transition-colors">
+              Beauty Rooms
+            </p>
+            <span className="text-[0.8125rem] text-[var(--color-accent-gold)] leading-none transition-transform group-hover:translate-x-0.5">›</span>
+          </Link>
           {activeCircle && (
             <button
               onClick={() => setActiveCircle(null)}
@@ -575,52 +531,51 @@ export default function Community() {
             </button>
           )}
         </div>
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar px-5 pb-1">
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar px-5 pb-1">
           {[...BEAUTY_ROOMS].sort((a, b) => (joinedRooms.has(b.key) ? 1 : 0) - (joinedRooms.has(a.key) ? 1 : 0)).map(c => {
             const postCount = posts.filter(p => p.circle === c.key).length;
             const isActive = activeCircle === c.key;
             const isJoined = joinedRooms.has(c.key);
             const arch = ROOM_ARCHETYPES[c.key];
+            const cardStyle = isActive
+              ? { background: "linear-gradient(180deg, #F9F4E8 0%, #EFE6D2 100%)", border: "1px solid #C8B06A", boxShadow: "0 4px 18px rgba(200,176,106,0.18)" }
+              : { background: "linear-gradient(180deg, #FAF6EC 0%, #F2EBDB 100%)", border: "1px solid rgba(200,176,106,0.28)" };
             return (
               <div
                 key={c.key}
-                className={`flex-shrink-0 flex flex-col items-start px-3.5 py-2 rounded-2xl border transition-all ${
-                  isActive
-                    ? "text-white border-transparent shadow-sm"
-                    : isJoined
-                    ? "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[#C8B06A]/45"
-                    : "bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[var(--color-border)]"
-                }`}
-                style={isActive ? { background: c.color } : {}}
+                onClick={() => setActiveCircle(isActive ? null : c.key)}
+                className="flex-shrink-0 w-[144px] rounded-[1.75rem] transition-all cursor-pointer relative overflow-hidden"
+                style={cardStyle}
               >
-                <button
-                  onClick={() => setActiveCircle(isActive ? null : c.key)}
-                  className="w-full text-left"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[0.625rem]">{c.glyph}</span>
-                    <span className="text-[0.6875rem] font-light tracking-wide">{c.label}</span>
-                    {postCount > 0 && (
-                      <span className={`text-[0.5rem] ${isActive ? "text-white/70" : "text-primary-35"}`}>
-                        {postCount}
-                      </span>
-                    )}
-                  </div>
-                  <span className={`text-[0.5625rem] font-light italic tracking-wide mt-0.5 ${isActive ? "text-white/70" : "text-primary-40"}`}
-                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                    {arch?.archetype}
+                {postCount > 0 && (
+                  <span className="absolute top-3 right-3 text-[0.5rem] font-light text-[#9A8E76]">
+                    {postCount}
                   </span>
-                </button>
-                <button
-                  onClick={() => toggleJoinRoom(c.key)}
-                  className={`mt-1.5 text-[0.5rem] tracking-[0.14em] uppercase font-light px-2 py-0.5 rounded-full transition-all ${
-                    isJoined
-                      ? isActive ? "bg-white/20 text-white" : "bg-[#C8B06A]/15 text-[var(--color-accent-gold)]"
-                      : isActive ? "bg-white/15 text-white/75 hover:bg-white/25" : "bg-[var(--color-bg-elevated)] text-primary-45 hover:text-primary-60"
-                  }`}
-                >
-                  {isJoined ? "✦ Member" : "Join"}
-                </button>
+                )}
+                <div className="flex justify-center pt-5">
+                  <span className="text-[0.9375rem] leading-none" style={{ color: c.color, opacity: isActive ? 1 : 0.75 }}>
+                    {c.glyph}
+                  </span>
+                </div>
+                <div className="px-3 mt-3 text-center">
+                  <p className="text-[1.0625rem] font-light italic leading-tight" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: "#2D3A30" }}>
+                    {arch?.archetype}
+                  </p>
+                  <p className="text-[0.5625rem] tracking-[0.22em] uppercase text-[#4A5A4E] font-light mt-2">
+                    {c.label}
+                  </p>
+                </div>
+                <div className="mx-5 mt-3.5 h-px" style={{ background: isActive ? "rgba(200,176,106,0.35)" : "rgba(200,176,106,0.14)" }} />
+                <div className="py-3 flex items-center justify-center gap-1">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleJoinRoom(c.key); }}
+                    className="flex items-center gap-1 text-[0.5625rem] tracking-[0.2em] uppercase font-light transition-colors"
+                    style={{ color: isJoined ? "#8A7530" : "#3A4A3E" }}
+                  >
+                    {isJoined ? "✦ Member" : "Join"}
+                    {!isJoined && <Plus size={8} strokeWidth={1.5} />}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -693,12 +648,24 @@ export default function Community() {
                       <p className="text-[0.625rem] text-primary-35 font-light mt-0.5 truncate">{event.location}</p>
                     )}
                     {event.cta_label && (
-                      <span
-                        className="inline-flex items-center gap-0.5 mt-2 text-[0.625rem] font-light"
-                        style={{ color: "var(--color-accent-gold)" }}
-                      >
-                        {event.cta_label} ›
-                      </span>
+                      event.cta_url ? (
+                        <a
+                          href={event.cta_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-0.5 mt-2 text-[0.625rem] font-light"
+                          style={{ color: "var(--color-accent-gold)" }}
+                        >
+                          {event.cta_label} ›
+                        </a>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-0.5 mt-2 text-[0.625rem] font-light"
+                          style={{ color: "var(--color-accent-gold)" }}
+                        >
+                          {event.cta_label} ›
+                        </span>
+                      )
                     )}
                   </div>
                 </div>
@@ -887,7 +854,7 @@ export default function Community() {
                             ) : post.image_url ? (
                               <img src={post.image_url} alt={post.name} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center"><SwanLogo size={22} color="var(--color-text-primary)" /></div>
+                              <CategoryGradient product={post} className="w-full h-full" alt={post.name} />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">

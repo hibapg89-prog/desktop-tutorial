@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Users, ChevronRight } from "lucide-react";
+import { Plus, X, Users, ChevronRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import SwanLogo from "@/components/SwanLogo";
@@ -180,20 +180,31 @@ export default function CircleRooms() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      {/* Header */}
-      <div className="px-5 pt-14 pb-4 flex items-end justify-between">
-        <div>
-          <p className="text-[10px] tracking-[0.35em] text-primary-40 uppercase font-light">Private</p>
-          <h1 className="font-serif text-3xl text-[var(--color-text-primary)] font-light mt-0.5">Rooms</h1>
+      {/* Header banner */}
+      <div className="px-5 pt-14 pb-4">
+        <div className="relative rounded-2xl overflow-hidden">
+          <img
+            src="https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/66ad09890_IMG_5400.jpeg"
+            alt="Beauty Rooms"
+            className="w-full h-auto block"
+            draggable={false}
+          />
+          {/* Back button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-3 left-3 w-9 h-9 flex items-center justify-center rounded-full border border-[#C5A059]/70 bg-[#0A3D2A]/40 backdrop-blur-sm"
+            aria-label="Back"
+          >
+            <ChevronLeft size={18} color="#C5A059" />
+          </button>
+          {/* Invisible overlay over baked-in "New Room" button (right side) */}
+          <button
+            onClick={() => setShowComingSoon(true)}
+            className="absolute top-3 right-3 bottom-3 w-32 rounded-2xl"
+            style={{ background: "transparent" }}
+            aria-label="New Room"
+          />
         </div>
-        <button
-          onClick={() => setShowComingSoon(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-light text-white"
-          style={{ background: "linear-gradient(135deg,#C8B06A 0%,#E5D4A0 50%,#C8B06A 100%)" }}
-        >
-          <Plus size={14} />
-          New Room
-        </button>
       </div>
 
       {/* List */}
