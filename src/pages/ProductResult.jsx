@@ -64,11 +64,18 @@ export default function ProductResult() {
 
   const handleToggleVisible = async () => {
     const next = !isVisible;
+    setIsVisible(next);
     try {
       await base44.entities.Product.update(product.id, { is_profile_visible: next });
-      setIsVisible(next);
+      const fresh = await base44.entities.Product.filter({ id: id });
+      const p = fresh?.[0];
+      if (p) {
+        setIsVisible(p.is_profile_visible || false);
+        setProduct(p);
+      }
     } catch (err) {
       console.error("[ProductResult] is_profile_visible update failed:", err);
+      setIsVisible(!next);
       setVisibleError(true);
       setTimeout(() => setVisibleError(false), 2500);
     }
