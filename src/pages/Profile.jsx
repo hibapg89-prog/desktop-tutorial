@@ -705,66 +705,6 @@ export default function Profile() {
             )}
           </div>
 
-          {/* ── DIVIDER ───────────────────────────────────────────────────────── */}
-          <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
-
-          {/* ── SECTION 7: PRIVATE ROOMS ──────────────────────────────────────── */}
-          <div className="px-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
-                Private Rooms
-              </h2>
-            </div>
-
-            {isAtelier ? (
-              myRooms.length > 0 ? (
-                <div className="space-y-2">
-                  {myRooms.map(room => (
-                    <Link
-                      key={room.id}
-                      to={`/circle-rooms/${room.id}`}
-                      className="rounded-xl px-4 py-3 border border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-elevated)]/35"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.625rem] font-light text-primary-50 flex-shrink-0 bg-[#C8B06A]/12 border border-[#C8B06A]/25">
-                          {room.name?.[0]?.toUpperCase() || "R"}
-                        </div>
-                        <span className="text-[0.8125rem] text-[var(--color-text-primary)] font-light">{room.name}</span>
-                      </div>
-                      {room.created_by_id === user?.id && (
-                        <span className="text-[0.5rem] tracking-[0.18em] uppercase font-light px-2 py-0.5 rounded-full text-[var(--color-accent-gold)] border border-[#C8B06A]/30 bg-[#C8B06A]/7">
-                          Leader
-                        </span>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-[var(--color-border)] px-5 py-6 text-center bg-[var(--color-bg-surface)]">
-                  <p className="text-[0.6875rem] text-primary-40 font-light italic">You haven't joined any rooms yet.</p>
-                </div>
-              )
-            ) : (
-              myRooms.length > 0 ? (
-                <div className="space-y-2">
-                  {myRooms.map(room => (
-                    <div
-                      key={room.id}
-                      className="rounded-xl px-4 py-3 border border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-elevated)]/22"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.625rem] font-light text-primary-40 flex-shrink-0 bg-[#C8B06A]/10 border border-[#C8B06A]/20">
-                          {room.name?.[0]?.toUpperCase() || "R"}
-                        </div>
-                        <span className="text-[0.8125rem] text-[var(--color-text-primary)]/70 font-light">{room.name}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null
-            )}
-          </div>
-
           {/* ── SIGN OUT (Atelier only — plain footer) ────────────────────────── */}
           {isAtelier && (
             <>
