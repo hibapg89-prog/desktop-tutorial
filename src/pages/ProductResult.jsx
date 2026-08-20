@@ -24,7 +24,9 @@ export default function ProductResult() {
 
   useEffect(() => {
     if (id) {
-      base44.entities.Product.get(id).then(p => {
+      base44.entities.Product.filter({ id: id }).then(results => {
+        const p = results?.[0];
+        if (!p) { setLoading(false); return; }
         setProduct(p);
         setInVanity(p.in_vanity || false);
         setInWishlist(p.in_wishlist || false);
