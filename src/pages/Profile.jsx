@@ -179,8 +179,9 @@ export default function Profile() {
           setRituelsCount(Array.isArray(tutorials) ? tutorials.length : 0);
         } catch {}
         try {
-          const products = await base44.entities.Product.filter({ in_vanity: true, created_by_id: u.id });
-          setMyEditProducts(Array.isArray(products) ? products.slice(0, 6) : []);
+          const allProducts = await base44.entities.Product.list("-updated_date", 200);
+          const vanity = Array.isArray(allProducts) ? allProducts.filter(p => p.in_vanity && p.created_by_id === u.id) : [];
+          setMyEditProducts(vanity.slice(0, 6));
         } catch {}
         try {
           const allRooms = await base44.entities.CircleRoom.list("-last_activity", 50);
