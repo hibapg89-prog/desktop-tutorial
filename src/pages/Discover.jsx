@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import ForYouProducts from "@/components/discover/ForYouProducts";
 import ForYouServices from "@/components/discover/ForYouServices";
 import ForYouTutorials from "@/components/discover/ForYouTutorials";
+import CommunityDiscoveries from "@/components/discover/CommunityDiscoveries";
 import { formatPrice } from "@/utils/locale";
 
 // Category grid — invisible tappable zones mapped to subcategory pages
@@ -201,6 +202,7 @@ export default function Discover() {
       {!isSearching && (
         <div className="px-5 pb-24">
           <ForYouProducts />
+          <CommunityDiscoveries />
           <ForYouServices />
           <ForYouTutorials />
 
