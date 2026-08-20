@@ -24,6 +24,8 @@ export default function ProductResult() {
 
   useEffect(() => {
     if (id) {
+      const savedVisible = localStorage.getItem(`vis_${id}`);
+      if (savedVisible !== null) setIsVisible(savedVisible === 'true');
       base44.entities.Product.filter({ id: id }).then(results => {
         const p = results?.[0];
         if (!p) { setLoading(false); return; }
@@ -31,7 +33,7 @@ export default function ProductResult() {
         setInVanity(p.in_vanity || false);
         setInWishlist(p.in_wishlist || false);
         setInShoppingList(p.in_shopping_list || false);
-        setIsVisible(p.is_profile_visible || false);
+        if (savedVisible === null) setIsVisible(p.is_profile_visible || false);
         setLoading(false);
       }).catch(() => setLoading(false));
     }
@@ -65,17 +67,13 @@ export default function ProductResult() {
   const handleToggleVisible = async () => {
     const next = !isVisible;
     setIsVisible(next);
+    localStorage.setItem(`vis_${id}`, String(next));
     try {
       await base44.entities.Product.update(product.id, { is_profile_visible: next });
-      const fresh = await base44.entities.Product.filter({ id: id });
-      const p = fresh?.[0];
-      if (p) {
-        setIsVisible(p.is_profile_visible || false);
-        setProduct(p);
-      }
     } catch (err) {
       console.error("[ProductResult] is_profile_visible update failed:", err);
       setIsVisible(!next);
+      localStorage.setItem(`vis_${id}`, String(!next));
       setVisibleError(true);
       setTimeout(() => setVisibleError(false), 2500);
     }
