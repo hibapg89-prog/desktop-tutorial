@@ -3,8 +3,6 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, MapPin, Copy, Check, Heart, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
-import ProductImage from "@/components/ProductImage";
-import ProductImageControls from "@/components/ProductImageControls";
 import IngredientAlert from "@/components/IngredientAlert";
 import TranslateToggle from "@/components/TranslateToggle";
 import { formatPrice } from "@/utils/locale";
@@ -21,6 +19,7 @@ export default function ProductResult() {
   const [copied, setCopied] = useState(false);
   const [vanityHint, setVanityHint] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
@@ -38,17 +37,9 @@ export default function ProductResult() {
     }
   }, [id]);
 
-  // Listen for realtime updates so the product image appears as soon as the
-  // backend image-enrichment function finishes (it runs after the page loads).
   useEffect(() => {
-    if (!id) return;
-    const unsubscribe = base44.entities.Product.subscribe((event) => {
-      if (event.id === id && event.type === 'update' && event.data) {
-        setProduct(event.data);
-      }
-    });
-    return unsubscribe;
-  }, [id]);
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const showError = (msg) => {
     setErrorMsg(msg);
@@ -186,12 +177,14 @@ export default function ProductResult() {
             className="w-40 h-40 rounded-3xl overflow-hidden shadow-2xl mb-6 border border-white/60"
             style={{ background: "var(--color-bg-elevated)" }}
           >
-            <ProductImage product={product} className="w-full h-full" fittingType="fit" alt={product.name} />
+            {product.image_url ? (
+              <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-4" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <SwanLogo size={60} color="var(--color-text-primary)" />
+              </div>
+            )}
           </motion.div>
-
-          <div className="flex items-center gap-2 mt-3">
-            <ProductImageControls product={product} onUpdated={setProduct} />
-          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -259,7 +252,7 @@ export default function ProductResult() {
           {inVanity ? "In My Vanity" : "Add to My Vanity"}
         </button>
 
-        {inVanity && (
+        {currentUser && product.created_by_id === currentUser.id && (
           <div className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3">
             <div>
               <p className="text-xs text-[var(--color-text-primary)] font-light">Visible in Discovery</p>
