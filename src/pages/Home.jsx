@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { ShieldAlert, ShoppingCart, BarChart3, Award, ChevronRight, Star } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
@@ -23,11 +23,18 @@ function timeGreeting() {
   return "Good evening";
 }
 
+function readAccessibilityPref(key) {
+  try { return JSON.parse(localStorage.getItem("muse_accessibility") || "{}")[key] ?? false; }
+  catch { return false; }
+}
+
 export default function Home() {
   const context = useOutletContext();
   const [user,            setUser]            = useState(null);
   const [shimmerProducts, setShimmerProducts] = useState([]);
   const [recentPosts,     setRecentPosts]     = useState([]);
+  const [guidedPath,      setGuidedPath]      = useState(() => readAccessibilityPref("guidedPath"));
+  const chimePlayedRef = useRef(false);
 
   useEffect(() => {
     base44.auth.me()
@@ -44,6 +51,55 @@ export default function Home() {
       .then(setRecentPosts)
       .catch(() => {});
   }, []);
+
+  // Re-read guidedPath when user navigates back from settings
+  useEffect(() => {
+    const sync = () => {
+      const next = readAccessibilityPref("guidedPath");
+      setGuidedPath(prev => {
+        if (!next) chimePlayedRef.current = false;
+        return next;
+      });
+    };
+    window.addEventListener("focus", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.removeEventListener("focus", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, []);
+
+  // Play a subtle chime when Guided Path first activates (skip in Calm Mode)
+  useEffect(() => {
+    if (!guidedPath || chimePlayedRef.current) return;
+    if (readAccessibilityPref("calmMode")) return;
+    chimePlayedRef.current = true;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.28);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.55);
+    } catch {}
+  }, [guidedPath]);
+
+  const dismissGuide = () => {
+    try {
+      const current = JSON.parse(localStorage.getItem("muse_accessibility") || "{}");
+      localStorage.setItem("muse_accessibility", JSON.stringify({ ...current, guidedPath: false }));
+    } catch {}
+    chimePlayedRef.current = false;
+    setGuidedPath(false);
+  };
 
   const firstName = user?.full_name?.split(" ")[0]
     || user?.email?.split("@")[0]
@@ -104,20 +160,72 @@ export default function Home() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        role="button"
-        tabIndex={0}
-        aria-label="Scan & Discover – Identify any beauty product"
-        className="mx-5 mb-8 rounded-2xl overflow-hidden shadow-sm cursor-pointer bg-[#043927]"
-        onClick={() => context?.openScan?.()}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); context?.openScan?.(); } }}
+        className="mx-5 mb-8 relative"
       >
-        <div className="px-6 py-7 flex items-center justify-between">
-          <div>
-            <p className="text-[0.5625rem] tracking-[0.35em] uppercase text-gold-70 font-light">The Muse</p>
-            <h2 className="font-serif text-2xl text-[#FDF5E6] font-light mt-1">Scan & Discover</h2>
-            <p className="text-[0.6875rem] text-[#FDF5E6]/45 font-light mt-1.5 tracking-wide">Identify any beauty product</p>
+        {/* Guided Path tooltip */}
+        {guidedPath && (
+          <div
+            className="absolute -top-14 left-0 right-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl z-10"
+            style={{
+              background: "rgba(4,57,39,0.94)",
+              border: "1px solid rgba(200,176,106,0.5)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <p
+              className="flex-1 text-[0.75rem] font-light leading-snug"
+              style={{ color: "#C8B06A", fontFamily: "Inter, DM Sans, sans-serif" }}
+            >
+              Start here — scan your first product.
+            </p>
+            <button
+              onClick={dismissGuide}
+              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(200,176,106,0.2)" }}
+              aria-label="Dismiss guide"
+            >
+              <svg width="7" height="7" viewBox="0 0 7 7" fill="none">
+                <path d="M1 1l5 5M6 1L1 6" stroke="#C8B06A" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            </button>
+            {/* Arrow pointing down */}
+            <div
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2"
+              style={{
+                width: 0, height: 0,
+                borderLeft: "7px solid transparent",
+                borderRight: "7px solid transparent",
+                borderTop: "7px solid rgba(4,57,39,0.94)",
+              }}
+            />
           </div>
-          <SwanLogo size={40} color="var(--color-accent-gold)" className="opacity-70 flex-shrink-0" />
+        )}
+
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Scan & Discover – Identify any beauty product"
+          className="rounded-2xl overflow-hidden shadow-sm cursor-pointer bg-[#043927]"
+          style={guidedPath ? {
+            boxShadow: "0 0 0 2.5px #C8B06A, 0 0 14px rgba(200,176,106,0.35)",
+          } : {}}
+          onClick={() => { dismissGuide(); context?.openScan?.(); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              dismissGuide();
+              context?.openScan?.();
+            }
+          }}
+        >
+          <div className="px-6 py-7 flex items-center justify-between">
+            <div>
+              <p className="text-[0.5625rem] tracking-[0.35em] uppercase text-gold-70 font-light">The Muse</p>
+              <h2 className="font-serif text-2xl text-[#FDF5E6] font-light mt-1">Scan & Discover</h2>
+              <p className="text-[0.6875rem] text-[#FDF5E6]/45 font-light mt-1.5 tracking-wide">Identify any beauty product</p>
+            </div>
+            <SwanLogo size={40} color="var(--color-accent-gold)" className="opacity-70 flex-shrink-0" />
+          </div>
         </div>
       </motion.div>
 
