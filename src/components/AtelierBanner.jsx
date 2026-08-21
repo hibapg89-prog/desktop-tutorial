@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 
 const BANNER_IMAGE =
-  "https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/815685766_IMG_5270.jpeg";
+  "https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/3d2fb00ac_IMG_5270.jpeg";
 
 const NAV_LINKS = [
   { label: "Alerts",   to: "/ingredient-alerts" },
