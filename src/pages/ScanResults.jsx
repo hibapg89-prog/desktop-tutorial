@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Camera, Upload } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 
 export default function ScanResults() {
@@ -9,8 +9,54 @@ export default function ScanResults() {
   const products = state?.products || [];
 
   if (products.length === 0) {
-    navigate("/home", { replace: true });
-    return null;
+    return (
+      <div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
+        <div className="flex items-center justify-between px-5 pt-14 pb-5">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(11,60,38,0.07)" }}
+            aria-label="Back"
+          >
+            <ArrowLeft size={18} color="var(--color-text-primary)" />
+          </button>
+          <SwanLogo size={32} color="var(--color-accent-gold)" />
+          <div className="w-10" />
+        </div>
+
+        <div className="px-6 text-center mt-4 mb-10">
+          <p className="text-[0.5625rem] tracking-[0.3em] uppercase font-light mb-2"
+            style={{ color: "var(--color-accent-gold)" }}>The Muse</p>
+          <h1 className="font-serif text-[2.25rem] font-light leading-tight"
+            style={{ color: "var(--color-text-primary)" }}>Scan &amp; Discover</h1>
+          <p className="text-[0.8125rem] font-light mt-3"
+            style={{ color: "var(--color-text-secondary)" }}>Point your camera at any beauty product to identify it instantly.</p>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-4">
+          <label className="w-full max-w-sm cursor-pointer">
+            <input type="file" accept="image/*" capture="environment" className="sr-only" />
+            <div
+              className="w-full aspect-square rounded-3xl flex flex-col items-center justify-center gap-4 border-2 border-dashed"
+              style={{ borderColor: "rgba(200,176,106,0.4)", background: "var(--color-bg-surface)" }}
+            >
+              <div className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ background: "#043927" }}>
+                <Camera size={28} color="#C8B06A" />
+              </div>
+              <p className="font-serif text-lg font-light" style={{ color: "var(--color-text-primary)" }}>Take a photo</p>
+              <p className="text-[0.75rem] font-light" style={{ color: "var(--color-text-secondary)" }}>or tap to choose from library</p>
+            </div>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="file" accept="image/*" className="sr-only" />
+            <Upload size={14} color="var(--color-accent-gold)" />
+            <span className="text-[0.8125rem] font-light" style={{ color: "var(--color-accent-gold)" }}>Upload from library</span>
+          </label>
+        </div>
+      </div>
+    );
   }
 
   return (

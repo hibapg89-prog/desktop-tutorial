@@ -46,7 +46,7 @@ export default function AtelierBanner({ onScan }) {
           style={{ top: "16%", left: "5%" }}
         >
           <p
-            className="text-[0.5rem] tracking-[0.28em] uppercase font-light"
+            className="text-[0.75rem] tracking-[0.22em] uppercase font-light"
             style={{ color: "#C8B06A" }}
           >
             {getGreeting()}
@@ -84,7 +84,7 @@ export default function AtelierBanner({ onScan }) {
         {/* Nav buttons row — invisible overlays over baked image buttons */}
         <div
           className="absolute flex gap-2"
-          style={{ top: "29%", left: "4%", right: "4%" }}
+          style={{ top: "28%", left: "3%", right: "3%", bottom: "37%" }}
         >
           {NAV_LINKS.map(({ label, to }) => (
             <Link
@@ -92,7 +92,6 @@ export default function AtelierBanner({ onScan }) {
               to={to}
               aria-label={label}
               className="flex-1 rounded-2xl"
-              style={{ aspectRatio: "1 / 1" }}
             />
           ))}
         </div>
@@ -103,7 +102,7 @@ export default function AtelierBanner({ onScan }) {
           onClick={onScan}
           aria-label="Scan & Discover – Identify any beauty product"
           className="absolute rounded-2xl"
-          style={{ top: "56%", left: "4%", right: "4%", bottom: "6%" }}
+          style={{ top: "63%", left: "3%", right: "3%", bottom: "3%" }}
         />
       </div>
     </div>
