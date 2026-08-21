@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, MapPin, Copy, Check, Heart, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
+import ProductImage from "@/components/ProductImage";
+import ProductImageControls from "@/components/ProductImageControls";
 import IngredientAlert from "@/components/IngredientAlert";
 import TranslateToggle from "@/components/TranslateToggle";
 import { formatPrice } from "@/utils/locale";
@@ -19,13 +21,10 @@ export default function ProductResult() {
   const [copied, setCopied] = useState(false);
   const [vanityHint, setVanityHint] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [visibleError, setVisibleError] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     if (id) {
-      const savedVisible = localStorage.getItem(`vis_${id}`);
-      if (savedVisible !== null) setIsVisible(savedVisible === 'true');
       base44.entities.Product.filter({ id: id }).then(results => {
         const p = results?.[0];
         if (!p) { setLoading(false); return; }
@@ -33,20 +32,42 @@ export default function ProductResult() {
         setInVanity(p.in_vanity || false);
         setInWishlist(p.in_wishlist || false);
         setInShoppingList(p.in_shopping_list || false);
-        if (savedVisible === null) setIsVisible(p.is_profile_visible || false);
+        setIsVisible(p.is_profile_visible || false);
         setLoading(false);
       }).catch(() => setLoading(false));
     }
   }, [id]);
 
+  // Listen for realtime updates so the product image appears as soon as the
+  // backend image-enrichment function finishes (it runs after the page loads).
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
+    if (!id) return;
+    const unsubscribe = base44.entities.Product.subscribe((event) => {
+      if (event.id === id && event.type === 'update' && event.data) {
+        setProduct(event.data);
+      }
+    });
+    return unsubscribe;
+  }, [id]);
+
+  const showError = (msg) => {
+    setErrorMsg(msg);
+    setTimeout(() => setErrorMsg(null), 3000);
+  };
 
   const handleAddToVanity = async () => {
-    await base44.entities.Product.update(product.id, { in_vanity: true, in_wishlist: false });
+    const prevVanity = inVanity;
+    const prevWishlist = inWishlist;
     setInVanity(true);
     setInWishlist(false);
+    try {
+      await base44.entities.Product.update(product.id, { in_vanity: true, in_wishlist: false });
+    } catch (err) {
+      console.error("[ProductResult] add to vanity failed:", err);
+      setInVanity(prevVanity);
+      setInWishlist(prevWishlist);
+      showError("Could not add to vanity — please try again.");
+    }
   };
 
   const handleAddToWishlist = async () => {
@@ -55,27 +76,38 @@ export default function ProductResult() {
       setTimeout(() => setVanityHint(false), 2200);
       return;
     }
-    await base44.entities.Product.update(product.id, { in_wishlist: !inWishlist });
-    setInWishlist(w => !w);
+    const next = !inWishlist;
+    setInWishlist(next);
+    try {
+      await base44.entities.Product.update(product.id, { in_wishlist: next });
+    } catch (err) {
+      console.error("[ProductResult] wishlist update failed:", err);
+      setInWishlist(!next);
+      showError("Could not update wishlist — please try again.");
+    }
   };
 
   const handleAddToShoppingList = async () => {
-    await base44.entities.Product.update(product.id, { in_shopping_list: !inShoppingList, shopping_qty: 1 });
-    setInShoppingList(s => !s);
+    const next = !inShoppingList;
+    setInShoppingList(next);
+    try {
+      await base44.entities.Product.update(product.id, { in_shopping_list: next, shopping_qty: 1 });
+    } catch (err) {
+      console.error("[ProductResult] shopping list update failed:", err);
+      setInShoppingList(!next);
+      showError("Could not update shopping list — please try again.");
+    }
   };
 
   const handleToggleVisible = async () => {
     const next = !isVisible;
     setIsVisible(next);
-    localStorage.setItem(`vis_${id}`, String(next));
     try {
       await base44.entities.Product.update(product.id, { is_profile_visible: next });
     } catch (err) {
       console.error("[ProductResult] is_profile_visible update failed:", err);
       setIsVisible(!next);
-      localStorage.setItem(`vis_${id}`, String(!next));
-      setVisibleError(true);
-      setTimeout(() => setVisibleError(false), 2500);
+      showError("Could not update visibility — please try again.");
     }
   };
 
@@ -103,7 +135,6 @@ export default function ProductResult() {
     try { return JSON.parse(product.where_to_buy || "[]"); } catch { return []; }
   })();
 
-  // Defensive guards for stale bad-data records
   const BAD_BRANDS = ["not identified", "unknown", "n/a", "none", "unidentified"];
   const displayBrand = (product.brand && !BAD_BRANDS.includes(product.brand.trim().toLowerCase()))
     ? product.brand
@@ -155,14 +186,12 @@ export default function ProductResult() {
             className="w-40 h-40 rounded-3xl overflow-hidden shadow-2xl mb-6 border border-white/60"
             style={{ background: "var(--color-bg-elevated)" }}
           >
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-4" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <SwanLogo size={60} color="var(--color-text-primary)" />
-              </div>
-            )}
+            <ProductImage product={product} className="w-full h-full" fittingType="fit" alt={product.name} />
           </motion.div>
+
+          <div className="flex items-center gap-2 mt-3">
+            <ProductImageControls product={product} onUpdated={setProduct} />
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -204,6 +233,20 @@ export default function ProductResult() {
         transition={{ delay: 0.5 }}
         className="px-5 py-4 flex flex-col gap-3"
       >
+        <AnimatePresence>
+          {errorMsg && (
+            <motion.p
+              key="error"
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="text-center text-[0.625rem] text-[#BC8F8F] font-light"
+            >
+              {errorMsg}
+            </motion.p>
+          )}
+        </AnimatePresence>
+
         <button
           onClick={handleAddToVanity}
           disabled={inVanity}
@@ -216,33 +259,19 @@ export default function ProductResult() {
           {inVanity ? "In My Vanity" : "Add to My Vanity"}
         </button>
 
-        {currentUser && product.created_by_id === currentUser.id && (
-          <div>
-            <div className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3">
-              <div>
-                <p className="text-xs text-[var(--color-text-primary)] font-light">Visible in Discovery</p>
-                <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">Let others find this product</p>
-              </div>
-              <button
-                onClick={handleToggleVisible}
-                aria-label={isVisible ? "Hide from Discovery" : "Show in Discovery"}
-                className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${isVisible ? "bg-[#C8B06A]" : "bg-[var(--color-border)]"}`}
-              >
-                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200 ${isVisible ? "left-[calc(100%-18px)]" : "left-0.5"}`} />
-              </button>
+        {inVanity && (
+          <div className="flex items-center justify-between bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-3">
+            <div>
+              <p className="text-xs text-[var(--color-text-primary)] font-light">Visible in Discovery</p>
+              <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">Let others find this product</p>
             </div>
-            <AnimatePresence>
-              {visibleError && (
-                <motion.p
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="text-[0.5625rem] text-[#BC8F8F] font-light text-right px-1 mt-1"
-                >
-                  Couldn't save — try again
-                </motion.p>
-              )}
-            </AnimatePresence>
+            <button
+              onClick={handleToggleVisible}
+              aria-label={isVisible ? "Hide from Discovery" : "Show in Discovery"}
+              className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${isVisible ? "bg-[#C8B06A]" : "bg-[var(--color-border)]"}`}
+            >
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200 ${isVisible ? "left-[calc(100%-18px)]" : "left-0.5"}`} />
+            </button>
           </div>
         )}
 
