@@ -196,6 +196,7 @@ export default function ScanHub({ onClose }) {
     try {
       let prompt = "";
       let file_urls = undefined;
+      let useImageAnalysis = type === "image";
 
       if (type === "image") {
         if (file) {
@@ -207,7 +208,19 @@ export default function ScanHub({ onClose }) {
         prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. Analyze this image carefully and identify ALL visible beauty products — there may be one, two, or more.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase, simplify, or translate it. If the label says "3D Hydra Brillant à Lèvres", use that exact text for the name field.\n- Read the EXACT shade name and number as printed — include the shade number if visible (e.g. "51 Frozen Light Blue", NOT just "Light Blue"). If no shade is printed, return null.\n- Read the EXACT brand name as it appears on the product.\n- Do NOT summarize or generalize. Transcribe visible text verbatim.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string — exact as on packaging), name (string — exact as on packaging), shade (string or null — exact shade name+number as on packaging), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
       } else if (type === "url") {
         if (isSocial) {
-          prompt = `You are a luxury beauty product identification expert. A user has shared this social media post link: "${url}". This may be an Instagram, TikTok, YouTube, Pinterest or similar post featuring beauty products. Based on any available context in the URL itself (username, post tags, or product names in the URL path), try to identify the beauty product being shown. If you cannot identify a specific real beauty product from the URL alone, set identified to false — do not fabricate details. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
+          // Attempt server-side OG image fetch — runs during the loading animation
+          try {
+            const ogResult = await base44.functions.invoke('fetchSocialOGImage', { url });
+            if (ogResult?.image_url) {
+              file_urls = [ogResult.image_url];
+              useImageAnalysis = true;
+            }
+          } catch {}
+          if (useImageAnalysis) {
+            prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. This image is from a social media post — it may feature one or more beauty products being used or reviewed.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase or generalize.\n- Read the EXACT shade name and number as printed. If no shade is visible, return null.\n- Read the EXACT brand name as it appears on the product.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
+          } else {
+            prompt = `You are a luxury beauty product identification expert. A user has shared this social media post link: "${url}". This may be an Instagram, TikTok, YouTube, Pinterest or similar post featuring beauty products. Based on any available context in the URL itself (username, post tags, or product names in the URL path), try to identify the beauty product being shown. If you cannot identify a specific real beauty product from the URL alone, set identified to false — do not fabricate details. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
+          }
         } else {
           prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL text alone (brand name, product name in the URL path), set identified to false — do not fabricate details.`;
         }
@@ -225,7 +238,7 @@ export default function ScanHub({ onClose }) {
         return ["null", "none", "n/a", "na", "", "no shade", "not applicable"].includes(s.toLowerCase()) ? null : s;
       };
 
-if (type === "image") {
+if (useImageAnalysis) {
         const imgResult = await base44.integrations.Core.InvokeLLM({
           prompt,
           file_urls,
