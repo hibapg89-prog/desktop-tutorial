@@ -174,20 +174,15 @@ export default function ScanHub({ onClose }) {
   const handleLinkSubmit = async () => {
     const trimmed = linkInput.trim();
     if (!trimmed) return;
+    let isSocial = false;
     try {
       const hostname = new URL(trimmed).hostname.replace(/^www\./, "");
-      if (SOCIAL_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d))) {
-        setScanError(
-          "Social media links can't be scanned — please paste a direct product URL from a retailer or brand website (e.g. sephora.com, lookfantastic.com)."
-        );
-        setActiveMode("error");
-        return;
-      }
+      isSocial = SOCIAL_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
     } catch {}
-    await analyzeProduct({ type: "url", url: trimmed });
+    await analyzeProduct({ type: "url", url: trimmed, isSocial });
   };
 
-  const analyzeProduct = async ({ type, file, url, text, imageUrl }) => {
+  const analyzeProduct = async ({ type, file, url, text, imageUrl, isSocial }) => {
     setScanError(null);
     setActiveMode("loading");
     setIsAnalyzing(true);
@@ -211,7 +206,11 @@ export default function ScanHub({ onClose }) {
         }
         prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. Analyze this image carefully and identify ALL visible beauty products — there may be one, two, or more.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase, simplify, or translate it. If the label says "3D Hydra Brillant à Lèvres", use that exact text for the name field.\n- Read the EXACT shade name and number as printed — include the shade number if visible (e.g. "51 Frozen Light Blue", NOT just "Light Blue"). If no shade is printed, return null.\n- Read the EXACT brand name as it appears on the product.\n- Do NOT summarize or generalize. Transcribe visible text verbatim.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string — exact as on packaging), name (string — exact as on packaging), shade (string or null — exact shade name+number as on packaging), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
       } else if (type === "url") {
-        prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL text alone (brand name, product name in the URL path), set identified to false — do not fabricate details.`;
+        if (isSocial) {
+          prompt = `You are a luxury beauty product identification expert. A user has shared this social media post link: "${url}". This may be an Instagram, TikTok, YouTube, Pinterest or similar post featuring beauty products. Based on any available context in the URL itself (username, post tags, or product names in the URL path), try to identify the beauty product being shown. If you cannot identify a specific real beauty product from the URL alone, set identified to false — do not fabricate details. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
+        } else {
+          prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL text alone (brand name, product name in the URL path), set identified to false — do not fabricate details.`;
+        }
       } else if (type === "voice") {
         prompt = `You are a luxury beauty product identification expert. The user said: "${text}". Identify this beauty product. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
       }
@@ -339,7 +338,10 @@ if (type === "image") {
         const isBadBrand = !result.brand || BAD_BRANDS.includes(brandLower) || brandLower.startsWith("not ");
         if (result.identified === false || isBadBrand) {
           setProgress(0); setIsAnalyzing(false);
-          setScanError("The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging.");
+          setScanError(isSocial
+            ? "The Muse couldn't identify a product from this post — try saving the image and using Gallery instead for best results."
+            : "The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging."
+          );
           setActiveMode("error");
           return;
         }
@@ -519,22 +521,22 @@ if (type === "image") {
         {/* ===== LINK INPUT ===== */}
         {activeMode === "link" && !isAnalyzing && (
           <div className="flex flex-col items-center px-8 w-full max-w-sm">
-            <h3 className="font-serif text-2xl text-[#1A3A30] text-center mb-1">Paste a link</h3>
-            <p className="text-sm text-[#8B7355] text-center mb-8 italic">to discover its beauty secrets</p>
+            <h3 className="font-serif text-2xl text-[#1A3A30] text-center mb-1">Paste a social link</h3>
+            <p className="text-sm text-[#8B7355] text-center mb-8 italic">Instagram, TikTok, Pinterest, YouTube &amp; more</p>
             <div className="w-full border border-[#1A3A30]/25 rounded-2xl px-4 py-3 flex items-center gap-3 bg-white/60 mb-4">
               <LinkIcon size={18} color="#1A3A30" />
               <input
                 autoFocus
                 value={linkInput}
                 onChange={(e) => setLinkInput(e.target.value)}
-                placeholder="Paste a product URL..."
+                placeholder="Paste a social media link..."
                 className="flex-1 bg-transparent text-sm text-[#1A3A30] outline-none placeholder:text-[#1A3A30]/30 font-light"
                 onKeyDown={(e) => e.key === "Enter" && handleLinkSubmit()}
               />
             </div>
             <p className="text-[11px] text-[#1A3A30]/40 font-light mb-8 text-center italic leading-relaxed">
-              Works with Sephora, LOOKFANTASTIC, brand websites and more<br/>
-              <span className="not-italic">Instagram &amp; TikTok links are not supported</span>
+              Works best with public posts featuring beauty products<br/>
+              <span className="not-italic">Also works with Sephora, brand websites and more</span>
             </p>
             <button
               onClick={handleLinkSubmit}
