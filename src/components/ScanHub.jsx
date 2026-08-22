@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Camera, Image as ImageIcon, Link as LinkIcon, Mic, Sparkles } from "lucide-react";
+import { X, Camera, Image as ImageIcon, Link as LinkIcon, Mic, Sparkles, Clock } from "lucide-react";
 
 // Vanity mirror icon — matches the gold oval-mirror illustration
 const MirrorIcon = ({ size = 24, color = "currentColor" }) => (
@@ -54,6 +54,7 @@ const normalizeSubcategory = (category, subcategory) => {
 };
 
 const inputMethods = [
+  { id: "history", label: "History", icon: Clock     },
   { id: "camera",  label: "Camera",  icon: Camera    },
   { id: "gallery", label: "Gallery", icon: ImageIcon  },
   { id: "link",    label: "Link",    icon: LinkIcon   },
@@ -61,13 +62,14 @@ const inputMethods = [
   { id: "mirror",  label: "Studio",  icon: MirrorIcon },
 ];
 
-// Fan arc positions for the 5 tiles, anchored at (150, 260)
+// Fan arc positions for the 6 tiles, anchored at (190, 240)
 const tilePositions = [
-  { x: -155, y:  -20 },   // camera  (far left)
-  { x:  -78, y: -100 },   // gallery
-  { x:    0, y: -130 },   // link    (top center)
-  { x:   78, y: -100 },   // audio
-  { x:  155, y:  -20 },   // effects (far right)
+  { x: -140, y:   20 },   // history (far left, below)
+  { x:  -98, y:  -80 },   // camera
+  { x:  -38, y: -122 },   // gallery
+  { x:   38, y: -122 },   // link    (top)
+  { x:   98, y:  -80 },   // audio
+  { x:  140, y:   20 },   // mirror  (far right, below)
 ];
 
 export default function ScanHub({ onClose }) {
@@ -84,6 +86,8 @@ export default function ScanHub({ onClose }) {
   const [showMuse,     setShowMuse]   = useState(false);
   const [duplicateProduct, setDuplicateProduct] = useState(null);
   const [pendingSave,      setPendingSave]      = useState(null);
+  const [scanHistory,      setScanHistory]      = useState([]);
+  const [historyLoading,   setHistoryLoading]   = useState(false);
 
   const fileInputRef    = useRef(null);
   const cameraInputRef  = useRef(null);
@@ -101,6 +105,15 @@ export default function ScanHub({ onClose }) {
     }
     return () => stopListening();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMode]);
+
+  useEffect(() => {
+    if (activeMode !== "history") return;
+    setHistoryLoading(true);
+    base44.entities.ScanLog.list()
+      .then(logs => setScanHistory((logs || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 20)))
+      .catch(() => setScanHistory([]))
+      .finally(() => setHistoryLoading(false));
   }, [activeMode]);
 
   const startListening = () => {
@@ -167,6 +180,12 @@ export default function ScanHub({ onClose }) {
     }
   };
 
+  const logScan = async ({ scan_method, status, product_id = null, brand = null, name = null, shade = null, product_count = 0 }) => {
+    try {
+      await base44.entities.ScanLog.create({ scan_method, status, product_id, brand, name, shade, product_count });
+    } catch {}
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -207,6 +226,7 @@ export default function ScanHub({ onClose }) {
     try {
       const prod = await base44.entities.Product.create(entityData);
       enrichProductImage(prod.id, enrichBrand, enrichName, enrichShade);
+      logScan({ scan_method: entityData.scan_method || "image", status: "success", product_id: prod.id, brand: enrichBrand, name: enrichName, shade: enrichShade, product_count: 1 });
       clearInterval(iv);
       setProgress(100);
       setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
@@ -312,6 +332,7 @@ if (useImageAnalysis) {
         });
         if (validProducts.length === 0) {
           setProgress(0); setIsAnalyzing(false);
+          logScan({ scan_method: type, status: "failed", product_count: 0 });
           setScanError("The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging.");
           setActiveMode("error");
           return;
@@ -336,6 +357,7 @@ if (useImageAnalysis) {
           }
           const prod = await base44.entities.Product.create(entityData);
           enrichProductImage(prod.id, p.brand, p.name, p.shade);
+          logScan({ scan_method: type, status: "success", product_id: prod.id, brand: p.brand, name: p.name, shade: p.shade, product_count: 1 });
           setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
         } else {
           const createdProducts = await Promise.all(
@@ -352,6 +374,7 @@ if (useImageAnalysis) {
           createdProducts.forEach((prod, i) => {
             enrichProductImage(prod.id, validProducts[i].brand, validProducts[i].name, validProducts[i].shade);
           });
+          logScan({ scan_method: type, status: "success", product_count: createdProducts.length });
           setIsAnalyzing(false);
           setProgress(100);
           setTimeout(() => {
@@ -397,6 +420,7 @@ if (useImageAnalysis) {
         const isBadBrand = !result.brand || BAD_BRANDS.includes(brandLower) || brandLower.startsWith("not ");
         if (result.identified === false || isBadBrand) {
           setProgress(0); setIsAnalyzing(false);
+          logScan({ scan_method: type, status: "failed", product_count: 0 });
           setScanError(isSocial
             ? "The Muse couldn't identify a product from this post — try saving the image and using Gallery instead for best results."
             : "The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging."
@@ -423,10 +447,12 @@ if (useImageAnalysis) {
         }
         const prod = await base44.entities.Product.create(entityData);
         enrichProductImage(prod.id, result.brand, result.name, result.shade);
+        logScan({ scan_method: type, status: "success", product_id: prod.id, brand: result.brand, name: result.name, shade: result.shade, product_count: 1 });
         setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
       }
     } catch {
       clearInterval(interval);
+      logScan({ scan_method: type, status: "failed", product_count: 0 });
       setScanError("Something went wrong. Please try again.");
       setActiveMode("error");
       setIsAnalyzing(false);
@@ -779,6 +805,75 @@ if (useImageAnalysis) {
           <StudioComingSoon onClose={() => setActiveMode(null)} />
         )}
 
+        {/* ===== HISTORY ===== */}
+        {activeMode === "history" && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col w-full max-w-sm px-6"
+            style={{ maxHeight: "72vh" }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-serif text-xl text-[#1A3A30]" style={{ letterSpacing: "0.02em" }}>Recent Scans</h3>
+              <button onClick={() => setActiveMode(null)} className="text-xs text-[#1A3A30]/40 underline">Back</button>
+            </div>
+
+            {historyLoading && (
+              <div className="flex-1 flex items-center justify-center py-12">
+                <p className="font-serif text-sm text-[#8B7355] italic">Loading history...</p>
+              </div>
+            )}
+
+            {!historyLoading && scanHistory.length === 0 && (
+              <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "#EFE9DC" }}>
+                  <Clock size={20} strokeWidth={1.4} color="#8B7355" />
+                </div>
+                <p className="font-serif text-sm text-[#8B7355] italic">No scans yet — try one above.</p>
+              </div>
+            )}
+
+            {!historyLoading && scanHistory.length > 0 && (
+              <div className="flex flex-col gap-3 overflow-y-auto pr-1" style={{ maxHeight: "58vh" }}>
+                {scanHistory.map((log, idx) => (
+                  <div
+                    key={log.id || idx}
+                    className="flex items-center gap-4 rounded-2xl px-4 py-3"
+                    style={{ background: "#EFE9DC", border: "1px solid rgba(11,60,38,0.08)" }}
+                  >
+                    {/* Status dot */}
+                    <div
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ background: log.status === "success" ? "#1A3A30" : "#C8B06A" }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      {log.status === "success" && log.brand ? (
+                        <>
+                          <p className="text-xs font-medium text-[#1A3A30] truncate">{log.brand}</p>
+                          {log.name && <p className="text-[11px] text-[#4A443E] italic truncate">{log.name}{log.shade ? ` — ${log.shade}` : ""}</p>}
+                        </>
+                      ) : (
+                        <p className="text-xs text-[#8B7355] italic">No product identified</p>
+                      )}
+                      <p className="text-[10px] text-[#8B7355]/60 mt-0.5 capitalize">
+                        {log.scan_method || "scan"}{log.product_count > 1 ? ` · ${log.product_count} products` : ""}
+                      </p>
+                    </div>
+                    {log.status === "success" && log.product_id && (
+                      <button
+                        onClick={() => { onClose(); navigate(`/product/${log.product_id}`); }}
+                        className="flex-shrink-0 text-[10px] tracking-[0.18em] uppercase text-[#1A3A30] border border-[#1A3A30]/30 rounded-full px-3 py-1.5 font-medium"
+                      >
+                        View
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* ===== DEFAULT — RADIAL FAN MENU ===== */}
         {!activeMode && (
           <div className="relative w-[380px] h-[440px] mx-auto max-w-full">
@@ -792,7 +887,8 @@ if (useImageAnalysis) {
                   animate={{ opacity: 1, scale: 1, x: pos.x, y: pos.y }}
                   transition={{ delay: 0.08 * i, type: "spring", stiffness: 220, damping: 18 }}
                   onClick={() => {
-                    if      (id === "camera")  cameraInputRef.current?.click();
+                    if      (id === "history") setActiveMode("history");
+                    else if (id === "camera")  cameraInputRef.current?.click();
                     else if (id === "gallery") fileInputRef.current?.click();
                     else if (id === "link")    setActiveMode("link");
                     else if (id === "audio")   { heardRef.current = ""; setHeard(""); setActiveMode("audio"); }
