@@ -82,6 +82,8 @@ export default function ScanHub({ onClose }) {
   const [previewFile,  setPreviewFile] = useState(null);
   const [previewUrl,   setPreviewUrl]  = useState(null);
   const [showMuse,     setShowMuse]   = useState(false);
+  const [duplicateProduct, setDuplicateProduct] = useState(null);
+  const [pendingSave,      setPendingSave]      = useState(null);
 
   const fileInputRef    = useRef(null);
   const cameraInputRef  = useRef(null);
@@ -154,6 +156,17 @@ export default function ScanHub({ onClose }) {
     })();
   };
 
+  const checkForDuplicate = async (brand, name) => {
+    try {
+      const existing = await base44.entities.Product.list();
+      const norm = s => (s || "").toLowerCase().trim().replace(/\s+/g, " ");
+      const b = norm(brand), n = norm(name);
+      return existing.find(p => norm(p.brand) === b && norm(p.name) === n) || null;
+    } catch {
+      return null;
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -180,6 +193,30 @@ export default function ScanHub({ onClose }) {
       isSocial = SOCIAL_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
     } catch {}
     await analyzeProduct({ type: "url", url: trimmed, isSocial });
+  };
+
+  const handleSaveAnyway = async () => {
+    if (!pendingSave) return;
+    const { entityData, enrichBrand, enrichName, enrichShade } = pendingSave;
+    setDuplicateProduct(null);
+    setPendingSave(null);
+    setActiveMode("loading");
+    setIsAnalyzing(true);
+    let p = 0;
+    const iv = setInterval(() => { p += 25; if (p > 90) p = 90; setProgress(Math.floor(p)); }, 300);
+    try {
+      const prod = await base44.entities.Product.create(entityData);
+      enrichProductImage(prod.id, enrichBrand, enrichName, enrichShade);
+      clearInterval(iv);
+      setProgress(100);
+      setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
+    } catch {
+      clearInterval(iv);
+      setScanError("Something went wrong. Please try again.");
+      setActiveMode("error");
+      setIsAnalyzing(false);
+      setProgress(0);
+    }
   };
 
   const analyzeProduct = async ({ type, file, url, text, imageUrl, isSocial }) => {
@@ -282,13 +319,22 @@ if (useImageAnalysis) {
         setProgress(100);
         if (validProducts.length === 1) {
           const p = validProducts[0];
-          const prod = await base44.entities.Product.create({
+          const entityData = {
             brand: p.brand, name: p.name, shade: computeSafeShade(p.shade),
             category: p.category || "Makeup", subcategory: normalizeSubcategory(p.category, p.subcategory),
             price: p.price_usd || 0, currency: "USD", description: p.description,
             muse_shimmer: p.muse_shimmer, where_to_buy: JSON.stringify(p.where_to_buy || []),
             ingredients: p.ingredients_summary, scan_method: type, image_url: file_urls?.[0] || null,
-          });
+          };
+          const dup = await checkForDuplicate(p.brand, p.name);
+          if (dup) {
+            setIsAnalyzing(false);
+            setDuplicateProduct(dup);
+            setPendingSave({ entityData, enrichBrand: p.brand, enrichName: p.name, enrichShade: p.shade });
+            setActiveMode("duplicate");
+            return;
+          }
+          const prod = await base44.entities.Product.create(entityData);
           enrichProductImage(prod.id, p.brand, p.name, p.shade);
           setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
         } else {
@@ -359,14 +405,23 @@ if (useImageAnalysis) {
           return;
         }
         setProgress(100);
-        const prod = await base44.entities.Product.create({
+        const entityData = {
           brand: result.brand, name: result.name, shade: computeSafeShade(result.shade),
           category: result.category || "Makeup", subcategory: normalizeSubcategory(result.category, result.subcategory),
           price: result.price_usd || 0, currency: "USD", description: result.description,
           muse_shimmer: result.muse_shimmer, where_to_buy: JSON.stringify(result.where_to_buy || []),
           ingredients: result.ingredients_summary, source_url: url || null,
           scan_method: type, image_url: file_urls?.[0] || null,
-        });
+        };
+        const dup = await checkForDuplicate(result.brand, result.name);
+        if (dup) {
+          setIsAnalyzing(false);
+          setDuplicateProduct(dup);
+          setPendingSave({ entityData, enrichBrand: result.brand, enrichName: result.name, enrichShade: result.shade });
+          setActiveMode("duplicate");
+          return;
+        }
+        const prod = await base44.entities.Product.create(entityData);
         enrichProductImage(prod.id, result.brand, result.name, result.shade);
         setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
       }
@@ -512,6 +567,49 @@ if (useImageAnalysis) {
             >
               Try Again
             </button>
+          </motion.div>
+        )}
+
+        {/* ===== DUPLICATE ===== */}
+        {activeMode === "duplicate" && duplicateProduct && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center px-8 text-center"
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
+              style={{ background: "#EFE9DC" }}
+            >
+              <span style={{ fontSize: 26, lineHeight: 1, color: "#1B2E2A" }}>✦</span>
+            </div>
+            <h3 className="font-serif text-xl text-[#1B2E2A] mb-2">Already in your collection</h3>
+            <p className="font-serif text-base text-[#4A443E] italic mb-1">{duplicateProduct.brand}</p>
+            <p className="text-sm text-[#4A443E] mb-1">{duplicateProduct.name}</p>
+            {duplicateProduct.shade && (
+              <p className="text-xs text-[#8B7355] italic mb-8">{duplicateProduct.shade}</p>
+            )}
+            {!duplicateProduct.shade && <div className="mb-8" />}
+            <div className="flex flex-col gap-3 w-full max-w-[240px]">
+              <button
+                onClick={() => { onClose(); navigate(`/product/${duplicateProduct.id}`); }}
+                className="w-full py-3.5 bg-[#1A3A30] text-[#FDF7EF] text-xs tracking-[0.25em] uppercase rounded-full font-light"
+              >
+                View in Collection
+              </button>
+              <button
+                onClick={handleSaveAnyway}
+                className="w-full py-3 border border-[#1A3A30]/30 text-[#1A3A30] text-xs tracking-[0.25em] uppercase rounded-full font-light"
+              >
+                Save Anyway
+              </button>
+              <button
+                onClick={() => { setDuplicateProduct(null); setPendingSave(null); setActiveMode(null); }}
+                className="mt-1 text-xs text-[#1A3A30]/40 underline"
+              >
+                Back
+              </button>
+            </div>
           </motion.div>
         )}
 
