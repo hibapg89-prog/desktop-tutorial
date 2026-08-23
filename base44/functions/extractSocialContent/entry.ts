@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { secrets } from 'base44:runtime';
 
 const MASTER_MUSE_PROMPT = `You are the AI extraction engine for a luxury beauty application. Your task is to analyze social media captions or video transcripts and extract all beauty products and application steps into a highly structured JSON format.
 
@@ -94,7 +95,7 @@ export default async function (req: Request): Promise<Response> {
       );
     }
 
-    const token = Deno.env.get('APIFY_TOKEN');
+    const token = secrets.get('APIFY_TOKEN');
     if (!token) {
       return Response.json({ success: false, error: 'APIFY_TOKEN not configured' }, { status: 500 });
     }
