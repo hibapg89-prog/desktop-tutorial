@@ -86,6 +86,7 @@ export default function ScanHub({ onClose }) {
   const [showMuse,     setShowMuse]   = useState(false);
   const [duplicateProduct, setDuplicateProduct] = useState(null);
   const [pendingSave,      setPendingSave]      = useState(null);
+  const [loadingHint,      setLoadingHint]      = useState(null);
 
   const fileInputRef    = useRef(null);
   const cameraInputRef  = useRef(null);
@@ -198,19 +199,21 @@ export default function ScanHub({ onClose }) {
     setScanError(null);
     setActiveMode("loading");
     setIsAnalyzing(true);
+    setLoadingHint("Scanning post for beauty products...");
     let p = 0;
+    // Slower animation — Level 3 video analysis can take up to a minute
     const interval = setInterval(() => {
-      p += Math.random() * 12;
-      if (p > 85) p = 85;
+      p += Math.random() * 5;
+      if (p > 88) p = 88;
       setProgress(Math.floor(p));
-    }, 500);
+    }, 800);
 
     try {
       const res = await base44.functions.invoke('extractSocialContent', { url });
       clearInterval(interval);
 
       if (!res?.success) {
-        setProgress(0); setIsAnalyzing(false);
+        setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
         setScanError(res?.error || "The Muse couldn't extract beauty content from this post. Try a post that features specific product names.");
         setActiveMode("error");
         logScan({ scan_method: "social_link", status: "failed", error_reason: res?.error || "Social extraction failed" });
@@ -221,7 +224,7 @@ export default function ScanHub({ onClose }) {
       const products = data?.products_identified || [];
 
       if (!products.length) {
-        setProgress(0); setIsAnalyzing(false);
+        setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
         setScanError("The Muse found the post but couldn't identify any beauty products. Try a post that features specific product names.");
         setActiveMode("error");
         logScan({ scan_method: "social_link", status: "failed", error_reason: "No products identified" });
@@ -254,7 +257,7 @@ export default function ScanHub({ onClose }) {
         product_count: createdProducts.length,
       });
 
-      setIsAnalyzing(false);
+      setIsAnalyzing(false); setLoadingHint(null);
       if (createdProducts.length === 1) {
         setTimeout(() => { onClose(); navigate(`/product/${createdProducts[0].id}`); }, 500);
       } else {
@@ -279,6 +282,7 @@ export default function ScanHub({ onClose }) {
       setActiveMode("error");
       setIsAnalyzing(false);
       setProgress(0);
+      setLoadingHint(null);
       logScan({ scan_method: "social_link", status: "failed", error_reason: "Social link scan error" });
     }
   };
@@ -656,6 +660,11 @@ if (useImageAnalysis) {
                   {progress}%
                 </span>
               </div>
+              {loadingHint && (
+                <p className="font-serif text-xs text-[#1A3C34]/45 italic mt-5 text-center max-w-[260px] leading-relaxed">
+                  {loadingHint}
+                </p>
+              )}
             </div>
           </div>
         )}

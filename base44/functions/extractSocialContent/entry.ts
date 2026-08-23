@@ -18,12 +18,33 @@ Extract from the content below and return ONLY valid JSON in this exact format:
   "the_ritual": [{"step": 1, "instruction": "Detailed, elegant instruction."}]
 }`;
 
+const GEMINI_VISION_PROMPT = `You are a luxury beauty product detection expert. Watch this video carefully and identify every beauty product shown — especially those appearing as on-screen text overlays, name cards, or graphics burned into the video (e.g. "Rare Beauty Soft Pinch Blush in Serene", "Charlotte Tilbury 4.5 Medium").
+
+RULES:
+1. Tone: Write "the_ritual" instructions in an elegant, editorial tone (e.g., "Sweep a satin-finish blush across the cheekbones..." not "Apply blush").
+2. Subcategories: For makeup products, use ONLY these exact strings: "face", "cheek", "lips", "eyes", "sets and palettes", or "makeup tools".
+3. Materials: List generic product types (e.g., "Tinted lip oil") not specific brand names.
+4. Read all visible on-screen text carefully — product names, shade names, and brand names may flash briefly.
+
+Return ONLY valid JSON in this exact format:
+{
+  "tutorial_title": "Chic 2-to-3 word title",
+  "category": "Makeup, Skincare, Hair, or Wellness",
+  "read_time": "Estimated time in minutes",
+  "materials": ["List of generic product types"],
+  "products_identified": [{"brand": "Brand Name", "product_name": "Specific Product Name", "subcategory": "exact allowed string"}],
+  "the_ritual": [{"step": 1, "instruction": "Detailed, elegant instruction."}]
+}
+
+If no beauty products are identifiable, return products_identified as an empty array.`;
+
 const APIFY_ACTORS = {
   instagram: 'apify~instagram-post-scraper',
   tiktok: 'clockworks~free-tiktok-scraper',
 };
 
 const SCRAPE_TIMEOUT_MS = 30000;
+const GEMINI_VIDEO_MAX_BYTES = 15 * 1024 * 1024; // 15 MB
 
 function detectPlatform(url: string): 'instagram' | 'tiktok' | null {
   try {
@@ -53,6 +74,16 @@ function hasSubstantiveContent(caption: string): boolean {
   const words = caption.trim().split(/\s+/);
   const meaningful = words.filter(w => !w.startsWith('#') && !w.startsWith('@') && w.length > 2);
   return meaningful.length >= 3;
+}
+
+// Encode video bytes to base64 in chunks to avoid call-stack overflow on large buffers
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
 }
 
 async function scrapeWithApify(
@@ -98,6 +129,77 @@ async function scrapeWithApify(
   }
 }
 
+// Level 3: download the video and send to Gemini 1.5 Flash for on-screen text + product detection
+async function analyzeVideoWithGemini(
+  videoUrl: string,
+  apiKey: string,
+): Promise<{ data?: any; error?: string }> {
+  // Download the video
+  const dlController = new AbortController();
+  const dlTimer = setTimeout(() => dlController.abort(), 20000);
+  let videoBuffer: ArrayBuffer;
+  try {
+    const dlRes = await fetch(videoUrl, { signal: dlController.signal });
+    clearTimeout(dlTimer);
+    if (!dlRes.ok) return { error: `Video download failed (HTTP ${dlRes.status})` };
+    videoBuffer = await dlRes.arrayBuffer();
+  } catch (e: any) {
+    clearTimeout(dlTimer);
+    return { error: `Video download failed: ${e?.message || 'timeout'}` };
+  }
+
+  if (videoBuffer.byteLength > GEMINI_VIDEO_MAX_BYTES) {
+    return { error: 'Video file is too large for frame analysis' };
+  }
+
+  const base64Data = uint8ArrayToBase64(new Uint8Array(videoBuffer));
+
+  // Call Gemini 1.5 Flash with inline video data
+  const gemController = new AbortController();
+  const gemTimer = setTimeout(() => gemController.abort(), 50000);
+  try {
+    const gemRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inlineData: { mimeType: 'video/mp4', data: base64Data } },
+              { text: GEMINI_VISION_PROMPT },
+            ],
+          }],
+          generationConfig: { temperature: 0.1 },
+        }),
+        signal: gemController.signal,
+      },
+    );
+    clearTimeout(gemTimer);
+
+    if (!gemRes.ok) {
+      const errText = await gemRes.text();
+      return { error: `Gemini API error ${gemRes.status}: ${errText.slice(0, 200)}` };
+    }
+
+    const gemData = await gemRes.json();
+    const rawText: string = gemData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Strip markdown code fences if Gemini wraps the JSON
+    const cleaned = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+
+    const parsed = JSON.parse(cleaned);
+    return { data: parsed };
+  } catch (e: any) {
+    clearTimeout(gemTimer);
+    return { error: e?.message || 'Gemini analysis failed' };
+  }
+}
+
 export default async function (req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
@@ -133,7 +235,27 @@ export default async function (req: Request): Promise<Response> {
 
     const { caption, videoUrl, thumbnailUrl } = scraped;
 
+    // Helper: attempt Level 3 Gemini video analysis
+    const tryLevel3 = async (): Promise<Response | null> => {
+      if (!videoUrl) return null;
+      const geminiKey = secrets.get('GEMINI_API_KEY');
+      if (!geminiKey) return null;
+      const result = await analyzeVideoWithGemini(videoUrl, geminiKey);
+      if (result.error || !result.data) return null;
+      return Response.json({
+        success: true,
+        level: 3,
+        caption: caption || '',
+        videoUrl,
+        thumbnailUrl,
+        data: result.data,
+      });
+    };
+
+    // No caption at all — go straight to Level 3
     if (!caption?.trim()) {
+      const level3 = await tryLevel3();
+      if (level3) return level3;
       return Response.json({
         success: false,
         level: 1,
@@ -143,15 +265,17 @@ export default async function (req: Request): Promise<Response> {
       });
     }
 
-    // If caption is only hashtags/mentions, products are likely in the video itself
+    // Caption is only hashtags/mentions — try Level 3 before giving up
     if (!hasSubstantiveContent(caption)) {
+      const level3 = await tryLevel3();
+      if (level3) return level3;
       return Response.json({
         success: false,
         level: 1,
         videoUrl,
         thumbnailUrl,
         caption,
-        error: 'This post\'s caption only contains hashtags. Try a post where product names are written in the description, or paste the product names directly.',
+        error: "This post's caption only contains hashtags. Try a post where product names are written in the description, or paste the product names directly.",
       });
     }
 
