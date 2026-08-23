@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Camera, Image as ImageIcon, Link as LinkIcon, Mic, Sparkles, Clock } from "lucide-react";
+import { X, Camera, Image as ImageIcon, Link as LinkIcon, Mic, Sparkles } from "lucide-react";
 
 // Vanity mirror icon — matches the gold oval-mirror illustration
 const MirrorIcon = ({ size = 24, color = "currentColor" }) => (
@@ -86,8 +86,6 @@ export default function ScanHub({ onClose }) {
   const [showMuse,     setShowMuse]   = useState(false);
   const [duplicateProduct, setDuplicateProduct] = useState(null);
   const [pendingSave,      setPendingSave]      = useState(null);
-  const [scanHistory,      setScanHistory]      = useState([]);
-  const [historyLoading,   setHistoryLoading]   = useState(false);
 
   const fileInputRef    = useRef(null);
   const cameraInputRef  = useRef(null);
@@ -105,15 +103,6 @@ export default function ScanHub({ onClose }) {
     }
     return () => stopListening();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMode]);
-
-  useEffect(() => {
-    if (activeMode !== "history") return;
-    setHistoryLoading(true);
-    base44.entities.ScanLog.list()
-      .then(logs => setScanHistory((logs || []).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 20)))
-      .catch(() => setScanHistory([]))
-      .finally(() => setHistoryLoading(false));
   }, [activeMode]);
 
   const startListening = () => {
@@ -805,75 +794,6 @@ if (useImageAnalysis) {
           <StudioComingSoon onClose={() => setActiveMode(null)} />
         )}
 
-        {/* ===== HISTORY ===== */}
-        {activeMode === "history" && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col w-full max-w-sm px-6"
-            style={{ maxHeight: "72vh" }}
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-serif text-xl text-[#1A3A30]" style={{ letterSpacing: "0.02em" }}>Recent Scans</h3>
-              <button onClick={() => setActiveMode(null)} className="text-xs text-[#1A3A30]/40 underline">Back</button>
-            </div>
-
-            {historyLoading && (
-              <div className="flex-1 flex items-center justify-center py-12">
-                <p className="font-serif text-sm text-[#8B7355] italic">Loading history...</p>
-              </div>
-            )}
-
-            {!historyLoading && scanHistory.length === 0 && (
-              <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "#EFE9DC" }}>
-                  <Clock size={20} strokeWidth={1.4} color="#8B7355" />
-                </div>
-                <p className="font-serif text-sm text-[#8B7355] italic">No scans yet — try one above.</p>
-              </div>
-            )}
-
-            {!historyLoading && scanHistory.length > 0 && (
-              <div className="flex flex-col gap-3 overflow-y-auto pr-1" style={{ maxHeight: "58vh" }}>
-                {scanHistory.map((log, idx) => (
-                  <div
-                    key={log.id || idx}
-                    className="flex items-center gap-4 rounded-2xl px-4 py-3"
-                    style={{ background: "#EFE9DC", border: "1px solid rgba(11,60,38,0.08)" }}
-                  >
-                    {/* Status dot */}
-                    <div
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ background: log.status === "success" ? "#1A3A30" : "#C8B06A" }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      {log.status === "success" && log.brand ? (
-                        <>
-                          <p className="text-xs font-medium text-[#1A3A30] truncate">{log.brand}</p>
-                          {log.name && <p className="text-[11px] text-[#4A443E] italic truncate">{log.name}{log.shade ? ` — ${log.shade}` : ""}</p>}
-                        </>
-                      ) : (
-                        <p className="text-xs text-[#8B7355] italic">No product identified</p>
-                      )}
-                      <p className="text-[10px] text-[#8B7355]/60 mt-0.5 capitalize">
-                        {log.scan_method || "scan"}{log.product_count > 1 ? ` · ${log.product_count} products` : ""}
-                      </p>
-                    </div>
-                    {log.status === "success" && log.product_id && (
-                      <button
-                        onClick={() => { onClose(); navigate(`/product/${log.product_id}`); }}
-                        className="flex-shrink-0 text-[10px] tracking-[0.18em] uppercase text-[#1A3A30] border border-[#1A3A30]/30 rounded-full px-3 py-1.5 font-medium"
-                      >
-                        View
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
-
         {/* ===== DEFAULT — RADIAL FAN MENU ===== */}
         {!activeMode && (
           <div className="relative w-[380px] h-[440px] mx-auto max-w-full">
@@ -887,7 +807,7 @@ if (useImageAnalysis) {
                   animate={{ opacity: 1, scale: 1, x: pos.x, y: pos.y }}
                   transition={{ delay: 0.08 * i, type: "spring", stiffness: 220, damping: 18 }}
                   onClick={() => {
-                    if      (id === "history") setActiveMode("history");
+                    if      (id === "history") { onClose(); navigate("/scan-history"); }
                     else if (id === "camera")  cameraInputRef.current?.click();
                     else if (id === "gallery") fileInputRef.current?.click();
                     else if (id === "link")    setActiveMode("link");
