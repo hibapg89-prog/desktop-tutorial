@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Camera, Image as ImageIcon, Link as LinkIcon, Mic, Sparkles } from "lucide-react";
+import { X, Camera, Image as ImageIcon, Link as LinkIcon, Mic, Sparkles, History } from "lucide-react";
 
 // Vanity mirror icon — matches the gold oval-mirror illustration
 const MirrorIcon = ({ size = 24, color = "currentColor" }) => (
@@ -54,7 +54,7 @@ const normalizeSubcategory = (category, subcategory) => {
 };
 
 const inputMethods = [
-  { id: "history", label: "History", icon: Clock     },
+  { id: "history", label: "History", icon: History   },
   { id: "camera",  label: "Camera",  icon: Camera    },
   { id: "gallery", label: "Gallery", icon: ImageIcon  },
   { id: "link",    label: "Link",    icon: LinkIcon   },
