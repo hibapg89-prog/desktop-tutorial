@@ -34,6 +34,27 @@ function detectPlatform(url: string): 'instagram' | 'tiktok' | null {
   return null;
 }
 
+// Follow redirects to resolve short URLs (e.g. vm.tiktok.com → www.tiktok.com/...)
+async function expandShortUrl(url: string): Promise<string> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, { method: 'HEAD', redirect: 'follow', signal: controller.signal });
+    clearTimeout(timer);
+    return res.url || url;
+  } catch {
+    return url;
+  }
+}
+
+// Returns false when caption is empty or only hashtags/mentions with no real words
+function hasSubstantiveContent(caption: string): boolean {
+  if (!caption?.trim()) return false;
+  const words = caption.trim().split(/\s+/);
+  const meaningful = words.filter(w => !w.startsWith('#') && !w.startsWith('@') && w.length > 2);
+  return meaningful.length >= 3;
+}
+
 async function scrapeWithApify(
   platform: 'instagram' | 'tiktok',
   url: string,
@@ -87,7 +108,10 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ success: false, error: 'No URL provided' }, { status: 400 });
     }
 
-    const platform = detectPlatform(url);
+    // Expand short links (e.g. vm.tiktok.com/ZN8xxx → www.tiktok.com/@user/video/...)
+    const resolvedUrl = await expandShortUrl(url);
+    const platform = detectPlatform(resolvedUrl) ?? detectPlatform(url);
+
     if (!platform) {
       return Response.json(
         { success: false, error: 'Unsupported platform — only Instagram and TikTok are supported' },
@@ -100,8 +124,8 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ success: false, error: 'APIFY_TOKEN not configured' }, { status: 500 });
     }
 
-    // Level 1: scrape caption via Apify
-    const scraped = await scrapeWithApify(platform, url, token);
+    // Level 1: scrape caption via Apify (use resolved URL)
+    const scraped = await scrapeWithApify(platform, resolvedUrl, token);
 
     if (scraped.error) {
       return Response.json({ success: false, level: 1, error: scraped.error });
@@ -115,7 +139,19 @@ export default async function (req: Request): Promise<Response> {
         level: 1,
         videoUrl,
         thumbnailUrl,
-        error: 'No caption or text found — video analysis may be needed',
+        error: 'No caption found in this post — video analysis may be needed',
+      });
+    }
+
+    // If caption is only hashtags/mentions, products are likely in the video itself
+    if (!hasSubstantiveContent(caption)) {
+      return Response.json({
+        success: false,
+        level: 1,
+        videoUrl,
+        thumbnailUrl,
+        caption,
+        error: 'This post\'s caption only contains hashtags. Try a post where product names are written in the description, or paste the product names directly.',
       });
     }
 
