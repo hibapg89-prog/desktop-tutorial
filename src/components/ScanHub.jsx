@@ -192,14 +192,113 @@ export default function ScanHub({ onClose }) {
     }, 1200);
   };
 
+  const SOCIAL_EXTRACTABLE = ["instagram.com", "tiktok.com"];
+
+  const analyzeSocialLink = async (url) => {
+    setScanError(null);
+    setActiveMode("loading");
+    setIsAnalyzing(true);
+    let p = 0;
+    const interval = setInterval(() => {
+      p += Math.random() * 12;
+      if (p > 85) p = 85;
+      setProgress(Math.floor(p));
+    }, 500);
+
+    try {
+      const res = await base44.functions.invoke('extractSocialContent', { url });
+      clearInterval(interval);
+
+      if (!res?.success) {
+        setProgress(0); setIsAnalyzing(false);
+        setScanError(res?.error || "The Muse couldn't extract beauty content from this post. Try a post that features specific product names.");
+        setActiveMode("error");
+        logScan({ scan_method: "social_link", status: "failed", error_reason: res?.error || "Social extraction failed" });
+        return;
+      }
+
+      const { data, thumbnailUrl } = res;
+      const products = data?.products_identified || [];
+
+      if (!products.length) {
+        setProgress(0); setIsAnalyzing(false);
+        setScanError("The Muse found the post but couldn't identify any beauty products. Try a post that features specific product names.");
+        setActiveMode("error");
+        logScan({ scan_method: "social_link", status: "failed", error_reason: "No products identified" });
+        return;
+      }
+
+      setProgress(100);
+
+      const createdProducts = await Promise.all(
+        products.map(p =>
+          base44.entities.Product.create({
+            brand: p.brand,
+            name: p.product_name,
+            category: data.category || "Makeup",
+            subcategory: normalizeSubcategory(data.category || "Makeup", p.subcategory),
+            source_url: url,
+            scan_method: "social_link",
+            image_url: thumbnailUrl || null,
+            description: data.the_ritual?.map(s => s.instruction).join(" ") || null,
+          })
+        )
+      );
+
+      logScan({
+        scan_method: "social_link",
+        status: "success",
+        product_id: createdProducts[0]?.id,
+        brand: products[0]?.brand,
+        name: products[0]?.product_name,
+        product_count: createdProducts.length,
+      });
+
+      setIsAnalyzing(false);
+      if (createdProducts.length === 1) {
+        setTimeout(() => { onClose(); navigate(`/product/${createdProducts[0].id}`); }, 500);
+      } else {
+        setTimeout(() => {
+          onClose();
+          navigate("/scan-results", {
+            state: {
+              products: createdProducts.map((prod, i) => ({
+                id: prod.id,
+                brand: products[i].brand,
+                name: products[i].product_name,
+                category: data.category,
+              })),
+              scanImageUrl: thumbnailUrl || null,
+            }
+          });
+        }, 500);
+      }
+    } catch {
+      clearInterval(interval);
+      setScanError("Something went wrong. Please try again.");
+      setActiveMode("error");
+      setIsAnalyzing(false);
+      setProgress(0);
+      logScan({ scan_method: "social_link", status: "failed", error_reason: "Social link scan error" });
+    }
+  };
+
   const handleLinkSubmit = async () => {
     const trimmed = linkInput.trim();
     if (!trimmed) return;
-    let isSocial = false;
     try {
       const hostname = new URL(trimmed).hostname.replace(/^www\./, "");
-      isSocial = SOCIAL_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+      if (SOCIAL_EXTRACTABLE.some(d => hostname === d || hostname.endsWith("." + d))) {
+        await analyzeSocialLink(trimmed);
+        return;
+      }
     } catch {}
+    const isSocial = (() => {
+      try {
+        const hostname = new URL(trimmed).hostname.replace(/^www\./, "");
+        return SOCIAL_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+      } catch { return false; }
+    })();
     await analyzeProduct({ type: "url", url: trimmed, isSocial });
   };
 
