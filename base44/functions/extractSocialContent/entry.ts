@@ -44,15 +44,48 @@ const APIFY_ACTORS = {
 };
 
 const SCRAPE_TIMEOUT_MS = 30000;
-const GEMINI_VIDEO_MAX_BYTES = 15 * 1024 * 1024; // 15 MB
-const GEMINI_IMAGE_MAX_BYTES = 5 * 1024 * 1024;  // 5 MB
-const MIN_JPEG_BYTES = 5000; // Ignore thumbnails smaller than this (corrupt/tiny icons)
+const WHISPER_MAX_BYTES   = 25 * 1024 * 1024; // 25 MB — OpenAI Whisper hard limit
+const GEMINI_VIDEO_MAX_BYTES = 15 * 1024 * 1024; // 15 MB — Gemini inline video limit
+const GEMINI_IMAGE_MAX_BYTES = 5  * 1024 * 1024; // 5 MB  — per image
+const MIN_JPEG_BYTES = 5000; // Ignore embedded frames smaller than this
 
 // Mobile UA + Referer to bypass TikTok CDN restrictions
 const TIKTOK_DOWNLOAD_HEADERS: Record<string, string> = {
   'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
   'Referer': 'https://www.tiktok.com/',
   'Accept': '*/*',
+};
+
+// Strict schema for LLM extraction responses
+const EXTRACTION_SCHEMA = {
+  type: 'object',
+  properties: {
+    tutorial_title: { type: 'string' },
+    category: { type: 'string' },
+    read_time: { type: 'string' },
+    materials: { type: 'array', items: { type: 'string' } },
+    products_identified: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          brand: { type: 'string' },
+          product_name: { type: 'string' },
+          subcategory: { type: 'string' },
+        },
+      },
+    },
+    the_ritual: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          step: { type: 'number' },
+          instruction: { type: 'string' },
+        },
+      },
+    },
+  },
 };
 
 // ── Platform detection ────────────────────────────────────────────────────────
@@ -84,9 +117,9 @@ async function expandShortUrl(url: string): Promise<string> {
 }
 
 // Returns false when caption has no real words (only hashtags / mentions)
-function hasSubstantiveContent(caption: string): boolean {
-  if (!caption?.trim()) return false;
-  const words = caption.trim().split(/\s+/);
+function hasSubstantiveContent(text: string): boolean {
+  if (!text?.trim()) return false;
+  const words = text.trim().split(/\s+/);
   const meaningful = words.filter(w => !w.startsWith('#') && !w.startsWith('@') && w.length > 2);
   return meaningful.length >= 3;
 }
@@ -104,22 +137,18 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
 }
 
 // Scan an MP4 binary for embedded JPEG frames (SOI = 0xFF 0xD8 0xFF, EOI = 0xFF 0xD9).
-// Many social-platform videos embed cover art and preview frames in container metadata.
+// Social-platform MP4s commonly embed cover art and preview frames in container metadata.
 function extractEmbeddedJpegs(buffer: Uint8Array, maxCount = 5): Uint8Array[] {
   const frames: Uint8Array[] = [];
   let i = 0;
   while (i < buffer.length - 2 && frames.length < maxCount) {
-    // JPEG Start-Of-Image: FF D8 FF
     if (buffer[i] === 0xFF && buffer[i + 1] === 0xD8 && buffer[i + 2] === 0xFF) {
       let j = i + 3;
       let found = false;
       while (j < buffer.length - 1) {
-        // JPEG End-Of-Image: FF D9
         if (buffer[j] === 0xFF && buffer[j + 1] === 0xD9) {
           const jpeg = buffer.slice(i, j + 2);
-          if (jpeg.length >= MIN_JPEG_BYTES) {
-            frames.push(jpeg);
-          }
+          if (jpeg.length >= MIN_JPEG_BYTES) frames.push(jpeg);
           i = j + 2;
           found = true;
           break;
@@ -136,12 +165,12 @@ function extractEmbeddedJpegs(buffer: Uint8Array, maxCount = 5): Uint8Array[] {
 
 // ── Network helpers ───────────────────────────────────────────────────────────
 
-// Download URL → raw ArrayBuffer, with size guard
+// Download URL → raw ArrayBuffer with size guard
 async function downloadBuffer(
   url: string,
   maxBytes: number,
   headers: Record<string, string> = {},
-  timeoutMs = 15000,
+  timeoutMs = 20000,
 ): Promise<{ data?: ArrayBuffer; contentType?: string; error?: string }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -173,16 +202,52 @@ async function downloadBase64(
   return { data: uint8ArrayToBase64(new Uint8Array(result.data)), mimeType: result.contentType };
 }
 
-// ── Gemini calls ──────────────────────────────────────────────────────────────
+// ── Whisper transcription ─────────────────────────────────────────────────────
 
-// Call Gemini 1.5 Flash with an array of inline image parts + prompt text
-async function callGeminiWithImages(
-  imageParts: Array<{ data: string; mimeType: string }>,
+// Send a video/audio buffer to OpenAI Whisper and return the text transcript.
+// Whisper accepts MP4 directly and strips the audio internally.
+async function transcribeWithWhisper(
+  buffer: ArrayBuffer,
+  apiKey: string,
+  timeoutMs = 60000,
+): Promise<{ transcript?: string; error?: string }> {
+  const formData = new FormData();
+  formData.append('file', new Blob([buffer], { type: 'video/mp4' }), 'audio.mp4');
+  formData.append('model', 'whisper-1');
+  formData.append('response_format', 'text');
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: formData,
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const errText = await res.text();
+      return { error: `Whisper API ${res.status}: ${errText.slice(0, 300)}` };
+    }
+    const transcript = (await res.text()).trim();
+    return { transcript };
+  } catch (e: any) {
+    clearTimeout(timer);
+    return { error: e?.message || 'Whisper call timed out' };
+  }
+}
+
+// ── Gemini vision ─────────────────────────────────────────────────────────────
+
+// Call Gemini 1.5 Flash with one or more inline image/video parts + prompt text
+async function callGeminiWithParts(
+  parts: Array<{ data: string; mimeType: string }>,
   apiKey: string,
   timeoutMs = 30000,
 ): Promise<{ data?: any; error?: string }> {
-  const parts = [
-    ...imageParts.map(p => ({ inlineData: { mimeType: p.mimeType, data: p.data } })),
+  const contentParts = [
+    ...parts.map(p => ({ inlineData: { mimeType: p.mimeType, data: p.data } })),
     { text: GEMINI_VISION_PROMPT },
   ];
 
@@ -195,19 +260,17 @@ async function callGeminiWithImages(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts }],
+          contents: [{ parts: contentParts }],
           generationConfig: { temperature: 0.1 },
         }),
         signal: controller.signal,
       },
     );
     clearTimeout(timer);
-
     if (!res.ok) {
       const errText = await res.text();
       return { error: `Gemini API ${res.status}: ${errText.slice(0, 300)}` };
     }
-
     const gemData = await res.json();
     const rawText: string = gemData.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const cleaned = rawText
@@ -215,21 +278,11 @@ async function callGeminiWithImages(
       .replace(/^```\s*/i, '')
       .replace(/\s*```$/i, '')
       .trim();
-
     return { data: JSON.parse(cleaned) };
   } catch (e: any) {
     clearTimeout(timer);
     return { error: e?.message || 'Gemini call failed' };
   }
-}
-
-// Call Gemini 1.5 Flash with a single inline video part
-async function callGeminiWithVideo(
-  videoBase64: string,
-  apiKey: string,
-  timeoutMs = 30000,
-): Promise<{ data?: any; error?: string }> {
-  return callGeminiWithImages([{ data: videoBase64, mimeType: 'video/mp4' }], apiKey, timeoutMs);
 }
 
 // ── Apify scraper ─────────────────────────────────────────────────────────────
@@ -241,7 +294,6 @@ async function scrapeWithApify(
 ): Promise<{ caption?: string; videoUrl?: string | null; thumbnailUrl?: string | null; error?: string }> {
   const actor = APIFY_ACTORS[platform];
   const apiUrl = `https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${token}&timeout=30`;
-
   const inputBody = platform === 'instagram'
     ? { directUrls: [url], resultsLimit: 1 }
     : { postURLs: [url], resultsPerPage: 1 };
@@ -258,7 +310,6 @@ async function scrapeWithApify(
       signal: controller.signal,
     });
     clearTimeout(timeout);
-
     if (!res.ok) return { error: `Apify HTTP ${res.status}` };
 
     const items: any[] = await res.json();
@@ -269,7 +320,7 @@ async function scrapeWithApify(
     const videoUrl: string | null = item.videoUrl || item.playAddress || item.downloadAddr || null;
     const thumbnailUrl: string | null = item.displayUrl || item.coverUrl || item.thumbnailUrl || null;
 
-    console.log(`[Apify] caption="${caption.slice(0, 80)}…" videoUrl=${!!videoUrl} thumbnailUrl=${!!thumbnailUrl}`);
+    console.log(`[Apify] caption="${caption.slice(0, 80)}" | videoUrl=${!!videoUrl} | thumbnailUrl=${!!thumbnailUrl}`);
     return { caption, videoUrl, thumbnailUrl };
   } catch (e: any) {
     clearTimeout(timeout);
@@ -289,9 +340,9 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ success: false, error: 'No URL provided' }, { status: 400 });
     }
 
-    console.log(`[Pipeline] ── New scan request: ${url}`);
+    console.log(`[Pipeline] ── New scan: ${url}`);
 
-    // Step 1: Expand short links (vm.tiktok.com → canonical TikTok URL)
+    // ── Step 1: Expand short links ────────────────────────────────────────────
     const resolvedUrl = await expandShortUrl(url);
     const platform = detectPlatform(resolvedUrl) ?? detectPlatform(url);
 
@@ -309,7 +360,7 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ success: false, error: 'APIFY_TOKEN not configured' }, { status: 500 });
     }
 
-    // Step 2: Scrape caption + media URLs via Apify
+    // ── Step 2: Scrape via Apify ──────────────────────────────────────────────
     const scraped = await scrapeWithApify(platform, resolvedUrl, token);
     if (scraped.error) {
       console.log(`[Pipeline] Apify error: ${scraped.error}`);
@@ -318,13 +369,129 @@ export default async function (req: Request): Promise<Response> {
 
     const { caption, videoUrl, thumbnailUrl } = scraped;
 
-    // ── Level 3: Gemini vision fallback ──────────────────────────────────────
-    // Called when caption has no substantive product text.
-    // Strategy: thumbnail + keyframes extracted from video binary → multi-image Gemini.
-    // Falls back to full video inline if frame extraction yields < 2 frames.
+    // Shared video buffer — downloaded once for both Level 2 (Whisper) and Level 3 (Gemini).
+    // null = not yet attempted; false = attempted and failed; ArrayBuffer = ready.
+    let _videoBuffer: ArrayBuffer | false | null = null;
+    let _videoError: string | null = null;
+
+    const getVideoBuffer = async (): Promise<ArrayBuffer | null> => {
+      if (_videoBuffer !== null) return _videoBuffer || null;
+      if (!videoUrl) {
+        _videoBuffer = false;
+        _videoError = 'No video URL';
+        return null;
+      }
+      console.log(`[Video] Downloading: ${videoUrl.slice(0, 80)}…`);
+      const headers = platform === 'tiktok' ? TIKTOK_DOWNLOAD_HEADERS : {};
+      // Use Whisper's larger limit so the same buffer serves both L2 and L3
+      const result = await downloadBuffer(videoUrl, WHISPER_MAX_BYTES, headers, 20000);
+      if (result.data) {
+        const mb = Math.round(result.data.byteLength / 1024 / 1024 * 10) / 10;
+        console.log(`[Video] Downloaded (${mb}MB)`);
+        _videoBuffer = result.data;
+        return result.data;
+      }
+      console.log(`[Video] Download failed: ${result.error}`);
+      _videoBuffer = false;
+      _videoError = result.error || 'Download failed';
+      return null;
+    };
+
+    // ── Run Claude extraction on any text content ─────────────────────────────
+    const extractFromText = async (
+      text: string,
+      label: string,
+    ): Promise<{ data?: any; error?: string }> => {
+      const prompt = `${MASTER_MUSE_PROMPT}\n\nCONTENT TO ANALYSE (${label}):\n${text}`;
+      try {
+        const data = await base44.integrations.Core.InvokeLLM({
+          prompt,
+          response_json_schema: EXTRACTION_SCHEMA,
+        });
+        return { data };
+      } catch (e: any) {
+        return { error: e?.message || 'LLM extraction failed' };
+      }
+    };
+
+    // ── LEVEL 2 — Audio transcription via OpenAI Whisper ─────────────────────
+    const tryLevel2 = async (): Promise<{ response?: Response; errors: string[] }> => {
+      const errors: string[] = [];
+      console.log('[L2] ── Starting Level 2: audio transcription');
+
+      const openaiKey = secrets.get('OPENAI_API_KEY');
+      if (!openaiKey) {
+        const msg = 'OPENAI_API_KEY not configured';
+        console.log(`[L2] ${msg}`);
+        errors.push(msg);
+        return { errors };
+      }
+
+      const buf = await getVideoBuffer();
+      if (!buf) {
+        const msg = _videoError || 'No video buffer';
+        console.log(`[L2] Cannot transcribe — ${msg}`);
+        errors.push(msg);
+        return { errors };
+      }
+
+      console.log(`[L2] Sending ${Math.round(buf.byteLength / 1024 / 1024 * 10) / 10}MB to OpenAI Whisper…`);
+      const whisper = await transcribeWithWhisper(buf, openaiKey, 60000);
+
+      if (!whisper.transcript) {
+        console.log(`[L2] Whisper failed: ${whisper.error}`);
+        errors.push(`Whisper: ${whisper.error}`);
+        return { errors };
+      }
+
+      const transcript = whisper.transcript;
+      console.log(`[L2] Transcript (${transcript.split(/\s+/).length} words): "${transcript.slice(0, 120)}…"`);
+
+      if (!hasSubstantiveContent(transcript)) {
+        const msg = `Transcript has no substantive content: "${transcript.slice(0, 60)}"`;
+        console.log(`[L2] ${msg}`);
+        errors.push(msg);
+        return { errors };
+      }
+
+      console.log('[L2] Extracting products from transcript via Claude…');
+      const extraction = await extractFromText(transcript, 'VIDEO TRANSCRIPT');
+
+      if (extraction.error) {
+        console.log(`[L2] Extraction error: ${extraction.error}`);
+        errors.push(`Extraction: ${extraction.error}`);
+        return { errors };
+      }
+
+      const productCount = extraction.data?.products_identified?.length ?? 0;
+      console.log(`[L2] Extraction complete — ${productCount} product(s) found in transcript`);
+
+      if (!productCount) {
+        const msg = 'No products identified in transcript';
+        console.log(`[L2] ${msg}`);
+        errors.push(msg);
+        return { errors };
+      }
+
+      return {
+        response: Response.json({
+          success: true,
+          level: 2,
+          transcript,
+          caption: caption || '',
+          videoUrl,
+          thumbnailUrl,
+          data: extraction.data,
+        }),
+        errors,
+      };
+    };
+
+    // ── LEVEL 3 — Gemini 1.5 Flash visual analysis ────────────────────────────
+    // Priority: thumbnail image → extracted keyframes → full inline video
     const tryLevel3 = async (): Promise<{ response?: Response; errors: string[] }> => {
       const errors: string[] = [];
-      console.log('[L3] ── Starting Level 3 vision analysis');
+      console.log('[L3] ── Starting Level 3: Gemini vision analysis');
 
       const geminiKey = secrets.get('GEMINI_API_KEY');
       if (!geminiKey) {
@@ -336,9 +503,9 @@ export default async function (req: Request): Promise<Response> {
 
       const imageParts: Array<{ data: string; mimeType: string }> = [];
 
-      // Step 3a: Download thumbnail (cover frame 0)
+      // Step 3a: Thumbnail (cover image — fast, always try first)
       if (thumbnailUrl) {
-        console.log(`[L3] Step 3a — Downloading thumbnail: ${thumbnailUrl.slice(0, 80)}…`);
+        console.log(`[L3] Step 3a — thumbnail: ${thumbnailUrl.slice(0, 80)}…`);
         const thumb = await downloadBase64(thumbnailUrl, GEMINI_IMAGE_MAX_BYTES, {}, 10000);
         if (thumb.data) {
           const kb = Math.round(thumb.data.length * 0.75 / 1024);
@@ -349,55 +516,49 @@ export default async function (req: Request): Promise<Response> {
           errors.push(`Thumbnail: ${thumb.error}`);
         }
       } else {
-        console.log('[L3] No thumbnail URL available');
+        console.log('[L3] No thumbnail URL');
         errors.push('No thumbnail URL');
       }
 
-      // Step 3b: Download video binary and extract keyframes
-      let videoBase64: string | null = null;
-      if (videoUrl) {
-        const headers = platform === 'tiktok' ? TIKTOK_DOWNLOAD_HEADERS : {};
-        console.log(`[L3] Step 3b — Downloading video: ${videoUrl.slice(0, 80)}…`);
-        const videoBuf = await downloadBuffer(videoUrl, GEMINI_VIDEO_MAX_BYTES, headers, 15000);
+      // Step 3b: Extract keyframes from the shared video buffer
+      let videoBase64ForGemini: string | null = null;
+      const buf = await getVideoBuffer();
 
-        if (videoBuf.data) {
-          const mb = Math.round(videoBuf.data.byteLength / 1024 / 1024 * 10) / 10;
-          console.log(`[L3] Video downloaded (${mb}MB) — scanning for embedded JPEG keyframes…`);
+      if (buf) {
+        const raw = new Uint8Array(buf);
+        console.log('[L3] Step 3b — scanning video binary for embedded JPEG keyframes…');
+        const frames = extractEmbeddedJpegs(raw, 4);
+        console.log(`[L3] Found ${frames.length} embedded JPEG frame(s)`);
 
-          const raw = new Uint8Array(videoBuf.data);
-          const frames = extractEmbeddedJpegs(raw, 4);
-          console.log(`[L3] Keyframe scan complete — found ${frames.length} embedded JPEG(s)`);
-
-          if (frames.length >= 2) {
-            // Enough extracted frames — use them as individual image parts
-            for (let i = 0; i < frames.length; i++) {
-              const b64 = uint8ArrayToBase64(frames[i]);
-              const kb = Math.round(b64.length * 0.75 / 1024);
-              console.log(`[L3]   Frame ${i + 1}: ${kb}KB`);
-              imageParts.push({ data: b64, mimeType: 'image/jpeg' });
-            }
-          } else {
-            // Too few embedded frames — keep the video for inline fallback
-            console.log('[L3] Fewer than 2 keyframes extracted — will use full video as fallback');
-            videoBase64 = uint8ArrayToBase64(raw);
+        if (frames.length >= 2) {
+          for (let i = 0; i < frames.length; i++) {
+            const b64 = uint8ArrayToBase64(frames[i]);
+            const kb = Math.round(b64.length * 0.75 / 1024);
+            console.log(`[L3]   Frame ${i + 1}: ${kb}KB`);
+            imageParts.push({ data: b64, mimeType: 'image/jpeg' });
           }
         } else {
-          console.log(`[L3] Video download failed: ${videoBuf.error}`);
-          errors.push(`Video download: ${videoBuf.error}`);
+          console.log('[L3] Fewer than 2 embedded frames — will use full video inline as fallback');
+          if (buf.byteLength <= GEMINI_VIDEO_MAX_BYTES) {
+            videoBase64ForGemini = uint8ArrayToBase64(raw);
+          } else {
+            const mb = Math.round(buf.byteLength / 1024 / 1024 * 10) / 10;
+            console.log(`[L3] Video (${mb}MB) exceeds Gemini 15MB inline limit — skipping video fallback`);
+            errors.push(`Video too large for Gemini inline (${mb}MB)`);
+          }
         }
       } else {
-        console.log('[L3] No video URL available');
-        errors.push('No video URL');
+        console.log(`[L3] Video not available for frame extraction (${_videoError})`);
+        errors.push(`Video: ${_videoError}`);
       }
 
       // Step 3c: Call Gemini with collected image frames
       if (imageParts.length > 0) {
-        console.log(`[L3] Step 3c — Calling Gemini 1.5 Flash with ${imageParts.length} image frame(s)…`);
-        const result = await callGeminiWithImages(imageParts, geminiKey, 30000);
-
+        console.log(`[L3] Step 3c — calling Gemini 1.5 Flash with ${imageParts.length} image frame(s)…`);
+        const result = await callGeminiWithParts(imageParts, geminiKey, 30000);
         if (result.data) {
           const count = result.data.products_identified?.length ?? 0;
-          console.log(`[L3] Gemini vision success — ${count} product(s) identified from frames`);
+          console.log(`[L3] Gemini frames success — ${count} product(s) identified`);
           return {
             response: Response.json({
               success: true,
@@ -412,19 +573,21 @@ export default async function (req: Request): Promise<Response> {
             errors,
           };
         }
-
-        console.log(`[L3] Gemini frames call failed: ${result.error}`);
-        errors.push(`Gemini (frames): ${result.error}`);
+        console.log(`[L3] Gemini frames failed: ${result.error}`);
+        errors.push(`Gemini frames: ${result.error}`);
       }
 
-      // Step 3d: Last resort — inline full video
-      if (videoBase64) {
-        console.log('[L3] Step 3d — Calling Gemini 1.5 Flash with full inline video…');
-        const result = await callGeminiWithVideo(videoBase64, geminiKey, 30000);
-
+      // Step 3d: Last resort — inline full video (≤ 15MB only)
+      if (videoBase64ForGemini) {
+        console.log('[L3] Step 3d — calling Gemini 1.5 Flash with full inline video…');
+        const result = await callGeminiWithParts(
+          [{ data: videoBase64ForGemini, mimeType: 'video/mp4' }],
+          geminiKey,
+          30000,
+        );
         if (result.data) {
           const count = result.data.products_identified?.length ?? 0;
-          console.log(`[L3] Gemini video success — ${count} product(s) identified from video`);
+          console.log(`[L3] Gemini video success — ${count} product(s) identified`);
           return {
             response: Response.json({
               success: true,
@@ -438,94 +601,58 @@ export default async function (req: Request): Promise<Response> {
             errors,
           };
         }
-
-        console.log(`[L3] Gemini video call failed: ${result.error}`);
-        errors.push(`Gemini (video): ${result.error}`);
+        console.log(`[L3] Gemini video failed: ${result.error}`);
+        errors.push(`Gemini video: ${result.error}`);
       }
 
-      console.log(`[L3] All Level 3 attempts failed. Errors: ${errors.join(' | ')}`);
+      console.log(`[L3] All attempts failed: ${errors.join(' | ')}`);
       return { errors };
     };
 
-    // ── Routing logic ─────────────────────────────────────────────────────────
+    // ── Routing ───────────────────────────────────────────────────────────────
 
-    // No caption at all → go straight to Level 3
-    if (!caption?.trim()) {
-      console.log('[Pipeline] No caption — routing directly to Level 3 vision');
-      const { response: level3, errors } = await tryLevel3();
-      if (level3) return level3;
-      return Response.json({
-        success: false,
-        level: 1,
-        videoUrl,
-        thumbnailUrl,
-        error: `No caption found. Vision analysis failed: ${errors.join(' | ')}`,
-      });
+    // LEVEL 1: Caption has substantive text — extract directly with Claude
+    if (hasSubstantiveContent(caption || '')) {
+      console.log('[Pipeline] Caption has product text — running Level 1 extraction');
+      const extraction = await extractFromText(caption!, 'CAPTION');
+
+      if (!extraction.error) {
+        const productCount = extraction.data?.products_identified?.length ?? 0;
+        console.log(`[Pipeline] Level 1 complete — ${productCount} product(s) extracted`);
+        return Response.json({
+          success: true,
+          level: 1,
+          caption,
+          videoUrl,
+          thumbnailUrl,
+          data: extraction.data,
+        });
+      }
+      console.log(`[Pipeline] Level 1 extraction error: ${extraction.error} — falling through to L2/L3`);
+    } else {
+      console.log(`[Pipeline] Caption "${(caption || '').slice(0, 60)}" has no product text — skipping Level 1`);
     }
 
-    // Caption is only hashtags/mentions → try Level 3 before giving up
-    if (!hasSubstantiveContent(caption)) {
-      console.log('[Pipeline] Caption is hashtag-only — routing to Level 3 vision');
-      const { response: level3, errors } = await tryLevel3();
-      if (level3) return level3;
-      return Response.json({
-        success: false,
-        level: 1,
-        videoUrl,
-        thumbnailUrl,
-        caption,
-        error: `Caption only contains hashtags. Vision analysis failed: ${errors.join(' | ')}`,
-      });
-    }
+    // LEVEL 2: Audio transcription (handles spoken product names, foreign-language voiceover, etc.)
+    const { response: level2Response, errors: l2errors } = await tryLevel2();
+    if (level2Response) return level2Response;
+    console.log(`[Pipeline] Level 2 failed (${l2errors.join('; ')}) — trying Level 3`);
 
-    // Level 1: Claude extracts products from the caption text
-    console.log('[Pipeline] Caption has substantive content — running Level 1 extraction');
-    const extractionPrompt = `${MASTER_MUSE_PROMPT}\n\nCONTENT TO ANALYSE:\n${caption}`;
+    // LEVEL 3: Visual analysis — keyframes + Gemini vision
+    const { response: level3Response, errors: l3errors } = await tryLevel3();
+    if (level3Response) return level3Response;
 
-    const extracted = await base44.integrations.Core.InvokeLLM({
-      prompt: extractionPrompt,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          tutorial_title: { type: 'string' },
-          category: { type: 'string' },
-          read_time: { type: 'string' },
-          materials: { type: 'array', items: { type: 'string' } },
-          products_identified: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                brand: { type: 'string' },
-                product_name: { type: 'string' },
-                subcategory: { type: 'string' },
-              },
-            },
-          },
-          the_ritual: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                step: { type: 'number' },
-                instruction: { type: 'string' },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    const productCount = extracted?.products_identified?.length ?? 0;
-    console.log(`[Pipeline] Level 1 complete — ${productCount} product(s) extracted from caption`);
+    // All three levels exhausted
+    const allErrors = [...l2errors, ...l3errors];
+    console.log(`[Pipeline] All levels failed: ${allErrors.join(' | ')}`);
 
     return Response.json({
-      success: true,
-      level: 1,
-      caption,
+      success: false,
+      level: 3,
       videoUrl,
       thumbnailUrl,
-      data: extracted,
+      caption: caption || '',
+      error: `Could not identify products. L2: ${l2errors.join('; ')} | L3: ${l3errors.join('; ')}`,
     });
 
   } catch (error: any) {
