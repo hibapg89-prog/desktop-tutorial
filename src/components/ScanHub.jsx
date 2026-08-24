@@ -211,17 +211,22 @@ export default function ScanHub({ onClose }) {
     try {
       const res = await base44.functions.invoke('extractSocialContent', { url });
       clearInterval(interval);
+      console.log('[Scraper Output]:', JSON.stringify(res).slice(0, 500));
 
       if (!res?.success) {
+        const errMsg = res?.error || "Social extraction failed";
+        console.error('[Pipeline Error]: extraction returned failure —', errMsg);
         setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
         setScanError(res?.error || "The Muse couldn't extract beauty content from this post. Try a post that features specific product names.");
         setActiveMode("error");
-        logScan({ scan_method: "social_link", status: "failed", error_reason: res?.error || "Social extraction failed" });
+        logScan({ scan_method: "social_link", status: "failed", error_reason: errMsg });
         return;
       }
 
       const { data, thumbnailUrl } = res;
       const products = data?.products_identified || [];
+      console.log('[AI Raw Response]:', JSON.stringify(data).slice(0, 500));
+      console.log('[Parsed Products]:', products);
 
       if (!products.length) {
         setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
@@ -276,14 +281,15 @@ export default function ScanHub({ onClose }) {
           });
         }, 500);
       }
-    } catch {
+    } catch (error) {
       clearInterval(interval);
+      console.error('[Pipeline Error]:', error);
       setScanError("Something went wrong. Please try again.");
       setActiveMode("error");
       setIsAnalyzing(false);
       setProgress(0);
       setLoadingHint(null);
-      logScan({ scan_method: "social_link", status: "failed", error_reason: "Social link scan error" });
+      logScan({ scan_method: "social_link", status: "failed", error_reason: error?.message || String(error) });
     }
   };
 
@@ -387,7 +393,8 @@ export default function ScanHub({ onClose }) {
         return ["null", "none", "n/a", "na", "", "no shade", "not applicable"].includes(s.toLowerCase()) ? null : s;
       };
 
-if (useImageAnalysis) {
+// TODO: InvokeLLM below uses Anthropic (no API key) — migrate to a backend function using Gemini
+      if (useImageAnalysis) {
         const imgResult = await base44.integrations.Core.InvokeLLM({
           prompt,
           file_urls,
@@ -486,6 +493,7 @@ if (useImageAnalysis) {
           }, 500);
         }
       } else {
+        // TODO: InvokeLLM below uses Anthropic (no API key) — migrate to a backend function using Gemini
         const result = await base44.integrations.Core.InvokeLLM({
           prompt,
           file_urls,
@@ -542,9 +550,10 @@ if (useImageAnalysis) {
         logScan({ scan_method: type, status: "success", product_id: prod.id, brand: result.brand, name: result.name, shade: result.shade, product_count: 1 });
         setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
       }
-    } catch {
+    } catch (error) {
       clearInterval(interval);
-      logScan({ scan_method: type, status: "failed", product_count: 0 });
+      console.error('[Pipeline Error]:', error);
+      logScan({ scan_method: type, status: "failed", product_count: 0, error_reason: error?.message || String(error) });
       setScanError("Something went wrong. Please try again.");
       setActiveMode("error");
       setIsAnalyzing(false);
