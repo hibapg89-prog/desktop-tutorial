@@ -415,7 +415,7 @@ export default async function (req: Request): Promise<Response> {
     };
 
     // ── LEVEL 2 — Audio transcription via OpenAI Whisper ─────────────────────
-    const tryLevel2 = async (): Promise<{ response?: Response; errors: string[] }> => {
+    const tryLevel2 = async (): Promise<{ response?: Response; errors: string[]; productCount: number }> => {
       const errors: string[] = [];
       console.log('[L2] ── Starting Level 2: audio transcription');
 
@@ -424,7 +424,7 @@ export default async function (req: Request): Promise<Response> {
         const msg = 'GROQ_API_KEY not configured';
         console.log(`[L2] ${msg}`);
         errors.push(msg);
-        return { errors };
+        return { errors, productCount: 0 };
       }
 
       const buf = await getVideoBuffer();
@@ -432,16 +432,16 @@ export default async function (req: Request): Promise<Response> {
         const msg = _videoError || 'No video buffer';
         console.log(`[L2] Cannot transcribe — ${msg}`);
         errors.push(msg);
-        return { errors };
+        return { errors, productCount: 0 };
       }
 
-      console.log(`[L2] Sending ${Math.round(buf.byteLength / 1024 / 1024 * 10) / 10}MB to OpenAI Whisper…`);
+      console.log(`[L2] Sending ${Math.round(buf.byteLength / 1024 / 1024 * 10) / 10}MB to Groq Whisper…`);
       const whisper = await transcribeWithWhisper(buf, openaiKey, 60000);
 
       if (!whisper.transcript) {
         console.log(`[L2] Whisper failed: ${whisper.error}`);
         errors.push(`Whisper: ${whisper.error}`);
-        return { errors };
+        return { errors, productCount: 0 };
       }
 
       const transcript = whisper.transcript;
@@ -451,7 +451,7 @@ export default async function (req: Request): Promise<Response> {
         const msg = `Transcript has no substantive content: "${transcript.slice(0, 60)}"`;
         console.log(`[L2] ${msg}`);
         errors.push(msg);
-        return { errors };
+        return { errors, productCount: 0 };
       }
 
       console.log('[L2] Extracting products from transcript via Claude…');
@@ -460,19 +460,13 @@ export default async function (req: Request): Promise<Response> {
       if (extraction.error) {
         console.log(`[L2] Extraction error: ${extraction.error}`);
         errors.push(`Extraction: ${extraction.error}`);
-        return { errors };
+        return { errors, productCount: 0 };
       }
 
       const productCount = extraction.data?.products_identified?.length ?? 0;
       console.log(`[L2] Extraction complete — ${productCount} product(s) found in transcript`);
 
-      if (!productCount) {
-        const msg = 'No products identified in transcript';
-        console.log(`[L2] ${msg}`);
-        errors.push(msg);
-        return { errors };
-      }
-
+      // Always return a response + productCount — routing decides whether to escalate to L3
       return {
         response: Response.json({
           success: true,
@@ -484,6 +478,7 @@ export default async function (req: Request): Promise<Response> {
           data: extraction.data,
         }),
         errors,
+        productCount,
       };
     };
 
@@ -634,9 +629,12 @@ export default async function (req: Request): Promise<Response> {
     }
 
     // LEVEL 2: Audio transcription (handles spoken product names, foreign-language voiceover, etc.)
-    const { response: level2Response, errors: l2errors } = await tryLevel2();
-    if (level2Response) return level2Response;
-    console.log(`[Pipeline] Level 2 failed (${l2errors.join('; ')}) — trying Level 3`);
+    const { response: level2Response, errors: l2errors, productCount: l2ProductCount } = await tryLevel2();
+    if (level2Response && l2ProductCount > 0) return level2Response;
+    const l2Reason = level2Response
+      ? `transcript yielded 0 products (background music / no spoken names)`
+      : l2errors.join('; ');
+    console.log(`[Pipeline] Level 2 did not yield products (${l2Reason}) — escalating to Level 3`);
 
     // LEVEL 3: Visual analysis — keyframes + Gemini vision
     const { response: level3Response, errors: l3errors } = await tryLevel3();
