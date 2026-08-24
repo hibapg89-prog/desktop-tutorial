@@ -1,4 +1,3 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { secrets } from 'base44:runtime';
 
 const MASTER_MUSE_PROMPT = `You are the AI extraction engine for a luxury beauty application. Your task is to analyze social media captions or video transcripts and extract all beauty products and application steps into a highly structured JSON format.
@@ -54,38 +53,6 @@ const TIKTOK_DOWNLOAD_HEADERS: Record<string, string> = {
   'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
   'Referer': 'https://www.tiktok.com/',
   'Accept': '*/*',
-};
-
-// Strict schema for LLM extraction responses
-const EXTRACTION_SCHEMA = {
-  type: 'object',
-  properties: {
-    tutorial_title: { type: 'string' },
-    category: { type: 'string' },
-    read_time: { type: 'string' },
-    materials: { type: 'array', items: { type: 'string' } },
-    products_identified: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          brand: { type: 'string' },
-          product_name: { type: 'string' },
-          subcategory: { type: 'string' },
-        },
-      },
-    },
-    the_ritual: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          step: { type: 'number' },
-          instruction: { type: 'string' },
-        },
-      },
-    },
-  },
 };
 
 // ── Platform detection ────────────────────────────────────────────────────────
@@ -285,6 +252,56 @@ async function callGeminiWithParts(
   }
 }
 
+// ── Gemini text extraction ────────────────────────────────────────────────────
+
+// Call Gemini 1.5 Flash with a text-only prompt and parse the JSON response.
+async function extractFromTextViaGemini(
+  prompt: string,
+  apiKey: string,
+  timeoutMs = 30000,
+): Promise<{ data?: any; rawResponse?: string; error?: string }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.1 },
+        }),
+        signal: controller.signal,
+      },
+    );
+    clearTimeout(timer);
+    if (!res.ok) {
+      const errText = await res.text();
+      return { error: `Gemini text API ${res.status}: ${errText.slice(0, 300)}` };
+    }
+    const gemData = await res.json();
+    const rawText: string = gemData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const cleaned = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+
+    if (!cleaned) {
+      return { error: 'Gemini returned empty text', rawResponse: rawText };
+    }
+    try {
+      return { data: JSON.parse(cleaned), rawResponse: rawText };
+    } catch (parseErr: any) {
+      return { error: `JSON parse failed: ${parseErr.message}`, rawResponse: rawText };
+    }
+  } catch (e: any) {
+    clearTimeout(timer);
+    return { error: e?.message || 'Gemini text call timed out' };
+  }
+}
+
 // ── Apify scraper ─────────────────────────────────────────────────────────────
 
 async function scrapeWithApify(
@@ -318,9 +335,9 @@ async function scrapeWithApify(
     const item = items[0];
     console.log(`[Apify] item keys: ${Object.keys(item).join(', ')}`);
 
-    const caption = item.caption || item.text || item.description || '';
-    const videoUrl: string | null = item.videoUrl || item.playAddress || item.downloadAddr || null;
-    const thumbnailUrl: string | null = item.displayUrl || item.coverUrl || item.thumbnailUrl || null;
+    const caption = item.caption || item.text || item.description || item.videoDescription || item.alt || item.body || '';
+    const videoUrl: string | null = item.videoUrl || item.playAddress || item.downloadAddr || item.video?.playAddr || item.videoLink || null;
+    const thumbnailUrl: string | null = item.displayUrl || item.coverUrl || item.thumbnailUrl || item.video?.cover || item.cover || item.previewUrl || null;
 
     console.log(`[Apify] caption="${caption.slice(0, 120)}" | videoUrl=${!!videoUrl} | thumbnailUrl=${!!thumbnailUrl}`);
     return { caption, videoUrl, thumbnailUrl };
@@ -334,7 +351,6 @@ async function scrapeWithApify(
 
 export default async function (req: Request): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
     const body = await req.json();
     const { url } = body || {};
 
@@ -399,21 +415,30 @@ export default async function (req: Request): Promise<Response> {
       return null;
     };
 
-    // ── Run Claude extraction on any text content ─────────────────────────────
+    // ── Run Gemini text extraction on any text content ────────────────────────
     const extractFromText = async (
       text: string,
       label: string,
     ): Promise<{ data?: any; error?: string }> => {
-      const prompt = `${MASTER_MUSE_PROMPT}\n\nCONTENT TO ANALYSE (${label}):\n${text}`;
-      try {
-        const data = await base44.integrations.Core.InvokeLLM({
-          prompt,
-          response_json_schema: EXTRACTION_SCHEMA,
-        });
-        return { data };
-      } catch (e: any) {
-        return { error: e?.message || 'LLM extraction failed' };
+      const geminiKey = secrets.get('GEMINI_API_KEY');
+      if (!geminiKey) {
+        return { error: 'GEMINI_API_KEY not configured' };
       }
+      const prompt = `${MASTER_MUSE_PROMPT}\n\nCONTENT TO ANALYSE (${label}):\n${text}`;
+      console.log(`[Extract/${label}] Calling Gemini 1.5 Flash (text length: ${text.length} chars)…`);
+      const result = await extractFromTextViaGemini(prompt, geminiKey, 30000);
+      if (result.rawResponse) {
+        console.log(`[Extract/${label}] Raw response (first 300): "${result.rawResponse.slice(0, 300)}"`);
+      }
+      if (result.error) {
+        console.log(`[Extract/${label}] Error: ${result.error}`);
+        return { error: result.error };
+      }
+      const productCount = result.data?.products_identified?.length ?? 0;
+      if (productCount === 0) {
+        console.log(`[Extract/${label}] WARNING: 0 products in parsed result. Full data: ${JSON.stringify(result.data)}`);
+      }
+      return { data: result.data };
     };
 
     // ── LEVEL 2 — Audio transcription via OpenAI Whisper ─────────────────────
