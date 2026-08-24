@@ -213,13 +213,13 @@ async function transcribeWithWhisper(
 ): Promise<{ transcript?: string; error?: string }> {
   const formData = new FormData();
   formData.append('file', new Blob([buffer], { type: 'video/mp4' }), 'audio.mp4');
-  formData.append('model', 'whisper-1');
+  formData.append('model', 'whisper-large-v3-turbo');
   formData.append('response_format', 'text');
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}` },
       body: formData,
@@ -419,9 +419,9 @@ export default async function (req: Request): Promise<Response> {
       const errors: string[] = [];
       console.log('[L2] ── Starting Level 2: audio transcription');
 
-      const openaiKey = secrets.get('OPENAI_API_KEY');
+      const openaiKey = secrets.get('GROQ_API_KEY');
       if (!openaiKey) {
-        const msg = 'OPENAI_API_KEY not configured';
+        const msg = 'GROQ_API_KEY not configured';
         console.log(`[L2] ${msg}`);
         errors.push(msg);
         return { errors };
