@@ -83,12 +83,11 @@ async function expandShortUrl(url: string): Promise<string> {
   }
 }
 
-// Returns false when caption has no real words (only hashtags / mentions)
+// Returns true when text has more than 15 non-whitespace characters.
+// Intentionally permissive — TikTok captions list products as "@Brand product name"
+// and we must NOT strip @-mentions before sending to the LLM.
 function hasSubstantiveContent(text: string): boolean {
-  if (!text?.trim()) return false;
-  const words = text.trim().split(/\s+/);
-  const meaningful = words.filter(w => !w.startsWith('#') && !w.startsWith('@') && w.length > 2);
-  return meaningful.length >= 3;
+  return (text?.trim()?.length ?? 0) >= 15;
 }
 
 // ── Binary helpers ────────────────────────────────────────────────────────────
@@ -333,13 +332,15 @@ async function scrapeWithApify(
     if (!items?.length) return { error: 'No data returned from scraper' };
 
     const item = items[0];
-    console.log(`[Apify] item keys: ${Object.keys(item).join(', ')}`);
+    // Dump the full raw scraper output so we can verify field names
+    const rawDump = JSON.stringify(item, null, 2);
+    console.log(`[Apify] Raw scraper output (first 4000 chars):\n${rawDump.slice(0, 4000)}`);
 
     const caption = item.caption || item.text || item.description || item.videoDescription || item.alt || item.body || '';
     const videoUrl: string | null = item.videoUrl || item.playAddress || item.downloadAddr || item.video?.playAddr || item.videoLink || null;
     const thumbnailUrl: string | null = item.displayUrl || item.coverUrl || item.thumbnailUrl || item.video?.cover || item.cover || item.previewUrl || null;
 
-    console.log(`[Apify] caption="${caption.slice(0, 120)}" | videoUrl=${!!videoUrl} | thumbnailUrl=${!!thumbnailUrl}`);
+    console.log(`[Apify] caption="${caption.slice(0, 200)}" | videoUrl=${!!videoUrl} | thumbnailUrl=${!!thumbnailUrl}`);
     return { caption, videoUrl, thumbnailUrl };
   } catch (e: any) {
     clearTimeout(timeout);
@@ -359,6 +360,8 @@ export default async function (req: Request): Promise<Response> {
     }
 
     console.log(`[Pipeline] ── New scan: ${url}`);
+    // Log which secrets are present so we know immediately if API keys are missing
+    console.log(`[Pipeline] Secrets present: APIFY_TOKEN=${!!secrets.get('APIFY_TOKEN')} | GEMINI_API_KEY=${!!secrets.get('GEMINI_API_KEY')} | GROQ_API_KEY=${!!secrets.get('GROQ_API_KEY')}`);
 
     // ── Step 1: Expand short links ────────────────────────────────────────────
     const resolvedUrl = await expandShortUrl(url);
@@ -472,16 +475,16 @@ export default async function (req: Request): Promise<Response> {
       }
 
       const transcript = whisper.transcript;
-      console.log(`[L2] Transcript (${transcript.split(/\s+/).length} words): "${transcript.slice(0, 120)}…"`);
+      console.log(`[L2] Transcript (${transcript.split(/\s+/).length} words): "${transcript.slice(0, 200)}…"`);
 
-      if (!hasSubstantiveContent(transcript)) {
-        const msg = `Transcript has no substantive content: "${transcript.slice(0, 60)}"`;
+      if (!transcript.trim()) {
+        const msg = 'Whisper returned an empty transcript';
         console.log(`[L2] ${msg}`);
         errors.push(msg);
         return { errors, productCount: 0 };
       }
 
-      console.log('[L2] Extracting products from transcript via Claude…');
+      console.log('[L2] Extracting products from transcript via Gemini…');
       const extraction = await extractFromText(transcript, 'VIDEO TRANSCRIPT');
 
       if (extraction.error) {
@@ -633,7 +636,7 @@ export default async function (req: Request): Promise<Response> {
 
     // ── Routing ───────────────────────────────────────────────────────────────
 
-    // LEVEL 1: Caption has substantive text — extract directly with Claude
+    // LEVEL 1: Caption has substantive text — extract directly with Gemini
     if (hasSubstantiveContent(caption || '')) {
       console.log('[Pipeline] Caption has product text — running Level 1 extraction');
       const extraction = await extractFromText(caption!, 'CAPTION');
@@ -686,7 +689,7 @@ export default async function (req: Request): Promise<Response> {
     });
 
   } catch (error: any) {
-    console.log(`[Pipeline] Unhandled error: ${error?.message}`);
-    return Response.json({ success: false, error: error?.message || 'Internal error' });
+    console.log(`[Pipeline] Unhandled error: ${error?.message}\n${error?.stack || ''}`);
+    return Response.json({ success: false, error: error?.message || 'Internal error', stack: error?.stack });
   }
 }
