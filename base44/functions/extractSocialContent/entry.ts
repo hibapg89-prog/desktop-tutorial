@@ -316,11 +316,13 @@ async function scrapeWithApify(
     if (!items?.length) return { error: 'No data returned from scraper' };
 
     const item = items[0];
+    console.log(`[Apify] item keys: ${Object.keys(item).join(', ')}`);
+
     const caption = item.caption || item.text || item.description || '';
     const videoUrl: string | null = item.videoUrl || item.playAddress || item.downloadAddr || null;
     const thumbnailUrl: string | null = item.displayUrl || item.coverUrl || item.thumbnailUrl || null;
 
-    console.log(`[Apify] caption="${caption.slice(0, 80)}" | videoUrl=${!!videoUrl} | thumbnailUrl=${!!thumbnailUrl}`);
+    console.log(`[Apify] caption="${caption.slice(0, 120)}" | videoUrl=${!!videoUrl} | thumbnailUrl=${!!thumbnailUrl}`);
     return { caption, videoUrl, thumbnailUrl };
   } catch (e: any) {
     clearTimeout(timeout);
@@ -357,7 +359,7 @@ export default async function (req: Request): Promise<Response> {
 
     const token = secrets.get('APIFY_TOKEN');
     if (!token) {
-      return Response.json({ success: false, error: 'APIFY_TOKEN not configured' }, { status: 500 });
+      return Response.json({ success: false, error: 'APIFY_TOKEN not configured' });
     }
 
     // ── Step 2: Scrape via Apify ──────────────────────────────────────────────
@@ -614,16 +616,21 @@ export default async function (req: Request): Promise<Response> {
       if (!extraction.error) {
         const productCount = extraction.data?.products_identified?.length ?? 0;
         console.log(`[Pipeline] Level 1 complete — ${productCount} product(s) extracted`);
-        return Response.json({
-          success: true,
-          level: 1,
-          caption,
-          videoUrl,
-          thumbnailUrl,
-          data: extraction.data,
-        });
+        if (productCount === 0) {
+          console.log('[Pipeline] Level 1 returned 0 products — escalating to L2/L3 for visual analysis');
+        } else {
+          return Response.json({
+            success: true,
+            level: 1,
+            caption,
+            videoUrl,
+            thumbnailUrl,
+            data: extraction.data,
+          });
+        }
+      } else {
+        console.log(`[Pipeline] Level 1 extraction error: ${extraction.error} — falling through to L2/L3`);
       }
-      console.log(`[Pipeline] Level 1 extraction error: ${extraction.error} — falling through to L2/L3`);
     } else {
       console.log(`[Pipeline] Caption "${(caption || '').slice(0, 60)}" has no product text — skipping Level 1`);
     }
@@ -655,6 +662,6 @@ export default async function (req: Request): Promise<Response> {
 
   } catch (error: any) {
     console.log(`[Pipeline] Unhandled error: ${error?.message}`);
-    return Response.json({ success: false, error: error?.message || 'Internal error' }, { status: 500 });
+    return Response.json({ success: false, error: error?.message || 'Internal error' });
   }
 }
