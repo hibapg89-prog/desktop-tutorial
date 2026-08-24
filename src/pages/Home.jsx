@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import ScanHub from "@/components/ScanHub";
+import { useState, useEffect } from "react";
+import { Link, useOutletContext } from "react-router-dom";
 import { ChevronRight, Star } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import { motion } from "framer-motion";
@@ -11,66 +10,10 @@ import VanityBanner from "@/components/VanityBanner";
 import AtelierBanner from "@/components/AtelierBanner";
 import { formatPrice } from "@/utils/locale";
 
-function readAccessibilityPref(key) {
-  try { return JSON.parse(localStorage.getItem("muse_accessibility") || "{}")[key] ?? false; }
-  catch { return false; }
-}
-
 export default function Home() {
-  const [showScanHub, setShowScanHub] = useState(false);
+  const { openScan } = useOutletContext() ?? {};
   const [shimmerProducts, setShimmerProducts] = useState([]);
   const [recentPosts,     setRecentPosts]     = useState([]);
-  const [guidedPath, setGuidedPath] = useState(() => readAccessibilityPref("guidedPath"));
-  const chimePlayedRef = useRef(false);
-
-  // Re-sync guidedPath when user navigates back from Settings
-  useEffect(() => {
-    const sync = () => {
-      const next = readAccessibilityPref("guidedPath");
-      setGuidedPath(prev => {
-        if (!next) chimePlayedRef.current = false;
-        return next;
-      });
-    };
-    window.addEventListener("focus", sync);
-    document.addEventListener("visibilitychange", sync);
-    return () => {
-      window.removeEventListener("focus", sync);
-      document.removeEventListener("visibilitychange", sync);
-    };
-  }, []);
-
-  // Audio chime on first guided-path activation (skip if Calm Mode on)
-  useEffect(() => {
-    if (!guidedPath || chimePlayedRef.current) return;
-    if (readAccessibilityPref("calmMode")) return;
-    chimePlayedRef.current = true;
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.28);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.55);
-    } catch {}
-  }, [guidedPath]);
-
-  const dismissGuide = () => {
-    try {
-      const current = JSON.parse(localStorage.getItem("muse_accessibility") || "{}");
-      localStorage.setItem("muse_accessibility", JSON.stringify({ ...current, guidedPath: false }));
-    } catch {}
-    chimePlayedRef.current = false;
-    setGuidedPath(false);
-  };
 
   useEffect(() => {
     base44.entities.Product.filter({ muse_shimmer: true })
@@ -85,10 +28,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[var(--color-bg)]">
       {/* ── Atelier Banner ──────────────────────────────────────── */}
-      <AtelierBanner onScan={() => setShowScanHub(true)} guidedPath={guidedPath} onDismissGuide={dismissGuide} />
-
-      {/* ── Scan Hub modal ──────────────────────────────────────── */}
-      {showScanHub && <ScanHub onClose={() => setShowScanHub(false)} />}
+      <AtelierBanner onScan={openScan} />
 
       {/* ── Muse Shimmer strip ──────────────────────────────────── */}
       {shimmerProducts.length > 0 && (

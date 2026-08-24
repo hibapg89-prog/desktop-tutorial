@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
@@ -8,8 +9,14 @@ export default function ScanResults() {
   const { state } = useLocation();
   const products = state?.products || [];
 
+  useEffect(() => {
+    if (products.length === 0) {
+      navigate("/home", { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (products.length === 0) {
-    navigate("/home", { replace: true });
     return null;
   }
 
