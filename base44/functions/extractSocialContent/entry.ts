@@ -1,16 +1,13 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-
 const APIFY_TOKEN = Deno.env.get('APIFY_TOKEN');
 const APIFY_BASE = 'https://api.apify.com/v2';
 
-async function resolveUrl(url: string): Promise<string> {
+// Resolve short/redirect URLs (vm.tiktok.com, etc.) to their canonical form.
+async function resolveUrl(url) {
   try {
     const r = await fetch(url, {
       redirect: 'follow',
       method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36' },
       signal: AbortSignal.timeout(8000),
     });
     return r.url || url;
@@ -19,7 +16,105 @@ async function resolveUrl(url: string): Promise<string> {
   }
 }
 
-async function scrapeTikTok(url: string): Promise<{ caption: string; thumbnailUrl: string | null } | null> {
+// ── PRIMARY: TikTok oEmbed API (free, no auth, instant) ──────────────────
+// Returns the video caption (title), thumbnail, and author name.
+// https://developers.tiktok.com/doc/embed-posts
+async function tiktokOEmbed(url) {
+  try {
+    const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
+    const res = await fetch(oembedUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) {
+      console.error('[oEmbed] HTTP error:', res.status);
+      return null;
+    }
+    const data = await res.json();
+    if (!data || !data.title) return null;
+    return {
+      caption: data.title,
+      thumbnailUrl: data.thumbnail_url || null,
+      canonicalUrl: url,
+    };
+  } catch (err) {
+    console.error('[oEmbed] error:', err?.message || String(err));
+    return null;
+  }
+}
+
+// ── FALLBACK 1: Direct HTML page scrape (free, no auth) ───────────────────
+// Fetches the TikTok page HTML and extracts the caption from the embedded
+// __UNIVERSAL_DATA_FOR_REHYDRATION__ JSON blob or JSON-LD script tags.
+async function scrapeTikTokPage(url) {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) {
+      console.error('[PageScrape] HTTP error:', res.status);
+      return null;
+    }
+    const html = await res.text();
+
+    // Method A: __UNIVERSAL_DATA_FOR_REHYDRATION__ script tag
+    const uniMatch = html.match(/<script\s+id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/i);
+    if (uniMatch) {
+      try {
+        const uni = JSON.parse(uniMatch[1]);
+        const desc = uni?.['__DEFAULT_SCOPE__']?.['webapp.video-detail']?.['itemInfo']?.['itemStruct']?.['desc']
+                  || uni?.['__DEFAULT_SCOPE__']?.['webapp.video-detail']?.['itemInfo']?.['itemStruct']?.['description']
+                  || uni?.['__DEFAULT_SCOPE__']?.['webapp.video-detail']?.['videoInfo']?.['desc']
+                  || null;
+        if (desc) {
+          const thumb = uni?.['__DEFAULT_SCOPE__']?.['webapp.video-detail']?.['itemInfo']?.['itemStruct']?.['video']?.['cover'] || null;
+          console.log('[PageScrape] found caption via __UNIVERSAL_DATA__');
+          return { caption: desc, thumbnailUrl: thumb, canonicalUrl: url };
+        }
+      } catch (e) {
+        console.error('[PageScrape] JSON parse error:', e?.message);
+      }
+    }
+
+    // Method B: JSON-LD script tag
+    const ldMatches = html.match(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+    if (ldMatches) {
+      for (const ldMatch of ldMatches) {
+        const jsonStr = ldMatch.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '');
+        try {
+          const ld = JSON.parse(jsonStr);
+          const desc = ld?.description || (Array.isArray(ld) ? ld[0]?.description : null);
+          if (desc && desc.length > 5) {
+            console.log('[PageScrape] found caption via JSON-LD');
+            return { caption: desc, thumbnailUrl: ld?.thumbnailUrl || null, canonicalUrl: url };
+          }
+        } catch {}
+      }
+    }
+
+    // Method C: meta tags
+    const ogDesc = html.match(/<meta\s+(?:property|name)=["']og:description["']\s+content=["']([^"']+)["']/i);
+    if (ogDesc?.[1] && ogDesc[1].length > 10) {
+      console.log('[PageScrape] found caption via og:description');
+      const ogThumb = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
+      return { caption: ogDesc[1], thumbnailUrl: ogThumb?.[1] || null, canonicalUrl: url };
+    }
+
+    console.error('[PageScrape] no caption found in page HTML');
+    return null;
+  } catch (err) {
+    console.error('[PageScrape] error:', err?.message || String(err));
+    return null;
+  }
+}
+
+// ── FALLBACK 2: Apify TikTok scraper (needs APIFY_TOKEN) ───────────────────
+async function scrapeTikTok(url) {
   if (!APIFY_TOKEN) return null;
   try {
     const res = await fetch(
@@ -37,19 +132,25 @@ async function scrapeTikTok(url: string): Promise<{ caption: string; thumbnailUr
         signal: AbortSignal.timeout(100000),
       }
     );
+    if (!res.ok) {
+      console.error('[Apify TikTok] HTTP error:', res.status, await res.text().catch(() => ''));
+      return null;
+    }
     const data = await res.json();
     const item = Array.isArray(data) ? data[0] : null;
     if (!item) return null;
     return {
       caption: item.text || item.desc || item.description || '',
       thumbnailUrl: item.videoMeta?.coverUrl || item.covers?.[0] || item.cover || null,
+      canonicalUrl: item.webVideoUrl || item.url || url,
     };
-  } catch {
+  } catch (err) {
+    console.error('[Apify TikTok] error:', err?.message || String(err));
     return null;
   }
 }
 
-async function scrapeInstagram(url: string): Promise<{ caption: string; thumbnailUrl: string | null } | null> {
+async function scrapeInstagram(url) {
   if (!APIFY_TOKEN) return null;
   try {
     const res = await fetch(
@@ -57,116 +158,85 @@ async function scrapeInstagram(url: string): Promise<{ caption: string; thumbnai
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          directUrls: [url],
-          resultsType: 'posts',
-          resultsLimit: 1,
-        }),
+        body: JSON.stringify({ directUrls: [url], resultsType: 'posts', resultsLimit: 1 }),
         signal: AbortSignal.timeout(100000),
       }
     );
+    if (!res.ok) {
+      console.error('[Apify Instagram] HTTP error:', res.status);
+      return null;
+    }
     const data = await res.json();
     const item = Array.isArray(data) ? data[0] : null;
     if (!item) return null;
     return {
       caption: item.caption || item.alt || '',
-      thumbnailUrl: item.displayUrl || null,
+      thumbnailUrl: item.displayUrl || item.thumbnailUrl || null,
     };
-  } catch {
+  } catch (err) {
+    console.error('[Apify Instagram] error:', err?.message || String(err));
     return null;
   }
 }
 
-export default async function(req: Request): Promise<Response> {
-  const base44 = createClientFromRequest(req);
-
-  let body: { url?: string };
+export default async function(req) {
   try {
-    body = await req.json();
-  } catch {
-    return Response.json({ success: false, error: 'Invalid request body' }, { status: 400 });
-  }
+    const { url } = await req.json();
 
-  const { url } = body;
-  if (!url) {
-    return Response.json({ success: false, error: 'Missing url parameter' }, { status: 400 });
-  }
-
-  if (!APIFY_TOKEN) {
-    return Response.json({
-      success: false,
-      error: 'APIFY_TOKEN secret is not configured. Please add it in the app secrets settings.',
-    }, { status: 500 });
-  }
-
-  // Resolve short URLs (e.g. vm.tiktok.com)
-  const resolvedUrl = await resolveUrl(url);
-
-  let hostname: string;
-  try {
-    hostname = new URL(resolvedUrl).hostname.replace(/^www\./, '');
-  } catch {
-    return Response.json({ success: false, error: 'Invalid URL' }, { status: 400 });
-  }
-
-  let scraped: { caption: string; thumbnailUrl: string | null } | null = null;
-
-  if (hostname === 'tiktok.com' || hostname.endsWith('.tiktok.com')) {
-    scraped = await scrapeTikTok(resolvedUrl);
-    // Fallback: try original short URL if resolution didn't help
-    if (!scraped && resolvedUrl !== url) {
-      scraped = await scrapeTikTok(url);
+    if (!url) {
+      return Response.json({ success: false, error: 'url is required' }, { status: 400 });
     }
-  } else if (hostname === 'instagram.com' || hostname.endsWith('.instagram.com')) {
-    scraped = await scrapeInstagram(resolvedUrl);
-  } else {
-    return Response.json({
-      success: false,
-      error: `Unsupported platform: ${hostname}. Only TikTok and Instagram are supported.`,
-    }, { status: 400 });
-  }
 
-  if (!scraped || !scraped.caption) {
+    // Resolve short URLs (vm.tiktok.com → www.tiktok.com/@user/video/...)
+    console.log('[extractSocialContent] resolving url:', url);
+    const resolvedUrl = await resolveUrl(url);
+    console.log('[extractSocialContent] resolved to:', resolvedUrl);
+
+    const hostname = (() => {
+      try { return new URL(resolvedUrl).hostname.replace(/^www\./, ''); } catch { return ''; }
+    })();
+
+    let scraped = null;
+
+    if (hostname === 'tiktok.com' || hostname.endsWith('.tiktok.com')) {
+      // PRIMARY: free oEmbed API (instant, no rate limits)
+      scraped = await tiktokOEmbed(resolvedUrl);
+      // FALLBACK 1: direct HTML page scrape (free, no auth)
+      if (!scraped?.caption) {
+        console.log('[extractSocialContent] oEmbed failed, trying page scrape...');
+        scraped = await scrapeTikTokPage(resolvedUrl);
+      }
+      // FALLBACK 2: Apify scraper (needs APIFY_TOKEN)
+      if (!scraped?.caption) {
+        console.log('[extractSocialContent] page scrape failed, trying Apify...');
+        scraped = await scrapeTikTok(resolvedUrl);
+        if (!scraped && resolvedUrl !== url) {
+          scraped = await scrapeTikTok(url);
+        }
+      }
+    } else if (hostname === 'instagram.com' || hostname.endsWith('.instagram.com')) {
+      scraped = await scrapeInstagram(resolvedUrl);
+    }
+
+    if (!scraped || !scraped.caption) {
+      console.error('[extractSocialContent] scraping produced no caption. scraped:', JSON.stringify(scraped));
+      return Response.json({
+        success: false,
+        error: 'The Muse couldn\'t read this post. Make sure it\'s public and try a direct link to the video (not a short share link).',
+      });
+    }
+
+    console.log('[extractSocialContent] caption:', scraped.caption.slice(0, 300));
+
     return Response.json({
-      success: false,
-      error: 'Could not extract content from this post. The post may be private or the scraper may have timed out.',
+      success: true,
+      caption: scraped.caption,
+      thumbnailUrl: scraped.thumbnailUrl || null,
+      canonicalUrl: scraped.canonicalUrl || null,
     });
+
+  } catch (error) {
+    console.error('[extractSocialContent] top-level error:', error?.message || String(error));
+    return Response.json({ success: false, error: error?.message || String(error) }, { status: 500 });
   }
-
-  const result = await base44.integrations.Core.InvokeLLM({
-    prompt: `You are a beauty product expert. Extract all beauty and skincare products mentioned in the following social media caption. For each product, identify the brand name, product name, and subcategory (e.g. foundation, lipstick, mascara, skincare, fragrance, etc.).
-
-Caption: "${scraped.caption}"
-
-If no beauty products are mentioned, return an empty products_identified array. Determine the overall content category (makeup, skincare, haircare, fragrance, etc.).`,
-    model: 'gemini_3_flash',
-    response_json_schema: {
-      type: 'object',
-      properties: {
-        category: {
-          type: 'string',
-          description: 'Overall category of products (makeup, skincare, haircare, fragrance, nails, etc.)',
-        },
-        products_identified: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              brand: { type: 'string', description: 'Brand name (e.g. Charlotte Tilbury, Dior)' },
-              product_name: { type: 'string', description: 'Product name or line' },
-              subcategory: { type: 'string', description: 'Product type (foundation, lipstick, serum, etc.)' },
-            },
-            required: ['brand', 'product_name', 'subcategory'],
-          },
-        },
-      },
-      required: ['category', 'products_identified'],
-    },
-  });
-
-  return Response.json({
-    success: true,
-    data: result,
-    thumbnailUrl: scraped.thumbnailUrl || null,
-  });
 }

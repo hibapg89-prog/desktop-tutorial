@@ -1,30 +1,94 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart, Sparkles, Share2 } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
+import ScanShareSheet from "@/components/ScanShareSheet";
+import { base44 } from "@/api/base44Client";
 
 export default function ScanResults() {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const products = state?.products || [];
+  const initialProducts = state?.products || [];
+  const [products, setProducts] = useState(initialProducts);
+  const [shareProduct, setShareProduct] = useState(null);
 
   useEffect(() => {
-    if (products.length === 0) {
+    if (initialProducts.length === 0) {
       navigate("/home", { replace: true });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (products.length === 0) {
-    return null;
-  }
+  // Subscribe to Product updates so images appear in real-time as the
+  // backend image-enrichment function finishes fetching them.
+  useEffect(() => {
+    const ids = new Set(initialProducts.map(p => p.id));
+    if (ids.size === 0) return;
+    const unsubscribe = base44.entities.Product.subscribe((event) => {
+      if (event.type === 'update' && ids.has(event.id) && event.data) {
+        setProducts(prev => prev.map(p =>
+          p.id === event.id ? { ...p, ...event.data } : p
+        ));
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  // Backup poll after 4s — catches any images that arrived before the subscription
+  useEffect(() => {
+    if (initialProducts.length === 0) return;
+    const t = setTimeout(async () => {
+      const fresh = await Promise.all(
+        initialProducts.map(async p => {
+          try {
+            const res = await base44.entities.Product.filter({ id: p.id });
+            return { ...p, ...(res?.[0] || {}) };
+          } catch { return p; }
+        })
+      );
+      setProducts(prev => fresh.map((f, i) => ({ ...prev[i], ...f })));
+    }, 4000);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (products.length === 0) return null;
+
+  const toggleVanity = async (product, e) => {
+    e.stopPropagation();
+    const next = !product.in_vanity;
+    setProducts(prev => prev.map(p =>
+      p.id === product.id ? { ...p, in_vanity: next, in_wishlist: next ? false : p.in_wishlist } : p
+    ));
+    try {
+      await base44.entities.Product.update(product.id, {
+        in_vanity: next,
+        in_wishlist: next ? false : product.in_wishlist,
+      });
+    } catch {
+      setProducts(prev => prev.map(p =>
+        p.id === product.id ? { ...p, in_vanity: !next, in_wishlist: product.in_wishlist } : p
+      ));
+    }
+  };
+
+  const toggleWishlist = async (product, e) => {
+    e.stopPropagation();
+    if (product.in_vanity) return;
+    const next = !product.in_wishlist;
+    setProducts(prev => prev.map(p =>
+      p.id === product.id ? { ...p, in_wishlist: next } : p
+    ));
+    try {
+      await base44.entities.Product.update(product.id, { in_wishlist: next });
+    } catch {
+      setProducts(prev => prev.map(p =>
+        p.id === product.id ? { ...p, in_wishlist: !next } : p
+      ));
+    }
+  };
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "var(--color-page-gradient)" }}
-    >
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--color-page-gradient)" }}>
       {/* Marble shimmer overlay */}
       <div
         className="fixed inset-0 pointer-events-none"
@@ -70,7 +134,7 @@ export default function ScanResults() {
         </p>
       </div>
 
-      {/* Gold rule — shelf edge */}
+      {/* Gold rule */}
       <div className="relative z-10 mx-5 mb-6">
         <div
           style={{
@@ -83,16 +147,14 @@ export default function ScanResults() {
       {/* Product cards */}
       <div className="relative z-10 flex-1 px-5 pb-12 flex flex-col gap-3">
         {products.map((product, i) => (
-          <motion.button
+          <motion.div
             key={product.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08, duration: 0.38, ease: "easeOut" }}
-            onClick={() => navigate(`/product/${product.id}`)}
-            className="w-full text-left"
           >
             <div
-              className="rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.985] transition-transform"
+              className="rounded-2xl overflow-hidden"
               style={{
                 background: "var(--color-bg-surface)",
                 border: "1px solid rgba(200,176,106,0.22)",
@@ -100,73 +162,115 @@ export default function ScanResults() {
                 backdropFilter: "blur(10px)",
               }}
             >
-              {/* Initial avatar */}
-              <div
-                className="w-13 h-13 w-[52px] h-[52px] rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: "var(--color-bg-elevated)",
-                  border: "1px solid rgba(200,176,106,0.28)",
-                }}
+              {/* Main card row — tappable to view product */}
+              <button
+                onClick={() => navigate(`/product/${product.id}`)}
+                className="w-full text-left px-5 py-4 flex items-center gap-4 active:scale-[0.985] transition-transform"
               >
-                <span
-                  style={{
-                    fontFamily: "Cormorant Garamond, serif",
-                    fontSize: "1.5rem",
-                    color: "var(--color-accent-gold)",
-                    lineHeight: 1,
-                  }}
+                {/* Product image / loading placeholder */}
+                <div
+                  className="w-[52px] h-[52px] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+                  style={{ background: "var(--color-bg-elevated)", border: "1px solid rgba(200,176,106,0.28)" }}
                 >
-                  {product.brand?.[0]?.toUpperCase() || "?"}
-                </span>
-              </div>
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: "Cormorant Garamond, serif",
+                        fontSize: "1.5rem",
+                        color: "var(--color-accent-gold)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {product.brand?.[0]?.toUpperCase() || "?"}
+                    </span>
+                  )}
+                </div>
 
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <p
-                  className="text-[10px] font-semibold tracking-[0.14em] uppercase truncate"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
-                  {product.brand}
-                </p>
-                <p
-                  className="mt-0.5 leading-snug line-clamp-2"
-                  style={{
-                    fontFamily: "Cormorant Garamond, serif",
-                    fontSize: "1.05rem",
-                    color: "var(--color-text-primary)",
-                    fontWeight: 400,
-                  }}
-                >
-                  {product.name}
-                  {product.shade ? ` — ${product.shade}` : ""}
-                </p>
-                {product.category && (
+                {/* Text */}
+                <div className="flex-1 min-w-0">
                   <p
-                    className="text-[11px] mt-1 font-light"
-                    style={{ color: "var(--color-text-primary)", opacity: 0.42 }}
+                    className="text-[10px] font-semibold tracking-[0.14em] uppercase truncate"
+                    style={{ color: "var(--color-text-primary)" }}
                   >
-                    {product.category}
+                    {product.brand}
                   </p>
-                )}
-              </div>
+                  <p
+                    className="mt-0.5 leading-snug line-clamp-2"
+                    style={{
+                      fontFamily: "Cormorant Garamond, serif",
+                      fontSize: "1.05rem",
+                      color: "var(--color-text-primary)",
+                      fontWeight: 400,
+                    }}
+                  >
+                    {product.name}{product.shade ? ` — ${product.shade}` : ""}
+                  </p>
+                  {product.category && (
+                    <p
+                      className="text-[11px] mt-1 font-light"
+                      style={{ color: "var(--color-text-primary)", opacity: 0.42 }}
+                    >
+                      {product.category}
+                    </p>
+                  )}
+                </div>
 
-              {/* Arrow pill — intentional brand CTA */}
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "#0B3C26" }}
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path
-                    d="M2 6h8M6 2l4 4-4 4"
-                    stroke="white"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                {/* Arrow pill */}
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: "#0B3C26" }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path
+                      d="M2 6h8M6 2l4 4-4 4"
+                      stroke="white"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+
+              {/* Action row — Vanity / Wishlist / Share */}
+              <div className="flex items-center gap-2 px-5 pb-3 pt-1">
+                <button
+                  onClick={(e) => toggleVanity(product, e)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] tracking-[0.12em] uppercase font-light transition-all ${
+                    product.in_vanity
+                      ? "bg-[#043927] text-[#FDF5E6]"
+                      : "border border-[var(--color-border)] text-primary-60"
+                  }`}
+                >
+                  <Sparkles size={11} />
+                  {product.in_vanity ? "In Vanity" : "Vanity"}
+                </button>
+                <button
+                  onClick={(e) => toggleWishlist(product, e)}
+                  disabled={product.in_vanity}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] tracking-[0.12em] uppercase font-light transition-all ${
+                    product.in_vanity
+                      ? "opacity-30 cursor-not-allowed border border-[var(--color-border)] text-primary-40"
+                      : product.in_wishlist
+                        ? "border border-[#BC8F8F] bg-[#BC8F8F]/10 text-[#BC8F8F]"
+                        : "border border-[var(--color-border)] text-primary-60"
+                  }`}
+                >
+                  <Heart size={11} fill={product.in_wishlist ? "currentColor" : "none"} />
+                  {product.in_wishlist ? "Wishlisted" : "Wishlist"}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShareProduct(product); }}
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-[10px] tracking-[0.12em] uppercase font-light border border-[var(--color-border)] text-primary-60 transition-all"
+                >
+                  <Share2 size={11} />
+                  Share
+                </button>
               </div>
             </div>
-          </motion.button>
+          </motion.div>
         ))}
       </div>
 
@@ -187,6 +291,11 @@ export default function ScanResults() {
       >
         Tap a product to explore
       </p>
+
+      {/* Share sheet */}
+      {shareProduct && (
+        <ScanShareSheet product={shareProduct} onClose={() => setShareProduct(null)} />
+      )}
     </div>
   );
 }
