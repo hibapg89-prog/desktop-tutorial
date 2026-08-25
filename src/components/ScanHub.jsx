@@ -145,9 +145,6 @@ export default function ScanHub({ onClose }) {
     setIsListening(false);
   };
 
-  // Fire-and-forget: call the backend function that fetches a verified product
-  // image URL (validated via real HTTP fetch) and stores it as image_url,
-  // replacing any user-uploaded scan photo with a proper product stock photo.
   const enrichProductImage = (productId, brand, name, shade) => {
     if (!productId || !brand) return;
     (async () => {
@@ -184,7 +181,6 @@ export default function ScanHub({ onClose }) {
     setPreviewFile(file);
     setPreviewUrl(url);
     setActiveMode("preview");
-    // Auto-analyse after a brief iridescent flourish
     setTimeout(() => {
       URL.revokeObjectURL(url);
       setPreviewFile(null);
@@ -201,7 +197,6 @@ export default function ScanHub({ onClose }) {
     setIsAnalyzing(true);
     setLoadingHint("Scanning post for beauty products...");
     let p = 0;
-    // Slower animation — Level 3 video analysis can take up to a minute
     const interval = setInterval(() => {
       p += Math.random() * 5;
       if (p > 88) p = 88;
@@ -360,10 +355,9 @@ export default function ScanHub({ onClose }) {
         } else if (imageUrl) {
           file_urls = [imageUrl];
         }
-        prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. Analyze this image carefully and identify ALL visible beauty products — there may be one, two, or more.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase, simplify, or translate it. If the label says "3D Hydra Brillant à Lèvres", use that exact text for the name field.\n- Read the EXACT shade name and number as printed — include the shade number if visible (e.g. "51 Frozen Light Blue", NOT just "Light Blue"). If no shade is printed, return null.\n- Read the EXACT brand name as it appears on the product.\n- Do NOT summarize or generalize. Transcribe visible text verbatim.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string — exact as on packaging), name (string — exact as on packaging), shade (string or null — exact shade name+number as on packaging), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
+        prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. Analyze this image carefully and identify ALL visible beauty products — there may be one, two, or more.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase, simplify, or translate it.\n- Read the EXACT shade name and number as printed — include the shade number if visible. If no shade is printed, return null.\n- Read the EXACT brand name as it appears on the product.\n- Do NOT summarize or generalize. Transcribe visible text verbatim.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
       } else if (type === "url") {
         if (isSocial) {
-          // Attempt server-side OG image fetch — runs during the loading animation
           try {
             const ogResult = await base44.functions.invoke('fetchSocialOGImage', { url });
             if (ogResult?.image_url) {
@@ -372,15 +366,15 @@ export default function ScanHub({ onClose }) {
             }
           } catch {}
           if (useImageAnalysis) {
-            prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. This image is from a social media post — it may feature one or more beauty products being used or reviewed.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase or generalize.\n- Read the EXACT shade name and number as printed. If no shade is visible, return null.\n- Read the EXACT brand name as it appears on the product.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
+            prompt = `You are a luxury beauty product identification expert. This image is from a social media post — it may feature one or more beauty products being used or reviewed. Return a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
           } else {
-            prompt = `You are a luxury beauty product identification expert. A user has shared this social media post link: "${url}". This may be an Instagram, TikTok, YouTube, Pinterest or similar post featuring beauty products. Based on any available context in the URL itself (username, post tags, or product names in the URL path), try to identify the beauty product being shown. If you cannot identify a specific real beauty product from the URL alone, set identified to false — do not fabricate details. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
+            prompt = `You are a luxury beauty product identification expert. A user has shared this social media post link: "${url}". Based on any available context in the URL itself, try to identify the beauty product being shown. If you cannot identify a specific real beauty product from the URL alone, set identified to false. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
           }
         } else {
-          prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL text alone (brand name, product name in the URL path), set identified to false — do not fabricate details.`;
+          prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL, set identified to false.`;
         }
       } else if (type === "voice") {
-        prompt = `You are a luxury beauty product identification expert. The user said: "${text}". Identify this beauty product. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
+        prompt = `You are a luxury beauty product identification expert. The user said: "${text}". Identify this beauty product. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
       }
 
       const BAD_BRANDS = [
@@ -393,7 +387,6 @@ export default function ScanHub({ onClose }) {
         return ["null", "none", "n/a", "na", "", "no shade", "not applicable"].includes(s.toLowerCase()) ? null : s;
       };
 
-// TODO: InvokeLLM below uses Anthropic (no API key) — migrate to a backend function using Gemini
       if (useImageAnalysis) {
         const imgResult = await base44.integrations.Core.InvokeLLM({
           prompt,
@@ -493,7 +486,6 @@ export default function ScanHub({ onClose }) {
           }, 500);
         }
       } else {
-        // TODO: InvokeLLM below uses Anthropic (no API key) — migrate to a backend function using Gemini
         const result = await base44.integrations.Core.InvokeLLM({
           prompt,
           file_urls,
@@ -568,9 +560,7 @@ export default function ScanHub({ onClose }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-        style={{
-          background: "#F7F2EE",
-        }}
+        style={{ background: "#F7F2EE" }}
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         {/* Close */}
@@ -581,7 +571,6 @@ export default function ScanHub({ onClose }) {
         {/* ===== LOADING ===== */}
         {activeMode === "loading" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden" style={{ background: "#F5F2ED" }}>
-            {/* Silk background — generated satin texture */}
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
@@ -590,10 +579,7 @@ export default function ScanHub({ onClose }) {
                 backgroundPosition: "center",
               }}
             />
-
-            {/* Content */}
             <div className="relative z-10 flex flex-col items-center px-8">
-              {/* Swan emblem */}
               <div className="swan-float mb-4">
                 <img
                   src="https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/87fc5ab0f_IMG_4373.png"
@@ -602,22 +588,18 @@ export default function ScanHub({ onClose }) {
                   style={{ background: "transparent", filter: "drop-shadow(0 2px 10px rgba(14,59,46,0.18))" }}
                 />
               </div>
-              {/* THE MUSE heading */}
               <h2
                 className="text-[#1A3C34] uppercase mb-8"
                 style={{ fontSize: "15px", letterSpacing: "0.42em", fontWeight: 600, paddingLeft: "0.42em", fontFamily: "'Cormorant Garamond', Georgia, serif" }}
               >
                 The Muse
               </h2>
-              {/* Status message */}
               <p className="font-serif text-base text-[#1A3C34] text-center mb-1" style={{ fontWeight: 400 }}>
                 The Muse is identifying
               </p>
               <p className="font-serif text-sm text-[#1A3C34] text-center mb-10 italic" style={{ fontWeight: 300 }}>
                 your beauty treasures...
               </p>
-
-              {/* Pill progress bar with moon phases */}
               <div className="flex items-center gap-3 w-full max-w-[300px]">
                 <div
                   className="flex-1 rounded-full flex items-center justify-center"
@@ -685,10 +667,7 @@ export default function ScanHub({ onClose }) {
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center px-8 text-center"
           >
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
-              style={{ background: "#EADCCF" }}
-            >
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6" style={{ background: "#EADCCF" }}>
               <span style={{ fontSize: 26, lineHeight: 1, color: "#1B2E2A" }}>✦</span>
             </div>
             <h3 className="font-serif text-xl text-[#1B2E2A] mb-2">The Muse couldn't identify this</h3>
@@ -709,10 +688,7 @@ export default function ScanHub({ onClose }) {
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center px-8 text-center"
           >
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
-              style={{ background: "#EFE9DC" }}
-            >
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6" style={{ background: "#EFE9DC" }}>
               <span style={{ fontSize: 26, lineHeight: 1, color: "#1B2E2A" }}>✦</span>
             </div>
             <h3 className="font-serif text-xl text-[#1B2E2A] mb-2">Already in your collection</h3>
@@ -745,13 +721,9 @@ export default function ScanHub({ onClose }) {
           </motion.div>
         )}
 
-        {/* ===== GALLERY PREVIEW (iridescent flourish, auto-analyses) ===== */}
+        {/* ===== GALLERY PREVIEW ===== */}
         {activeMode === "preview" && previewUrl && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center">
             <div className="iridescent-frame rounded-[18px]">
               <div className="w-52 h-52 rounded-[16px] overflow-hidden">
                 <img src={previewUrl} alt="Selected" className="w-full h-full object-cover" />
@@ -797,8 +769,6 @@ export default function ScanHub({ onClose }) {
             <div className="absolute top-6 right-6" style={{ transform: "rotate(8deg)" }}>
               <SwanLogo size={34} />
             </div>
-
-            {/* Soundwave SVG backdrop */}
             <div className="relative flex items-center justify-center mb-10">
               <svg width="280" height="120" viewBox="0 0 280 120" className="absolute" style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)" }}>
                 {[
@@ -820,8 +790,6 @@ export default function ScanHub({ onClose }) {
                   />
                 ))}
               </svg>
-
-              {/* Mic orb — tap to start/stop */}
               <motion.button
                 animate={{ scale: isListening ? [1, 1.06, 1] : 1 }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
@@ -837,7 +805,7 @@ export default function ScanHub({ onClose }) {
                     : "0 0 0 6px rgba(197,160,112,0.12), 0 8px 30px rgba(26,58,48,0.25)"
                 }}
               >
-                <Mic size={38} strokeWidth={1.6} color={isListening ? "#FDF7EF" : "#FDF7EF"} />
+                <Mic size={38} strokeWidth={1.6} color="#FDF7EF" />
                 {isListening && (
                   <motion.div
                     className="absolute inset-0 rounded-full border-2 border-[#C5A070]"
@@ -847,16 +815,12 @@ export default function ScanHub({ onClose }) {
                 )}
               </motion.button>
             </div>
-
-            {/* Status text */}
             <h3 className="font-serif text-2xl text-[#8B7355] mb-1" style={{ letterSpacing: "0.02em" }}>
               {isListening ? "Listening..." : "Voice Search"}
             </h3>
             <p className="text-sm text-[#8B7355]/70 italic mb-4">
               {isListening ? "Say the product name" : hasSpeech ? "Tap the orb to speak" : "Type the product below"}
             </p>
-
-            {/* Live transcript */}
             {heard && (
               <motion.p
                 initial={{ opacity: 0, y: 6 }}
@@ -866,8 +830,6 @@ export default function ScanHub({ onClose }) {
                 "{heard}"
               </motion.p>
             )}
-
-            {/* Fallback text input when speech not supported */}
             {!hasSpeech && (
               <div className="w-full max-w-xs px-6 mb-4">
                 <div className="w-full border border-[#1A3A30]/25 rounded-2xl px-4 py-3 flex items-center gap-3 bg-white/60">
@@ -887,13 +849,10 @@ export default function ScanHub({ onClose }) {
                 </div>
               </div>
             )}
-
             <div className="flex flex-col items-center gap-3 w-full max-w-xs px-8">
               {!hasSpeech && (
                 <button
-                  onClick={() => {
-                    if (voiceInput.trim()) analyzeProduct({ type: "voice", text: voiceInput.trim() });
-                  }}
+                  onClick={() => { if (voiceInput.trim()) analyzeProduct({ type: "voice", text: voiceInput.trim() }); }}
                   className="w-full py-3.5 bg-[#1A3A30] text-[#FDF7EF] text-xs tracking-[0.25em] uppercase rounded-full font-light"
                 >
                   Analyse with The Muse
@@ -906,7 +865,7 @@ export default function ScanHub({ onClose }) {
           </div>
         )}
 
-        {/* ===== MIRROR — VIRTUAL TRY-ON (coming soon) ===== */}
+        {/* ===== MIRROR — STUDIO ===== */}
         {activeMode === "mirror" && (
           <StudioComingSoon onClose={() => setActiveMode(null)} />
         )}
@@ -914,7 +873,6 @@ export default function ScanHub({ onClose }) {
         {/* ===== DEFAULT — RADIAL FAN MENU ===== */}
         {!activeMode && (
           <div className="relative w-[380px] h-[440px] mx-auto max-w-full">
-            {/* Fan tiles */}
             {inputMethods.map(({ id, label, icon: Icon }, i) => {
               const pos = tilePositions[i];
               return (
@@ -936,11 +894,7 @@ export default function ScanHub({ onClose }) {
                 >
                   <div
                     className="w-16 h-16 rounded-[20px] flex items-center justify-center"
-                    style={{
-                      background: "#EFE9DC",
-                      border: "1px solid #0B3C26",
-                      boxShadow: "0 4px 14px rgba(11,60,38,0.10)"
-                    }}
+                    style={{ background: "#EFE9DC", border: "1px solid #0B3C26", boxShadow: "0 4px 14px rgba(11,60,38,0.10)" }}
                   >
                     {typeof Icon === "string" ? (
                       <span style={{ fontSize: 24, lineHeight: 1 }}>{Icon}</span>
@@ -952,23 +906,13 @@ export default function ScanHub({ onClose }) {
                 </motion.button>
               );
             })}
-
-            {/* Central swan button — uploaded asset */}
             <motion.button
               initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.45, type: "spring", stiffness: 200, damping: 16 }}
               onClick={() => setShowMuse(true)}
               className="absolute rounded-full cursor-pointer overflow-hidden"
-              style={{
-                left: "190px",
-                top: "240px",
-                width: "140px",
-                height: "140px",
-                marginLeft: "-70px",
-                marginTop: "-70px",
-                boxShadow: "0 8px 24px rgba(11,60,38,0.18)"
-              }}
+              style={{ left: "190px", top: "240px", width: "140px", height: "140px", marginLeft: "-70px", marginTop: "-70px", boxShadow: "0 8px 24px rgba(11,60,38,0.18)" }}
             >
               <img
                 src="https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/26306bad9_IMG_4464.png"
@@ -979,18 +923,15 @@ export default function ScanHub({ onClose }) {
           </div>
         )}
 
-        {/* Tiny faint star - bottom-right corner */}
         {!activeMode && (
           <div className="absolute bottom-6 right-7 pointer-events-none" style={{ opacity: 0.25 }}>
             <Sparkles size={14} color="#1D221D" strokeWidth={1} />
           </div>
         )}
 
-        {/* Hidden file inputs */}
         <input ref={fileInputRef}   type="file" accept="image/*"                  className="hidden" onChange={handleFileUpload} />
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileUpload} />
 
-        {/* The Muse assistant — opened via central swan */}
         {showMuse && (
           <MuseAssistant
             onClose={() => setShowMuse(false)}
