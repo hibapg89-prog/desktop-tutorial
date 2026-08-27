@@ -192,7 +192,7 @@ function BrushHolder() {
   );
 }
 
-// ── DraggableProduct — free 2D drag on canvas ──────────────────────────────
+// ── DraggableProduct — free 2D drag on canvas ────────────────────────────────────
 
 function DraggableProduct({ product, initPos, onDragEnd }) {
   const navigate = useNavigate();
@@ -225,7 +225,7 @@ function DraggableProduct({ product, initPos, onDragEnd }) {
   );
 }
 
-// ── VanityCanvas — 2D marble surface with freely draggable products ─────────
+// ── VanityCanvas — 2D marble surface with freely draggable products ─────────────
 
 function VanityCanvas({ products }) {
   const [posMap, setPosMap] = useState(() => {
@@ -284,7 +284,7 @@ function VanityCanvas({ products }) {
   );
 }
 
-// ── PanelProduct — draggable item for split-screen ─────────────────────────
+// ── PanelProduct — draggable item for split-screen ─────────────────────────────
 
 function PanelProduct({ product, targetRef, onMove }) {
   const inRect = (rect, point) =>
@@ -380,7 +380,7 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
   );
 }
 
-// ── main page ──────────────────────────────────────────────────────────────
+// ── main page ─────────────────────────────────────────────────────────────
 
 export default function Vanity() {
   const [activeTab, setActiveTab] = useState("vanity");
@@ -556,7 +556,7 @@ export default function Vanity() {
 
   return (
     <main className="min-h-screen bg-[var(--color-bg)]">
-      {/* ── Vanity header — framed banner block ─────────────────────── */}
+      {/* ── Vanity header — framed banner block ─────────────────────────────────── */}
       <div className="px-5 pt-6 pb-4">
         <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid rgba(200,176,106,0.45)" }}>
           {/* Top bar — title + centered toggle */}
