@@ -1,0 +1,17 @@
+{
+  "name": "BrandResponse",
+  "type": "object",
+  "properties": {
+    "post_id": { "type": "string" },
+    "brand_name": { "type": "string" },
+    "response_text": { "type": "string" },
+    "responder_name": { "type": "string" }
+  },
+  "required": ["post_id", "brand_name", "response_text"],
+  "rls": {
+    "read": {},
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": { "created_by_id": "{{user.id}}" },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

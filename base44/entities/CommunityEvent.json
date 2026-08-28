@@ -1,0 +1,19 @@
+{
+  "name": "CommunityEvent",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string", "title": "Title" },
+    "subtitle": { "type": "string", "title": "Subtitle" },
+    "event_date": { "type": "string", "title": "Event date (YYYY-MM-DD)" },
+    "start_time": { "type": "string", "title": "Start time (e.g. 7:00 PM)" },
+    "end_time": { "type": "string", "title": "End time (e.g. 8:30 PM)" },
+    "location": { "type": "string", "title": "Location (e.g. Virtual, Le Studio Paris)" },
+    "event_type": { "type": "string", "title": "Type", "enum": ["virtual", "in_person"] },
+    "image_url": { "type": "string", "title": "Cover image URL" },
+    "cta_label": { "type": "string", "title": "CTA label" },
+    "cta_url": { "type": "string", "title": "CTA URL" },
+    "active": { "type": "boolean", "title": "Active", "default": true },
+    "display_order": { "type": "number", "title": "Display order" }
+  },
+  "required": ["title", "event_date"]
+}

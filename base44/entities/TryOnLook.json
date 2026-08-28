@@ -1,0 +1,17 @@
+{
+  "name": "TryOnLook",
+  "type": "object",
+  "properties": {
+    "category": { "type": "string", "enum": ["lipstick", "eyeshadow"] },
+    "shade_name": { "type": "string" },
+    "shade_hex": { "type": "string" },
+    "is_favorite": { "type": "boolean", "default": false }
+  },
+  "required": ["category", "shade_name", "shade_hex"],
+  "rls": {
+    "read": { "created_by_id": "{{user.id}}" },
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": { "created_by_id": "{{user.id}}" },
+    "delete": { "created_by_id": "{{user.id}}" }
+  }
+}

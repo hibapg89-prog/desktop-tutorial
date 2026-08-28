@@ -1,0 +1,17 @@
+{
+  "name": "Review",
+  "type": "object",
+  "properties": {
+    "post_id": { "type": "string" },
+    "rating": { "type": "number" },
+    "review_text": { "type": "string" },
+    "author_name": { "type": "string" }
+  },
+  "required": ["post_id", "review_text"],
+  "rls": {
+    "read": {},
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": { "created_by_id": "{{user.id}}" },
+    "delete": { "created_by_id": "{{user.id}}" }
+  }
+}

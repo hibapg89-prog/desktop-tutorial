@@ -1,0 +1,34 @@
+{
+  "name": "ShadePalette",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "title": "Palette name" },
+    "notes": { "type": "string", "title": "Inspiration notes" },
+    "category": {
+      "type": "string",
+      "enum": ["lipstick", "eyeshadow", "mixed"],
+      "default": "mixed",
+      "title": "Palette category"
+    },
+    "shades": {
+      "type": "array",
+      "title": "Shades in this palette",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "title": "Shade name" },
+          "hex": { "type": "string", "title": "Hex color" },
+          "category": { "type": "string", "enum": ["lipstick", "eyeshadow"], "title": "Shade type" }
+        },
+        "required": ["name", "hex"]
+      }
+    }
+  },
+  "required": ["name", "category"],
+  "rls": {
+    "read": { "created_by_id": "{{user.id}}" },
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": { "created_by_id": "{{user.id}}" },
+    "delete": { "created_by_id": "{{user.id}}" }
+  }
+}

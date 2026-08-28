@@ -1,0 +1,18 @@
+{
+  "name": "CirclePost",
+  "type": "object",
+  "properties": {
+    "room_id": { "type": "string" },
+    "text": { "type": "string" },
+    "image_url": { "type": "string" },
+    "author_name": { "type": "string" },
+    "post_type": { "type": "string" }
+  },
+  "required": ["room_id"],
+  "rls": {
+    "read": {},
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": {},
+    "delete": { "created_by_id": "{{user.id}}" }
+  }
+}

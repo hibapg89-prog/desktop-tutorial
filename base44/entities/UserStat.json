@@ -1,0 +1,13 @@
+{
+  "name": "UserStat",
+  "type": "object",
+  "properties": {
+    "user_id": { "type": "string", "description": "The ID of the user whose stats are tracked" },
+    "total_adores": {
+      "type": "number",
+      "description": "Running total of Adore reactions received across all posts",
+      "default": 0
+    }
+  },
+  "required": ["user_id"]
+}

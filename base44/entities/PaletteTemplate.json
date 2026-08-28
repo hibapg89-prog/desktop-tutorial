@@ -1,0 +1,29 @@
+{
+  "name": "PaletteTemplate",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "title": "Template name" },
+    "season_tag": { "type": "string", "title": "Season or event tag" },
+    "shades": {
+      "type": "array",
+      "title": "Shades in this template",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "title": "Shade name" },
+          "hex": { "type": "string", "title": "Hex color" },
+          "category": { "type": "string", "enum": ["lipstick", "eyeshadow"], "title": "Shade type" }
+        },
+        "required": ["name", "hex"]
+      }
+    },
+    "is_starter": { "type": "boolean", "default": false, "title": "Starter template (shared)" }
+  },
+  "required": ["name", "shades"],
+  "rls": {
+    "read": { "$or": [{ "created_by_id": "{{user.id}}" }, { "data.is_starter": true }] },
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": { "$or": [{ "created_by_id": "{{user.id}}" }, { "user_condition": { "role": "admin" } }] },
+    "delete": { "$or": [{ "created_by_id": "{{user.id}}" }, { "user_condition": { "role": "admin" } }] }
+  }
+}

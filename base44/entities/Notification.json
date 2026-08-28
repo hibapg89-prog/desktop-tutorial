@@ -1,0 +1,28 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_id": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["price_drop", "message", "expiry", "allergen", "swap", "recommendation"],
+      "default": "price_drop"
+    },
+    "title": { "type": "string" },
+    "body": { "type": "string" },
+    "product_id": { "type": "string" },
+    "product_name": { "type": "string" },
+    "image_url": { "type": "string" },
+    "price_now": { "type": "number" },
+    "was_price": { "type": "number" },
+    "discount_pct": { "type": "number" },
+    "sender_id": { "type": "string" },
+    "read": { "type": "boolean", "default": false }
+  },
+  "required": ["user_id", "title"],
+  "rls": {
+    "read": { "data.user_id": "{{user.id}}" },
+    "update": { "data.user_id": "{{user.id}}" },
+    "delete": { "data.user_id": "{{user.id}}" }
+  }
+}

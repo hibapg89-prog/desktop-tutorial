@@ -1,0 +1,25 @@
+{
+  "name": "CommunityPost",
+  "type": "object",
+  "properties": {
+    "product_id": { "type": "string" },
+    "brand": { "type": "string" },
+    "name": { "type": "string" },
+    "shade": { "type": "string" },
+    "category": { "type": "string" },
+    "image_url": { "type": "string" },
+    "price": { "type": "number" },
+    "currency": { "type": "string", "default": "USD" },
+    "review_text": { "type": "string" },
+    "rating": { "type": "number" },
+    "author_name": { "type": "string" },
+    "review_count": { "type": "number", "default": 0 }
+  },
+  "required": ["brand", "name", "review_text"],
+  "rls": {
+    "read": {},
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": { "created_by_id": "{{user.id}}" },
+    "delete": { "created_by_id": "{{user.id}}" }
+  }
+}
