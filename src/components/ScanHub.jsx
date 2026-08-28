@@ -199,6 +199,7 @@ export default function ScanHub({ onClose }) {
     "pinterest.com", "pinterest.fr", "pinterest.co.uk", "pinterest.de",
     "pinterest.es", "pinterest.it", "pinterest.ca", "pinterest.au",
     "pin.it",
+    "twitter.com", "x.com", "t.co",
   ];
 
   const analyzeSocialLink = async (url) => {
@@ -444,6 +445,114 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If you
         setScanError("The Muse couldn't find beauty products in this pin. Make sure the pin is public and mentions specific product names.");
         setActiveMode("error");
         logScan({ scan_method: "social_link", status: "failed", error_reason: "Pinterest extractor and web search found no beauty products" });
+        return;
+      }
+
+      // ── TWITTER / X: Backend oEmbed API ──────────────────────────────────
+      const isTwitter = urlHostname === 'twitter.com' || urlHostname === 'x.com' || urlHostname === 't.co';
+
+      if (isTwitter) {
+        setLoadingHint("Reading the post...");
+        try {
+          const twRes = await base44.functions.invoke('extractTwitterContent', { url });
+          if (twRes?.success && twRes.caption) {
+            caption = twRes.caption;
+            thumbnailUrl = twRes.thumbnailUrl || null;
+          }
+        } catch (err) {
+          console.error('[Twitter extractor error]:', err);
+        }
+
+        if (caption) {
+          setLoadingHint("Reading the beauty edit...");
+          const data = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a luxury beauty product identification expert analyzing a Twitter/X post. Extract all beauty products explicitly mentioned in this tweet.
+
+Post content:
+"${caption}"
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: exact brand name as written
+- product_name: exact product name as written
+- subcategory: the product type (e.g. Foundation, Concealer, Mascara, Lipstick, Blush, Bronzer, Eyeshadow Palette, Eyeliner, Sunscreen, Powder, Fragrance, Lip Liner, Highlighter)
+
+Also output:
+- category: the dominant category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract products EXPLICITLY named. Do NOT invent or infer products not mentioned. If no beauty products are mentioned, return an empty products_identified array.`,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                category: { type: 'string' },
+                products_identified: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      brand:        { type: 'string' },
+                      product_name: { type: 'string' },
+                      subcategory:  { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          });
+          const twProducts = data?.products_identified || [];
+          if (twProducts.length > 0) {
+            await finishWithProducts(twProducts, data.category, thumbnailUrl);
+            return;
+          }
+        }
+
+        // Twitter oEmbed failed or no products — Gemini web search fallback
+        setLoadingHint("Searching the web for this post...");
+        const webData = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a luxury beauty product identification expert. A user shared this Twitter/X post: "${url}"
+
+Search the web for the content of this tweet. Look for the tweet text or any page that discusses the products featured in this post.
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: exact brand name
+- product_name: exact product name
+- subcategory: the product type (e.g. Foundation, Concealer, Mascara, Lipstick, Blush, Bronzer, Eyeshadow Palette, Eyeliner, Sunscreen, Powder, Fragrance, Lip Liner, Highlighter)
+
+Also output:
+- category: the dominant category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If you cannot find the tweet content or no beauty products are mentioned, return an empty products_identified array.`,
+          model: 'gemini_3_flash',
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              category: { type: 'string' },
+              products_identified: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    brand:        { type: 'string' },
+                    product_name: { type: 'string' },
+                    subcategory:  { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        });
+        const webProducts = webData?.products_identified || [];
+        if (webProducts.length > 0) {
+          await finishWithProducts(webProducts, webData.category, thumbnailUrl);
+          return;
+        }
+
+        clearInterval(interval);
+        setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
+        setScanError("The Muse couldn't find beauty products in this post. Make sure the tweet is public and mentions specific product names.");
+        setActiveMode("error");
+        logScan({ scan_method: "social_link", status: "failed", error_reason: "Twitter extractor and web search found no beauty products" });
         return;
       }
 
