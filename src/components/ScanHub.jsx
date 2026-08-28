@@ -193,7 +193,7 @@ export default function ScanHub({ onClose }) {
     }, 1200);
   };
 
-  const SOCIAL_EXTRACTABLE = ["instagram.com", "tiktok.com"];
+  const SOCIAL_EXTRACTABLE = ["instagram.com", "tiktok.com", "youtube.com", "youtu.be"];
 
   const analyzeSocialLink = async (url) => {
     setScanError(null);
@@ -260,10 +260,81 @@ export default function ScanHub({ onClose }) {
     };
 
     try {
-      // ── PRIMARY: Direct TikTok oEmbed API call from the browser ────
-      // Free, public, no API key, no rate limits, ~1s response.
       let caption = null;
       let thumbnailUrl = null;
+
+      // ── YOUTUBE: Backend function (YouTube Data API v3) ───────────────
+      const urlHostname = (() => {
+        try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+      })();
+      const isYouTube = urlHostname === 'youtube.com' || urlHostname === 'youtu.be';
+
+      if (isYouTube) {
+        setLoadingHint("Reading the video...");
+        try {
+          const ytRes = await base44.functions.invoke('extractYouTubeContent', { url });
+          if (ytRes?.success && ytRes.caption) {
+            caption = ytRes.caption;
+            thumbnailUrl = ytRes.thumbnailUrl || null;
+          }
+        } catch (err) {
+          console.error('[YouTube extractor error]:', err);
+        }
+
+        if (caption) {
+          setLoadingHint("Reading the beauty edit...");
+          const data = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a luxury beauty product identification expert analyzing a YouTube video. Extract all beauty products explicitly mentioned in this video title and description.
+
+Video content:
+"${caption}"
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: exact brand name as written
+- product_name: exact product name as written
+- subcategory: the product type (e.g. Foundation, Concealer, Mascara, Lipstick, Blush, Bronzer, Eyeshadow Palette, Eyeliner, Sunscreen, Powder, Fragrance, Lip Liner, Highlighter)
+
+Also output:
+- category: the dominant category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract products EXPLICITLY named. Do NOT invent or infer products that aren't mentioned. If no beauty products are mentioned, return an empty products_identified array.`,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                category: { type: 'string' },
+                products_identified: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      brand:        { type: 'string' },
+                      product_name: { type: 'string' },
+                      subcategory:  { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          });
+          const ytProducts = data?.products_identified || [];
+          if (ytProducts.length > 0) {
+            await finishWithProducts(ytProducts, data.category, thumbnailUrl);
+            return;
+          }
+        }
+
+        // YouTube API returned nothing useful — fall through to Gemini web search
+        clearInterval(interval);
+        setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
+        setScanError("The Muse couldn't find beauty products in this video. Try a video that mentions specific product names in its title or description.");
+        setActiveMode("error");
+        logScan({ scan_method: "social_link", status: "failed", error_reason: "YouTube extractor found no beauty products" });
+        return;
+      }
+
+      // ── PRIMARY: Direct TikTok oEmbed API call from the browser ────
+      // Free, public, no API key, no rate limits, ~1s response.
 
       // Try direct oEmbed — TikTok sends permissive CORS headers on this endpoint
       setLoadingHint("Reading the post...");
