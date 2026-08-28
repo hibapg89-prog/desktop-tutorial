@@ -27,7 +27,6 @@
     --ring: 0 0% 3.9%;
     --radius: 0.5rem;
 
-    /* LuxeBeauty Brand Colors — The Muse Design System */
     --champagne: #F6EFDF;
     --emerald: #1F4A3A;
     --forest: #1F4A3A;
@@ -36,7 +35,6 @@
     --gold: #C9B58A;
     --satin: #F4ECDA;
 
-    /* ── Dark Mode Color Tokens — Light defaults ────── */
     --color-bg: #FDF5E6;
     --color-bg-surface: #F5EEE2;
     --color-bg-elevated: #EFE9DC;
@@ -57,7 +55,6 @@
     --color-body-font-weight: 400;
   }
 
-  /* OS-level dark mode — respects in-app light override */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --color-bg: #0D1A14;
@@ -80,7 +77,6 @@
     }
   }
 
-  /* In-app override — force dark (wins over OS light) */
   [data-theme="dark"] {
     --color-bg: #0D1A14;
     --color-bg-surface: #152B1E;
@@ -101,20 +97,17 @@
     --color-scrim-loading: rgba(13,26,20,0.72);
   }
 
-  /* ── High Contrast Text — light mode (in-app toggle only) ── */
   [data-high-contrast="true"]:not([data-theme="dark"]) {
     --color-body-font-weight: 500;
     --color-border: rgba(4, 57, 39, 0.22);
     --color-border-subtle: rgba(4, 57, 39, 0.14);
   }
 
-  /* ── High Contrast Text — dark mode (both toggles active) ── */
   [data-theme="dark"][data-high-contrast="true"] {
     --color-accent-gold: #E8CC8A;
     --color-text-gold-rgb: 232, 204, 138;
   }
 
-  /* ── High Contrast Text — OS dark auto-mode ── */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"])[data-high-contrast="true"] {
       --color-accent-gold: #E8CC8A;
@@ -122,7 +115,6 @@
     }
   }
 
-  /* In-app override — force light (wins over OS dark) */
   [data-theme="light"] {
     --color-bg: #FDF5E6;
     --color-bg-surface: #F5EEE2;
@@ -160,64 +152,22 @@
     font-family: 'Cormorant Garamond', Georgia, serif;
   }
 
-  h1 {
-    line-height: 1.3;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.4em;
-  }
+  h1 { line-height: 1.3; letter-spacing: 0.02em; margin-bottom: 0.4em; }
+  h2 { line-height: 1.35; letter-spacing: 0.025em; margin-bottom: 0.35em; }
+  h3 { line-height: 1.4; letter-spacing: 0.03em; margin-bottom: 0.3em; }
 
-  h2 {
-    line-height: 1.35;
-    letter-spacing: 0.025em;
-    margin-bottom: 0.35em;
-  }
-
-  h3 {
-    line-height: 1.4;
-    letter-spacing: 0.03em;
-    margin-bottom: 0.3em;
-  }
-
-  .font-serif {
-    line-height: 1.45;
-    letter-spacing: 0.015em;
-  }
+  .font-serif { line-height: 1.45; letter-spacing: 0.015em; }
 }
 
-/* LuxeBeauty Utility Classes */
-.luxe-bg {
-  background-color: #F6EFDF;
-}
+.luxe-bg { background-color: #F6EFDF; }
+.satin-bg { background: linear-gradient(135deg, #F6EFDF 0%, #F4ECDA 50%, #F6EFDF 100%); }
+.emerald-bg { background-color: #1F4A3A; }
+.forest-bg { background-color: #1F4A3A; }
+.dusty-rose-bg { background-color: #C08A82; }
+.gold-text { color: #C9B58A; }
+.emerald-text { color: #1F4A3A; }
+.dusty-rose-text { color: #C08A82; }
 
-.satin-bg {
-  background: linear-gradient(135deg, #F6EFDF 0%, #F4ECDA 50%, #F6EFDF 100%);
-}
-
-.emerald-bg {
-  background-color: #1F4A3A;
-}
-
-.forest-bg {
-  background-color: #1F4A3A;
-}
-
-.dusty-rose-bg {
-  background-color: #C08A82;
-}
-
-.gold-text {
-  color: #C9B58A;
-}
-
-.emerald-text {
-  color: #1F4A3A;
-}
-
-.dusty-rose-text {
-  color: #C08A82;
-}
-
-/* Swan shimmer effect */
 @keyframes shimmer {
   0% { opacity: 0.7; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.02); }
@@ -241,11 +191,8 @@
   100% { background-position: 0% 50%; }
 }
 
-.swan-float {
-  animation: float 4s ease-in-out infinite;
-}
+.swan-float { animation: float 4s ease-in-out infinite; }
 
-/* Iridescent selection frame */
 @keyframes iridescent {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -260,9 +207,7 @@
   box-shadow: 0 0 14px rgba(245, 198, 216, 0.55), 0 0 26px rgba(178, 235, 242, 0.4), 0 4px 14px rgba(209, 196, 233, 0.4);
 }
 
-.fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
-}
+.fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
 
 .muse-btn {
   background: radial-gradient(ellipse at center, #EBDDC0 0%, #D9C9A0 40%, #C9B58A 70%, #B89E6E 100%);
@@ -276,43 +221,21 @@
   animation: pearlescent 4s ease infinite;
 }
 
-/* Moon phase progress */
-.moon-progress {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
+.moon-progress { display: flex; gap: 4px; align-items: center; }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 4px;
-}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-accent-gold); border-radius: 2px; }
 
-::-webkit-scrollbar-track {
-  background: var(--color-bg);
-}
+.hide-scrollbar { scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-accent-gold);
-  border-radius: 2px;
-}
-
-/* Hide scrollbar utility — used by Sonic Bloom carousel */
-.hide-scrollbar {
-  scrollbar-width: none;
-}
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Transition smoothness */
 * {
   transition-property: background-color, border-color, color, fill, stroke;
   transition-duration: 200ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* High Contrast Text — button / toggle ring in light mode */
 [data-high-contrast="true"]:not([data-theme="dark"]) button:not(:focus-visible),
 [data-high-contrast="true"]:not([data-theme="dark"]) [role="switch"] {
   outline: 1px solid rgba(var(--color-text-primary-rgb), 0.22);
