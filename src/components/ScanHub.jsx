@@ -200,6 +200,8 @@ export default function ScanHub({ onClose }) {
     "pinterest.es", "pinterest.it", "pinterest.ca", "pinterest.au",
     "pin.it",
     "twitter.com", "x.com", "t.co",
+    "threads.net",
+    "facebook.com", "fb.com", "fb.watch",
   ];
 
   const analyzeSocialLink = async (url) => {
@@ -553,6 +555,312 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If you
         setScanError("The Muse couldn't find beauty products in this post. Make sure the tweet is public and mentions specific product names.");
         setActiveMode("error");
         logScan({ scan_method: "social_link", status: "failed", error_reason: "Twitter extractor and web search found no beauty products" });
+        return;
+      }
+
+      // ── THREADS: Backend og: meta scraper ────────────────────────────────
+      const isThreads = urlHostname === 'threads.net';
+
+      if (isThreads) {
+        setLoadingHint("Reading the Thread...");
+        try {
+          const thRes = await base44.functions.invoke('extractThreadsContent', { url });
+          if (thRes?.success && thRes.caption) {
+            caption = thRes.caption;
+            thumbnailUrl = thRes.thumbnailUrl || null;
+          }
+        } catch (err) {
+          console.error('[Threads extractor error]:', err);
+        }
+
+        if (caption) {
+          setLoadingHint("Reading the beauty edit...");
+          const data = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a luxury beauty product identification expert analyzing a Threads post. Extract all beauty products explicitly mentioned.
+
+Post content:
+"${caption}"
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: exact brand name as written
+- product_name: exact product name as written
+- subcategory: the product type (e.g. Foundation, Concealer, Mascara, Lipstick, Blush, Bronzer, Eyeshadow Palette, Eyeliner, Sunscreen, Powder, Fragrance, Lip Liner, Highlighter)
+
+Also output:
+- category: the dominant category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If none, return an empty products_identified array.`,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                category: { type: 'string' },
+                products_identified: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      brand:        { type: 'string' },
+                      product_name: { type: 'string' },
+                      subcategory:  { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          });
+          const thProducts = data?.products_identified || [];
+          if (thProducts.length > 0) {
+            await finishWithProducts(thProducts, data.category, thumbnailUrl);
+            return;
+          }
+        }
+
+        // Threads scrape failed — Gemini web search fallback
+        setLoadingHint("Searching the web for this Thread...");
+        const webData = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a luxury beauty product identification expert. A user shared this Threads post: "${url}"
+
+Search the web for the content of this post. For EACH beauty product explicitly mentioned, extract:
+- brand, product_name, subcategory
+
+Also output: category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract explicitly named products. Return an empty products_identified array if none found.`,
+          model: 'gemini_3_flash',
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              category: { type: 'string' },
+              products_identified: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    brand:        { type: 'string' },
+                    product_name: { type: 'string' },
+                    subcategory:  { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        });
+        const webProducts = webData?.products_identified || [];
+        if (webProducts.length > 0) {
+          await finishWithProducts(webProducts, webData.category, thumbnailUrl);
+          return;
+        }
+        clearInterval(interval);
+        setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
+        setScanError("The Muse couldn't find beauty products in this Thread. Make sure the post is public and mentions specific product names.");
+        setActiveMode("error");
+        logScan({ scan_method: "social_link", status: "failed", error_reason: "Threads extractor found no beauty products" });
+        return;
+      }
+
+      // ── INSTAGRAM: Apify scraper ──────────────────────────────────────────
+      const isInstagram = urlHostname === 'instagram.com';
+
+      if (isInstagram) {
+        setLoadingHint("Reading the post...");
+        try {
+          const igRes = await base44.functions.invoke('extractInstagramContent', { url });
+          if (igRes?.success && igRes.caption) {
+            caption = igRes.caption;
+            thumbnailUrl = igRes.thumbnailUrl || null;
+          }
+        } catch (err) {
+          console.error('[Instagram extractor error]:', err);
+        }
+
+        if (caption) {
+          setLoadingHint("Reading the beauty edit...");
+          const data = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a luxury beauty product identification expert analyzing an Instagram post. Extract all beauty products explicitly mentioned in this caption.
+
+Caption:
+"${caption}"
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: exact brand name as written
+- product_name: exact product name as written
+- subcategory: the product type (e.g. Foundation, Concealer, Mascara, Lipstick, Blush, Bronzer, Eyeshadow Palette, Eyeliner, Sunscreen, Powder, Fragrance, Lip Liner, Highlighter)
+
+Also output:
+- category: the dominant category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If none, return an empty products_identified array.`,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                category: { type: 'string' },
+                products_identified: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      brand:        { type: 'string' },
+                      product_name: { type: 'string' },
+                      subcategory:  { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          });
+          const igProducts = data?.products_identified || [];
+          if (igProducts.length > 0) {
+            await finishWithProducts(igProducts, data.category, thumbnailUrl);
+            return;
+          }
+        }
+
+        // Instagram Apify failed or no products — Gemini web search fallback
+        setLoadingHint("Searching the web for this post...");
+        const webData = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a luxury beauty product identification expert. A user shared this Instagram post: "${url}"
+
+Search the web for this post's caption or any page discussing the beauty products featured. For EACH beauty product explicitly mentioned, extract:
+- brand, product_name, subcategory
+
+Also output: category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract explicitly named products. Return an empty products_identified array if none found.`,
+          model: 'gemini_3_flash',
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              category: { type: 'string' },
+              products_identified: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    brand:        { type: 'string' },
+                    product_name: { type: 'string' },
+                    subcategory:  { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        });
+        const webProducts = webData?.products_identified || [];
+        if (webProducts.length > 0) {
+          await finishWithProducts(webProducts, webData.category, thumbnailUrl);
+          return;
+        }
+        clearInterval(interval);
+        setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
+        setScanError("The Muse couldn't read this Instagram post. Make sure it's public and mentions specific product names in the caption.");
+        setActiveMode("error");
+        logScan({ scan_method: "social_link", status: "failed", error_reason: "Instagram extractor found no beauty products" });
+        return;
+      }
+
+      // ── FACEBOOK: Backend og: meta scraper ───────────────────────────────
+      const isFacebook = urlHostname === 'facebook.com' || urlHostname === 'fb.com' || urlHostname === 'fb.watch';
+
+      if (isFacebook) {
+        setLoadingHint("Reading the post...");
+        try {
+          const fbRes = await base44.functions.invoke('extractFacebookContent', { url });
+          if (fbRes?.success && fbRes.caption) {
+            caption = fbRes.caption;
+            thumbnailUrl = fbRes.thumbnailUrl || null;
+          }
+        } catch (err) {
+          console.error('[Facebook extractor error]:', err);
+        }
+
+        if (caption) {
+          setLoadingHint("Reading the beauty edit...");
+          const data = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a luxury beauty product identification expert analyzing a Facebook post. Extract all beauty products explicitly mentioned.
+
+Post content:
+"${caption}"
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: exact brand name as written
+- product_name: exact product name as written
+- subcategory: the product type (e.g. Foundation, Concealer, Mascara, Lipstick, Blush, Bronzer, Eyeshadow Palette, Eyeliner, Sunscreen, Powder, Fragrance, Lip Liner, Highlighter)
+
+Also output:
+- category: the dominant category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If none, return an empty products_identified array.`,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                category: { type: 'string' },
+                products_identified: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      brand:        { type: 'string' },
+                      product_name: { type: 'string' },
+                      subcategory:  { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          });
+          const fbProducts = data?.products_identified || [];
+          if (fbProducts.length > 0) {
+            await finishWithProducts(fbProducts, data.category, thumbnailUrl);
+            return;
+          }
+        }
+
+        // Facebook scrape failed — Gemini web search fallback
+        setLoadingHint("Searching the web for this post...");
+        const webData = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a luxury beauty product identification expert. A user shared this Facebook post: "${url}"
+
+Search the web for the content of this post. For EACH beauty product explicitly mentioned, extract:
+- brand, product_name, subcategory
+
+Also output: category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract explicitly named products. Return an empty products_identified array if none found.`,
+          model: 'gemini_3_flash',
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              category: { type: 'string' },
+              products_identified: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    brand:        { type: 'string' },
+                    product_name: { type: 'string' },
+                    subcategory:  { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        });
+        const webProducts = webData?.products_identified || [];
+        if (webProducts.length > 0) {
+          await finishWithProducts(webProducts, webData.category, thumbnailUrl);
+          return;
+        }
+        clearInterval(interval);
+        setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
+        setScanError("The Muse couldn't find beauty products in this post. Make sure it's public and mentions specific product names.");
+        setActiveMode("error");
+        logScan({ scan_method: "social_link", status: "failed", error_reason: "Facebook extractor found no beauty products" });
         return;
       }
 
