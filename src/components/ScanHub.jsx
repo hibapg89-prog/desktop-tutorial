@@ -193,7 +193,13 @@ export default function ScanHub({ onClose }) {
     }, 1200);
   };
 
-  const SOCIAL_EXTRACTABLE = ["instagram.com", "tiktok.com", "youtube.com", "youtu.be"];
+  const SOCIAL_EXTRACTABLE = [
+    "instagram.com", "tiktok.com",
+    "youtube.com", "youtu.be",
+    "pinterest.com", "pinterest.fr", "pinterest.co.uk", "pinterest.de",
+    "pinterest.es", "pinterest.it", "pinterest.ca", "pinterest.au",
+    "pin.it",
+  ];
 
   const analyzeSocialLink = async (url) => {
     setScanError(null);
@@ -324,12 +330,120 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent or infer product
           }
         }
 
-        // YouTube API returned nothing useful — fall through to Gemini web search
+        // YouTube API returned nothing useful
         clearInterval(interval);
         setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
         setScanError("The Muse couldn't find beauty products in this video. Try a video that mentions specific product names in its title or description.");
         setActiveMode("error");
         logScan({ scan_method: "social_link", status: "failed", error_reason: "YouTube extractor found no beauty products" });
+        return;
+      }
+
+      // ── PINTEREST: Backend og: meta scraper ───────────────────────────────
+      const isPinterest = urlHostname.includes('pinterest') || urlHostname === 'pin.it';
+
+      if (isPinterest) {
+        setLoadingHint("Reading the pin...");
+        try {
+          const pinRes = await base44.functions.invoke('extractPinterestContent', { url });
+          if (pinRes?.success && pinRes.caption) {
+            caption = pinRes.caption;
+            thumbnailUrl = pinRes.thumbnailUrl || null;
+          }
+        } catch (err) {
+          console.error('[Pinterest extractor error]:', err);
+        }
+
+        if (caption) {
+          setLoadingHint("Reading the beauty edit...");
+          const data = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a luxury beauty product identification expert analyzing a Pinterest pin. Extract all beauty products explicitly mentioned in this pin.
+
+Pin content:
+"${caption}"
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: exact brand name as written
+- product_name: exact product name as written
+- subcategory: the product type (e.g. Foundation, Concealer, Mascara, Lipstick, Blush, Bronzer, Eyeshadow Palette, Eyeliner, Sunscreen, Powder, Fragrance, Lip Liner, Highlighter)
+
+Also output:
+- category: the dominant category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract products EXPLICITLY named. Do NOT invent or infer products not mentioned. If no beauty products are mentioned, return an empty products_identified array.`,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                category: { type: 'string' },
+                products_identified: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      brand:        { type: 'string' },
+                      product_name: { type: 'string' },
+                      subcategory:  { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          });
+          const pinProducts = data?.products_identified || [];
+          if (pinProducts.length > 0) {
+            await finishWithProducts(pinProducts, data.category, thumbnailUrl);
+            return;
+          }
+        }
+
+        // Pinterest scrape failed or found no products — Gemini web search fallback
+        setLoadingHint("Searching the web for this pin...");
+        const webData = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a luxury beauty product identification expert. A user shared this Pinterest pin: "${url}"
+
+Search the web for the content of this pin. Look for the pin caption, board title, or any page that discusses the products featured in this pin.
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: exact brand name
+- product_name: exact product name
+- subcategory: the product type (e.g. Foundation, Concealer, Mascara, Lipstick, Blush, Bronzer, Eyeshadow Palette, Eyeliner, Sunscreen, Powder, Fragrance, Lip Liner, Highlighter)
+
+Also output:
+- category: the dominant category from: ${CATEGORY_LIST.join(', ')}
+
+CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If you cannot find the pin content or no beauty products are mentioned, return an empty products_identified array.`,
+          model: 'gemini_3_flash',
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              category: { type: 'string' },
+              products_identified: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    brand:        { type: 'string' },
+                    product_name: { type: 'string' },
+                    subcategory:  { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        });
+        const webProducts = webData?.products_identified || [];
+        if (webProducts.length > 0) {
+          await finishWithProducts(webProducts, webData.category, thumbnailUrl);
+          return;
+        }
+
+        clearInterval(interval);
+        setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
+        setScanError("The Muse couldn't find beauty products in this pin. Make sure the pin is public and mentions specific product names.");
+        setActiveMode("error");
+        logScan({ scan_method: "social_link", status: "failed", error_reason: "Pinterest extractor and web search found no beauty products" });
         return;
       }
 
