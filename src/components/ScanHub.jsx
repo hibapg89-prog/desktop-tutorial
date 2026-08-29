@@ -268,6 +268,36 @@ export default function ScanHub({ onClose }) {
       return true;
     };
 
+    const mapVisionSubcategory = (cat) => {
+      const m = { lipstick:'Lipstick', lip_gloss:'Lip Gloss', foundation:'Foundation', concealer:'Concealer', eyeshadow:'Eyeshadow Palette', mascara:'Mascara', eyeliner:'Eyeliner', blush:'Blush', bronzer:'Bronzer', highlighter:'Highlighter', skincare:'Moisturizer', fragrance:'Eau de Parfum', nail_polish:'Nail Polish' };
+      return m[cat] || 'Other';
+    };
+    const inferVisionCategory = (cat) => {
+      if (cat === 'skincare') return 'Skincare';
+      if (cat === 'fragrance') return 'Fragrance';
+      if (cat === 'nail_polish') return 'Nail';
+      return 'Makeup';
+    };
+    const tryVisionFallback = async (imgUrl, cap, platformName) => {
+      if (!imgUrl) return false;
+      setLoadingHint("Looking closer at the image...");
+      try {
+        const vRes = await base44.functions.invoke('analyzeVisualContent', {
+          imageUrl: imgUrl, caption: cap || '', platform: platformName,
+        });
+        if (!vRes?.success || !vRes.products?.length) return false;
+        const confident = vRes.products.filter(p => p.confidence !== 'low');
+        if (!confident.length) return false;
+        const mapped = confident.map(p => ({
+          brand: p.brand || '',
+          product_name: p.shade ? `${p.name} in ${p.shade}` : p.name,
+          subcategory: mapVisionSubcategory(p.category),
+        }));
+        await finishWithProducts(mapped, inferVisionCategory(vRes.products[0]?.category), imgUrl);
+        return true;
+      } catch { return false; }
+    };
+
     try {
       let caption = null;
       let thumbnailUrl = null;
@@ -332,6 +362,9 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent or infer product
             return;
           }
         }
+
+        // Vision fallback: analyze thumbnail before giving up
+        if (await tryVisionFallback(thumbnailUrl, caption, 'youtube')) return;
 
         // YouTube API returned nothing useful
         clearInterval(interval);
@@ -399,6 +432,9 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent or infer product
             return;
           }
         }
+
+        // Vision fallback: analyze thumbnail before web search
+        if (await tryVisionFallback(thumbnailUrl, caption, 'pinterest')) return;
 
         // Pinterest scrape failed or found no products — Gemini web search fallback
         setLoadingHint("Searching the web for this pin...");
@@ -508,6 +544,9 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent or infer product
           }
         }
 
+        // Vision fallback: analyze thumbnail before web search
+        if (await tryVisionFallback(thumbnailUrl, caption, 'twitter')) return;
+
         // Twitter oEmbed failed or no products — Gemini web search fallback
         setLoadingHint("Searching the web for this post...");
         const webData = await base44.integrations.Core.InvokeLLM({
@@ -616,6 +655,9 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If non
           }
         }
 
+        // Vision fallback: analyze thumbnail before web search
+        if (await tryVisionFallback(thumbnailUrl, caption, 'threads')) return;
+
         // Threads scrape failed — Gemini web search fallback
         setLoadingHint("Searching the web for this Thread...");
         const webData = await base44.integrations.Core.InvokeLLM({
@@ -718,6 +760,9 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If non
           }
         }
 
+        // Vision fallback: analyze thumbnail before web search
+        if (await tryVisionFallback(thumbnailUrl, caption, 'instagram')) return;
+
         // Instagram Apify failed or no products — Gemini web search fallback
         setLoadingHint("Searching the web for this post...");
         const webData = await base44.integrations.Core.InvokeLLM({
@@ -819,6 +864,9 @@ CRITICAL: Only extract products EXPLICITLY named. Do NOT invent products. If non
             return;
           }
         }
+
+        // Vision fallback: analyze thumbnail before web search
+        if (await tryVisionFallback(thumbnailUrl, caption, 'facebook')) return;
 
         // Facebook scrape failed — Gemini web search fallback
         setLoadingHint("Searching the web for this post...");
@@ -957,6 +1005,9 @@ CRITICAL: Only extract products EXPLICITLY named in the post. Do NOT invent or i
           return;
         }
       }
+
+      // Vision fallback: analyze thumbnail before web search
+      if (await tryVisionFallback(thumbnailUrl, caption, 'tiktok')) return;
 
       // ── PATH 2: Gemini web search fallback ────────────────────────
       setLoadingHint("Searching the web for this post...");
