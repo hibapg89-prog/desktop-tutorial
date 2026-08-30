@@ -151,10 +151,41 @@ async function scrapeTikTok(url) {
 }
 
 async function scrapeInstagram(url) {
+  // Try og: scrape first (free, no Apify credits)
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      signal: AbortSignal.timeout(12000),
+      redirect: 'follow',
+    });
+    if (res.ok) {
+      const html = await res.text();
+      const extract = (prop) => {
+        const re = new RegExp(`<meta\\s+(?:property|name)=["']${prop}["']\\s+content=["']([^"']+)["']`, 'i');
+        const alt = new RegExp(`<meta\\s+content=["']([^"']+)["']\\s+(?:property|name)=["']${prop}["']`, 'i');
+        return html.match(re)?.[1] || html.match(alt)?.[1] || null;
+      };
+      const description = extract('og:description');
+      const image = extract('og:image') || extract('twitter:image');
+      if (description && description.length > 5) {
+        console.log('[scrapeInstagram] og: scrape succeeded');
+        return { caption: description, thumbnailUrl: image };
+      }
+    }
+  } catch (err) {
+    console.warn('[scrapeInstagram] og: scrape failed:', err?.message);
+  }
+
+  // Apify fallback — actor changed from apify~instagram-post-scraper (deprecated,
+  // now requires username field) to apify~instagram-scraper (accepts directUrls).
   if (!APIFY_TOKEN) return null;
   try {
     const res = await fetch(
-      `${APIFY_BASE}/acts/apify~instagram-post-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=90&memory=512`,
+      `${APIFY_BASE}/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=90&memory=512`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

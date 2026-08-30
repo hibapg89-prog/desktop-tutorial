@@ -1,10 +1,53 @@
-// Extracts caption and image from an Instagram post/reel via Apify.
-// Uses the same apify~instagram-post-scraper actor as the TikTok pipeline's
-// Instagram fallback, but as a dedicated function for cleaner routing.
-// Requires APIFY_TOKEN secret.
+// Extracts caption and image from an Instagram post/reel.
+// Pipeline:
+//   1. Googlebot UA og: scrape — free, instant, no credits needed
+//   2. Apify apify~instagram-scraper — paid fallback when og: scrape returns nothing
+// Requires APIFY_TOKEN secret for step 2.
 
 const APIFY_TOKEN = Deno.env.get('APIFY_TOKEN');
 const APIFY_BASE  = 'https://api.apify.com/v2';
+
+// ── Step 1: Googlebot og: scrape ─────────────────────────────────────────────
+// Instagram serves og:description (the caption) to known crawlers.
+async function scrapeOgInstagram(url) {
+  const UAs = [
+    'Googlebot/2.1 (+http://www.google.com/bot.html)',
+    'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+  ];
+  for (const ua of UAs) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': ua,
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(12000),
+        redirect: 'follow',
+      });
+      if (!res.ok) continue;
+      const html = await res.text();
+
+      const extract = (prop) => {
+        const re = new RegExp(`<meta\\s+(?:property|name)=["']${prop}["']\\s+content=["']([^"']+)["']`, 'i');
+        const alt = new RegExp(`<meta\\s+content=["']([^"']+)["']\\s+(?:property|name)=["']${prop}["']`, 'i');
+        return html.match(re)?.[1] || html.match(alt)?.[1] || null;
+      };
+
+      const description = extract('og:description');
+      const image       = extract('og:image') || extract('twitter:image');
+
+      if (description && description.length > 5) {
+        console.log(`[extractInstagramContent] og: scrape succeeded with UA: ${ua.slice(0, 30)}`);
+        return { caption: description, thumbnailUrl: image };
+      }
+    } catch (err) {
+      console.warn('[extractInstagramContent] og: scrape attempt failed:', err?.message);
+    }
+  }
+  return null;
+}
 
 export default async function (req) {
   try {
@@ -16,15 +59,32 @@ export default async function (req) {
 
     console.log('[extractInstagramContent] url:', url);
 
+    // ── Step 1: free Googlebot og: scrape ────────────────────────────────────
+    const ogResult = await scrapeOgInstagram(url);
+    if (ogResult?.caption) {
+      console.log('[extractInstagramContent] og: caption:', ogResult.caption.slice(0, 200));
+      return Response.json({
+        success: true,
+        caption: ogResult.caption,
+        thumbnailUrl: ogResult.thumbnailUrl || null,
+        platform: 'instagram',
+        method: 'og',
+      });
+    }
+
+    console.log('[extractInstagramContent] og: scrape returned no caption, trying Apify...');
+
     if (!APIFY_TOKEN) {
-      console.error('[extractInstagramContent] APIFY_TOKEN not set');
+      console.error('[extractInstagramContent] APIFY_TOKEN not set — cannot fall back to Apify');
       return Response.json({ success: false, error: 'Instagram scraping not configured.' });
     }
 
-    // ── PRIMARY: Apify Instagram scraper ────────────────────────────────────
+    // ── Step 2: Apify instagram-scraper ──────────────────────────────────────
+    // NOTE: actor changed from apify~instagram-post-scraper (deprecated, now requires
+    // username field) to apify~instagram-scraper which still accepts directUrls.
     try {
       const res = await fetch(
-        `${APIFY_BASE}/acts/apify~instagram-post-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=90&memory=512`,
+        `${APIFY_BASE}/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=90&memory=512`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -65,12 +125,13 @@ export default async function (req) {
         });
       }
 
-      console.log('[extractInstagramContent] caption:', caption.slice(0, 200));
+      console.log('[extractInstagramContent] Apify caption:', caption.slice(0, 200));
       return Response.json({
         success: true,
         caption,
         thumbnailUrl,
         platform: 'instagram',
+        method: 'apify',
       });
     } catch (err) {
       console.error('[extractInstagramContent] Apify error:', err?.message || String(err));
