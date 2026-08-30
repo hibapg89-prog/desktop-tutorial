@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import BadgePin from "@/components/BadgePin";
 import { BADGES } from "@/utils/badgeDefinitions";
 import { computeTier } from "@/utils/trustTier";
+import ShadePaletteSection from "@/components/ShadePaletteSection";
 
 const BEAUTY_ROOM_META = {
   skin_rituals: { label: "Skin Rituals",    glyph: "✦", color: "#C8A96E", archetype: "The Alchemist"  },
@@ -56,6 +57,7 @@ function buildAdnAttrs(user) {
 }
 
 
+
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 function glowShadow(mode) {
   if (mode === "GHOST") return "none";
@@ -69,6 +71,7 @@ function AdnIcon({ type, size = 16 }) {
   if (type === "feather")  return <Feather  {...p} />;
   return <Sun {...p} />;
 }
+
 
 
 // ── GLOW INDICATOR ─────────────────────────────────────────────────────────────
@@ -150,7 +153,7 @@ export default function Profile() {
       if (u) {
         try {
           const msgs = await base44.entities.Message.filter({ recipient_id: u.id, read: false });
-          setUnreadCount(msgs.length);
+          setUnreadCount(Array.isArray(msgs) ? msgs.length : 0);
         } catch {}
         try {
           const ub = await base44.entities.UserBadge.filter({ user_id: u.id });
@@ -523,6 +526,15 @@ export default function Profile() {
             <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
           )}
 
+          {/* ── SECTION 3.6: SHADE PALETTES ──────────────────────────────────── */}
+          {!visitorHidden && (
+            <ShadePaletteSection isAtelier={isAtelier} />
+          )}
+
+          {!visitorHidden && (
+            <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
+          )}
+
           {/* ── SECTION 4: MY EDIT ────────────────────────────────────────────── */}
           {!visitorHidden && (
             <div className="px-5">
@@ -664,7 +676,7 @@ export default function Profile() {
           {/* ── DIVIDER ───────────────────────────────────────────────────────── */}
           <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
 
-          {/* ── SECTION 6: BEAUTY ROOMS (community themed rooms) ─────────────── */}
+          {/* ── SECTION 6: BEAUTY CIRCLES ─────────────────────────────────────── */}
           <div className="px-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
@@ -704,6 +716,8 @@ export default function Profile() {
               ) : null
             )}
           </div>
+
+
 
           {/* ── SIGN OUT (Atelier only — plain footer) ────────────────────────── */}
           {isAtelier && (
@@ -869,6 +883,7 @@ export default function Profile() {
                   { label: "Notifications",         to: "/notifications-settings" },
                   { label: "Account & Beauty Data",  to: "/account" },
                   { label: "Accessibility",          to: "/accessibility" },
+                  { label: "Scan History",           to: "/scan-history" },
                 ].map(({ label, to }) => (
                   <Link
                     key={label}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, X, Sparkles, MessageCircle, Bookmark, Share2, Flag, Play } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import SwanLogo from "@/components/SwanLogo";
@@ -62,6 +62,7 @@ function TrustBadge({ post }) {
 
 export default function Community() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
@@ -86,6 +87,16 @@ export default function Community() {
     catch { return new Set(); }
   });
   const [reportingPostId, setReportingPostId] = useState(null);
+  const [prefillProduct, setPrefillProduct] = useState(null);
+
+  // Detect a product shared from ScanResults — auto-open the composer
+  useEffect(() => {
+    if (location.state?.prefillProduct) {
+      setPrefillProduct(location.state.prefillProduct);
+      setComposing(true);
+      window.history.replaceState(null, '');
+    }
+  }, [location.state]);
   const [creatorBadges, setCreatorBadges] = useState({});
   const [nudge, setNudge] = useState(null);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
@@ -1018,7 +1029,7 @@ export default function Community() {
         )}
       </div>
 
-      {composing && <CommunityComposer onClose={() => setComposing(false)} onPosted={load} />}
+      {composing && <CommunityComposer onClose={() => { setComposing(false); setPrefillProduct(null); }} onPosted={load} prefillProduct={prefillProduct} />}
       {reportingPostId && <ReportModal postId={reportingPostId} onClose={() => setReportingPostId(null)} />}
       {composingPoll && <PollComposer onClose={() => setComposingPoll(false)} onPosted={load} />}
       {composingSwap && <SwapComposer onClose={() => setComposingSwap(false)} onPosted={load} />}

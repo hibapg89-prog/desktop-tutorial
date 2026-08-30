@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Search, X, Trash2, CheckCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -27,6 +27,8 @@ function avatarColor(id = "") {
 
 export default function Messages() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const shareProduct = location.state?.shareProduct || null;
   const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [names, setNames] = useState({});
@@ -133,58 +135,74 @@ export default function Messages() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      {/* Header */}
-      <div className="px-5 pt-14 pb-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--color-border)] flex-shrink-0"
-            >
-              <ChevronLeft size={18} color="var(--color-text-primary)" />
-            </button>
-            <div>
-              <p className="text-[9px] tracking-[0.22em] uppercase text-primary-40 font-light">
-                The Muse Circle
-              </p>
-              <h1 className="font-serif text-xl text-[var(--color-text-primary)] leading-tight">Messages</h1>
-            </div>
-          </div>
-
+      {/* Header banner */}
+      <div className="px-5 pt-14 pb-4">
+        <div className="relative rounded-2xl overflow-hidden">
+          <img
+            src="https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/979e52955_IMG_4551.jpeg"
+            alt="The Muse Circle — Messages"
+            className="w-full h-auto block"
+            draggable={false}
+          />
+          {/* Read all badge */}
           {totalUnread > 0 && (
             <button
               onClick={markAllRead}
-              className="flex items-center gap-1.5 text-[10px] tracking-[0.1em] uppercase text-primary-55 font-light border border-[var(--color-border)] rounded-full px-3 py-1.5 hover:bg-[#043927] hover:text-[#FDF5E6] hover:border-[#043927] transition-colors"
+              className="absolute top-3 right-3 flex items-center gap-1.5 text-[10px] tracking-[0.1em] uppercase font-light rounded-full px-3 py-1.5 border border-[#C5A059]/70 bg-[#0A3D2A]/40 backdrop-blur-sm text-[#C5A059]"
             >
               <CheckCheck size={12} />
-              Read all
-              <span className="min-w-4 h-4 px-1 rounded-full bg-[var(--color-accent-gold)] text-white text-[9px] flex items-center justify-center font-medium">
-                {totalUnread}
-              </span>
+              {totalUnread}
             </button>
           )}
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="px-5 mb-4">
-        <div className="flex items-center gap-2 bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] px-3.5 py-2.5">
-          <Search size={15} color="var(--color-text-primary)" className="opacity-40" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search conversations…"
-            className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30"
+          {/* Functional invisible back button — covers the baked-in button in the banner image */}
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute left-1 top-12 bottom-20 w-14 rounded-full"
+            aria-label="Back"
           />
-          {query && (
-            <button onClick={() => setQuery("")} className="text-primary-40">
-              <X size={14} />
-            </button>
-          )}
+          {/* Functional search overlay (covers baked-in search bar) */}
+          <div className="absolute left-4 right-4 bottom-4">
+            <div className="flex items-center gap-2 bg-[#FBF7EF] rounded-full border border-[#E5DFD0] px-4 py-2.5 shadow-sm">
+              <Search size={15} color="#999999" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search conversations..."
+                className="flex-1 bg-transparent text-sm text-[#2D362E] font-light outline-none placeholder:text-[#999999]"
+              />
+              {query && (
+                <button onClick={() => setQuery("")} className="text-[#999999]">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="px-5 pb-32">
+        {/* Share product banner */}
+        {shareProduct && (
+          <div
+            className="mb-3 rounded-2xl p-3.5 flex items-center gap-3"
+            style={{ background: "var(--color-bg-surface)", border: "1px solid #C8B06A" }}
+          >
+            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "var(--color-bg-elevated)" }}>
+              {shareProduct.image_url ? (
+                <img src={shareProduct.image_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.2rem", color: "var(--color-accent-gold)" }}>
+                  {shareProduct.brand?.[0]?.toUpperCase() || "?"}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] tracking-[0.15em] uppercase text-[var(--color-accent-gold)] font-light">Sharing</p>
+              <p className="text-sm text-[var(--color-text-primary)] font-light truncate">{shareProduct.brand} — {shareProduct.name}</p>
+            </div>
+            <p className="text-[10px] text-primary-40 font-light italic">Tap a conversation →</p>
+          </div>
+        )}
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="swan-float">
@@ -220,7 +238,7 @@ export default function Messages() {
                   className="bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
                 >
                   <div
-                    onClick={() => navigate(`/messages/${c.other}`)}
+                    onClick={() => navigate(`/messages/${c.other}`, { state: shareProduct ? { shareProduct } : undefined })}
                     className="w-full flex items-center gap-3 p-3.5 text-left cursor-pointer hover:bg-[var(--color-bg-elevated)] transition-colors"
                   >
                     {/* Avatar with unread dot */}

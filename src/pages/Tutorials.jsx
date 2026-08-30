@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import AddEditFromLink from "@/components/AddEditFromLink";
 
 const TABS = ["MAKEUP", "SKINCARE", "HAIR", "WELLNESS"];
 
@@ -28,6 +29,8 @@ const SAMPLE_TUTORIALS = [
     duration_minutes: 10,
     image_url: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=500&q=80",
     aspect: "4/5",
+    creator_source: "Monica Bellucci",
+    creator_platform: "Instagram",
   },
   {
     id: "sample-3",
@@ -96,7 +99,7 @@ const SAMPLE_TUTORIALS = [
     category: "Skincare",
     difficulty: "Beginner",
     duration_minutes: 10,
-    image_url: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1643379855889-850035817d24?w=500&q=80",
     aspect: "3/4",
     is_muse_original: true,
   },
@@ -107,7 +110,7 @@ const SAMPLE_TUTORIALS = [
     category: "Hair",
     difficulty: "Beginner",
     duration_minutes: 15,
-    image_url: "https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?w=500&q=80",
     aspect: "4/5",
     is_muse_original: true,
   },
@@ -117,7 +120,7 @@ const SAMPLE_TUTORIALS = [
     category: "Hair",
     difficulty: "Intermediate",
     duration_minutes: 25,
-    image_url: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=500&q=80",
     aspect: "3/4",
     is_muse_original: true,
   },
@@ -138,7 +141,7 @@ const SAMPLE_TUTORIALS = [
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 10,
-    image_url: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1578747763484-51b21a33e4fa?w=500&q=80",
     aspect: "3/4",
     is_muse_original: true,
   },
@@ -148,7 +151,7 @@ const SAMPLE_TUTORIALS = [
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 5,
-    image_url: "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1564512480295-86e479d9b87c?w=500&q=80",
     aspect: "4/5",
     is_muse_original: true,
   },
@@ -158,7 +161,7 @@ const SAMPLE_TUTORIALS = [
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 12,
-    image_url: "https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1556760544-74068565f05c?w=500&q=80",
     aspect: "2/3",
     is_muse_original: true,
   },
@@ -167,9 +170,14 @@ const SAMPLE_TUTORIALS = [
 export default function Tutorials() {
   const [activeTab, setActiveTab] = useState("MAKEUP");
   const [dbTutorials, setDbTutorials] = useState([]);
+  const [showAddLink, setShowAddLink] = useState(false);
+
+  const loadTutorials = () => {
+    base44.entities.Tutorial.list("-created_date", 50).then(setDbTutorials).catch(() => {});
+  };
 
   useEffect(() => {
-    base44.entities.Tutorial.list("-created_date", 20).then(setDbTutorials).catch(() => {});
+    loadTutorials();
   }, []);
 
   const allTutorials = [
@@ -254,6 +262,24 @@ export default function Tutorials() {
           </div>
         </div>
       </div>
+
+      {/* Floating Add Edit button */}
+      <button
+        onClick={() => setShowAddLink(true)}
+        className="fixed bottom-24 right-5 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+        style={{ background: "var(--color-accent-gold)", boxShadow: "0 6px 20px rgba(200,176,106,0.35)" }}
+        aria-label="Add Edit from link"
+      >
+        <Plus size={20} color="#043927" strokeWidth={1.8} />
+      </button>
+
+      {/* Add Edit from Link modal */}
+      {showAddLink && (
+        <AddEditFromLink
+          onClose={() => setShowAddLink(false)}
+          onCreated={loadTutorials}
+        />
+      )}
     </div>
   );
 }
@@ -307,6 +333,11 @@ function TutorialCard({ tutorial, index }) {
             <h2 className="font-serif text-[19px] text-[var(--color-text-primary)] font-light leading-[1.25] tracking-[0.02em]">
               {tutorial.title}
             </h2>
+            {(tutorial.creator_source || tutorial.is_muse_original) && (
+              <p className="text-[9px] text-primary-40 font-light tracking-[0.08em] mt-1.5 italic">
+                by {tutorial.creator_source || "The Muse"}
+              </p>
+            )}
           </div>
         </Link>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Send, Paperclip, X, CheckCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -44,6 +44,8 @@ function avatarColor(id = "") {
 export default function Conversation() {
   const { userId: otherId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const shareProduct = location.state?.shareProduct || null;
   const [user, setUser] = useState(null);
   const [other, setOther] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -74,6 +76,15 @@ export default function Conversation() {
     setLoading(false);
     scrollToBottom();
   };
+
+  // Pre-fill message when sharing a product from ScanResults
+  useEffect(() => {
+    if (shareProduct) {
+      const link = `${window.location.origin}/product/${shareProduct.id}`;
+      setDraft(`Check out this beauty find — ${shareProduct.brand} ${shareProduct.name}${shareProduct.shade ? ` (${shareProduct.shade})` : ""} — ${link}`);
+      window.history.replaceState(null, '');
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {

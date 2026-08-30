@@ -26,6 +26,7 @@ const CAT_ACCENT = {
 
 const INK   = "#043927";
 const GOLD  = "#C8B06A";
+const CREAM = "#FDF5E6";
 
 function derivePersona(products, categoryData) {
   const total = products.length;

@@ -129,7 +129,7 @@ const SAMPLE_TUTORIALS = {
     category: "Hair",
     difficulty: "Beginner",
     duration_minutes: 15,
-    image_url: "https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?w=600&q=80",
     description: "Hair is a crown you never take off. This ritual treats it as such. A weekly deep-treatment ceremony that restores moisture, repairs damage, and returns your hair to its most luminous state.",
     materials: ["Moisturising shampoo", "Deep conditioner or hair mask", "Wide-tooth comb", "Hair oil (argan or jojoba)", "Shower cap"],
     steps: [
@@ -150,7 +150,7 @@ const SAMPLE_TUTORIALS = {
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 10,
-    image_url: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1578747763484-51b21a33e4fa?w=600&q=80",
     description: "The morning ritual is not preparation for the day — it is the first gift you give yourself. Ten minutes that set the tone for everything that follows.",
     materials: ["Jade roller or gua sha tool", "Facial mist", "Eye cream", "SPF moisturiser"],
     steps: [
@@ -233,7 +233,7 @@ const SAMPLE_TUTORIALS = {
     category: "Skincare",
     difficulty: "Beginner",
     duration_minutes: 10,
-    image_url: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1643379855889-850035817d24?w=600&q=80",
     description: "Ancient ritual, modern skin. Gua sha activates the lymphatic system, reduces puffiness, sculpts the face, and brings a natural flush of circulation — all in ten minutes.",
     materials: ["Gua sha tool (rose quartz or bian stone)", "Facial oil (2–3 drops minimum)"],
     steps: [
@@ -255,7 +255,7 @@ const SAMPLE_TUTORIALS = {
     category: "Hair",
     difficulty: "Intermediate",
     duration_minutes: 25,
-    image_url: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=600&q=80",
     description: "Salon volume at home. The technique relies on tension, heat, and the correct direction of airflow. Once understood, this changes everything.",
     materials: ["Round brush (medium to large barrel)", "Hair dryer with concentrator nozzle", "Heat protectant", "Smoothing serum or blowout cream", "Sectioning clips"],
     steps: [
@@ -299,7 +299,7 @@ const SAMPLE_TUTORIALS = {
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 5,
-    image_url: "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1564512480295-86e479d9b87c?w=600&q=80",
     description: "Cryotherapy for the face. The cold contracts blood vessels, reduces inflammation, tightens pores, and stimulates circulation — leaving skin visibly awake and luminous.",
     materials: ["Ice cubes or ice roller", "Clean cloth or gauze (for ice cubes)", "Facial oil or balm (optional barrier)"],
     steps: [
@@ -320,7 +320,7 @@ const SAMPLE_TUTORIALS = {
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 12,
-    image_url: "https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1556760544-74068565f05c?w=600&q=80",
     description: "Anoint your skin as an act of devotion. The body oil ceremony is not skincare — it is attention. Slow, deliberate contact with your own body as a form of care.",
     materials: ["Dry body oil (marula, rosehip, or jojoba)", "Warm towel (optional)"],
     steps: [
@@ -350,6 +350,7 @@ export default function TutorialDetail() {
   const [copiedSteps, setCopiedSteps] = useState(false);
   const [copiedMaterials, setCopiedMaterials] = useState(false);
   const [gotLook, setGotLook] = useState(false);
+  const [addingToVanity, setAddingToVanity] = useState(false);
   const [note, setNote] = useState("");
   const [checkedMaterials, setCheckedMaterials] = useState([]);
 
@@ -383,9 +384,31 @@ export default function TutorialDetail() {
     setTimeout(() => setCopiedMaterials(false), 2000);
   };
 
-  const handleGetTheLook = () => {
-    setGotLook(true);
-    setTimeout(() => setGotLook(false), 2500);
+  const handleGetTheLook = async () => {
+    if (materials.length === 0) return;
+    setAddingToVanity(true);
+    try {
+      const categoryMap = {
+        Makeup: "Makeup",
+        Skincare: "Skincare",
+        Hair: "Haircare",
+        Wellness: "Body",
+      };
+      const productCategory = categoryMap[tutorial.category] || "Makeup";
+      const products = materials.map((m) => ({
+        name: m,
+        brand: "To Source",
+        category: productCategory,
+        in_vanity: true,
+      }));
+      await base44.entities.Product.bulkCreate(products);
+      setGotLook(true);
+      setTimeout(() => setGotLook(false), 2500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAddingToVanity(false);
+    }
   };
 
   const toggleMaterial = (m) =>
@@ -495,6 +518,11 @@ export default function TutorialDetail() {
           <h1 className="font-serif text-[30px] text-[var(--color-text-primary)] font-light leading-[1.2] tracking-[0.02em] mb-2">
             {tutorial.title}
           </h1>
+          {(tutorial.creator_source || tutorial.is_muse_original) && (
+            <p className="text-[11px] text-primary-50 font-light tracking-[0.08em] italic mb-3">
+              by {tutorial.creator_source || "The Muse"}{tutorial.creator_platform ? ` · ${tutorial.creator_platform}` : ""}
+            </p>
+          )}
           <div className="flex items-center gap-3">
             <div className="w-8 h-px bg-[#C8B06A]" />
             <p className="text-[10px] text-primary-40 font-light tracking-[0.16em] uppercase">
@@ -594,13 +622,16 @@ export default function TutorialDetail() {
             <div className="mt-6 pt-5 border-t border-[#C8B06A]/25">
               <button
                 onClick={handleGetTheLook}
+                disabled={addingToVanity || gotLook}
                 className={`w-full py-3 rounded-full text-[9px] tracking-[0.24em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
                   gotLook
                     ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
-                    : "border-[var(--color-border)] text-[var(--color-text-primary)]"
-                }`}
+                    : "border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-elevated)]"
+                } ${addingToVanity ? "opacity-60" : ""}`}
               >
-                {gotLook ? (
+                {addingToVanity ? (
+                  <><span className="w-3 h-3 border border-[var(--color-text-primary)] border-t-transparent rounded-full animate-spin" /> Adding to La Vanity...</>
+                ) : gotLook ? (
                   <><Check size={11} strokeWidth={1.5} /> Added to La Vanity</>
                 ) : (
                   <><ShoppingBag size={11} strokeWidth={1.5} /> Get the Look — Add All to La Vanity</>
