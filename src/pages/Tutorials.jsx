@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, Plus } from "lucide-react";
+import { ChevronLeft, Plus, Bookmark } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AddEditFromLink from "@/components/AddEditFromLink";
 
-const TABS = ["MAKEUP", "SKINCARE", "HAIR", "WELLNESS"];
+const TABS = ["MAKEUP", "SKINCARE", "HAIR", "WELLNESS", "FAVORITES"];
 
 const SAMPLE_TUTORIALS = [
   // ── MAKEUP ──────────────────────────────────────────────────────────────────
@@ -171,6 +171,7 @@ export default function Tutorials() {
   const [activeTab, setActiveTab] = useState("MAKEUP");
   const [dbTutorials, setDbTutorials] = useState([]);
   const [showAddLink, setShowAddLink] = useState(false);
+  const [collectedIds, setCollectedIds] = useState([]);
 
   const loadTutorials = () => {
     base44.entities.Tutorial.list("-created_date", 50).then(setDbTutorials).catch(() => {});
@@ -178,6 +179,9 @@ export default function Tutorials() {
 
   useEffect(() => {
     loadTutorials();
+    base44.auth.me().then((u) => {
+      setCollectedIds(Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : []);
+    }).catch(() => {});
   }, []);
 
   const allTutorials = [
@@ -185,12 +189,14 @@ export default function Tutorials() {
     ...dbTutorials.map((t) => ({ ...t, id: t.id })),
   ];
 
-  const filtered = allTutorials.filter((t) =>
-    activeTab === "MAKEUP"   ? t.category === "Makeup"   :
-    activeTab === "SKINCARE" ? t.category === "Skincare" :
-    activeTab === "HAIR"     ? t.category === "Hair"     :
-                               t.category === "Wellness"
-  );
+  const filtered = activeTab === "FAVORITES"
+    ? allTutorials.filter((t) => collectedIds.includes(t.id))
+    : allTutorials.filter((t) =>
+        activeTab === "MAKEUP"   ? t.category === "Makeup"   :
+        activeTab === "SKINCARE" ? t.category === "Skincare" :
+        activeTab === "HAIR"     ? t.category === "Hair"     :
+                                   t.category === "Wellness"
+      );
 
   const col1 = filtered.filter((_, i) => i % 2 === 0);
   const col2 = filtered.filter((_, i) => i % 2 === 1);
@@ -247,26 +253,36 @@ export default function Tutorials() {
 
       {/* Editorial Masonry */}
       <div className="px-5 pb-28">
+        {activeTab === "FAVORITES" && filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Bookmark size={32} color="var(--color-accent-gold)" strokeWidth={1} className="mb-4 opacity-50" />
+            <p className="font-serif text-lg text-[var(--color-text-primary)]/60 italic mb-2">No favorites yet</p>
+            <p className="text-xs text-primary-40 font-light tracking-wide">
+              Open a tutorial and tap "Add to Favorites" to save it here
+            </p>
+          </div>
+        ) : (
         <div className="flex gap-5 max-w-2xl mx-auto">
           {/* Column 1 */}
           <div className="flex-1 flex flex-col gap-8">
             {col1.map((tutorial, i) => (
-              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2} />
+              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2} collectedIds={collectedIds} />
             ))}
           </div>
           {/* Column 2 — offset for stagger */}
           <div className="flex-1 flex flex-col gap-8 mt-14">
             {col2.map((tutorial, i) => (
-              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2 + 1} />
+              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2 + 1} collectedIds={collectedIds} />
             ))}
           </div>
         </div>
+        )}
       </div>
 
       {/* Floating Add Edit button */}
       <button
         onClick={() => setShowAddLink(true)}
-        className="fixed bottom-24 right-5 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+        className="fixed bottom-40 right-5 z-[60] w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
         style={{ background: "var(--color-accent-gold)", boxShadow: "0 6px 20px rgba(200,176,106,0.35)" }}
         aria-label="Add Edit from link"
       >
@@ -284,8 +300,32 @@ export default function Tutorials() {
   );
 }
 
-function TutorialCard({ tutorial, index }) {
+function TutorialCard({ tutorial, index, collectedIds = [], onToggleFavorite }) {
   const [aspired, setAspired] = useState(false);
+  const isCollected = collectedIds.includes(tutorial.id);
+
+  // Load aspire state from user profile
+  useEffect(() => {
+    base44.auth.me().then((u) => {
+      const aspiredIds = Array.isArray(u?.aspired_tutorials) ? u.aspired_tutorials : [];
+      setAspired(aspiredIds.includes(tutorial.id));
+    }).catch(() => {});
+  }, [tutorial.id]);
+
+  const toggleAspired = async () => {
+    const newState = !aspired;
+    setAspired(newState);
+    try {
+      const u = await base44.auth.me();
+      const aspiredIds = Array.isArray(u?.aspired_tutorials) ? u.aspired_tutorials : [];
+      const updated = newState
+        ? [...new Set([...aspiredIds, tutorial.id])]
+        : aspiredIds.filter((tid) => tid !== tutorial.id);
+      await base44.auth.updateMe({ aspired_tutorials: updated });
+    } catch {
+      setAspired(!newState);
+    }
+  };
 
   return (
     <motion.div
@@ -323,6 +363,12 @@ function TutorialCard({ tutorial, index }) {
                 </span>
               </div>
             )}
+            {/* Favorites badge */}
+            {isCollected && (
+              <div className="absolute bottom-3 right-3">
+                <Bookmark size={14} fill="var(--color-accent-gold)" color="var(--color-accent-gold)" strokeWidth={1.5} />
+              </div>
+            )}
           </div>
 
           {/* Editorial caption block */}
@@ -347,7 +393,7 @@ function TutorialCard({ tutorial, index }) {
             {tutorial.duration_minutes ? `${tutorial.duration_minutes} min read` : ""}
           </p>
           <button
-            onClick={() => setAspired((v) => !v)}
+            onClick={toggleAspired}
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
               aspired ? "bg-[#C8B06A]/15" : "bg-transparent"
             }`}

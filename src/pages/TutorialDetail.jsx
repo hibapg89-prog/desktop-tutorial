@@ -352,7 +352,11 @@ export default function TutorialDetail() {
   const [gotLook, setGotLook] = useState(false);
   const [addingToVanity, setAddingToVanity] = useState(false);
   const [note, setNote] = useState("");
+  const [noteSaved, setNoteSaved] = useState(false);
   const [checkedMaterials, setCheckedMaterials] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   useEffect(() => {
     if (SAMPLE_TUTORIALS[id]) {
@@ -367,8 +371,92 @@ export default function TutorialDetail() {
       const map = u?.tutorial_progress || {};
       setProgressMap(map);
       setCompletedSteps(Array.isArray(map[id]) ? map[id] : []);
+      // Load saved note
+      const notesMap = u?.tutorial_notes || {};
+      setNote(notesMap[id] || "");
+      // Load collected (favorites) status
+      const collectedIds = Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : [];
+      setCollected(collectedIds.includes(id));
+      // Load aspired status
+      const aspiredIds = Array.isArray(u?.aspired_tutorials) ? u.aspired_tutorials : [];
+      setAspired(aspiredIds.includes(id));
     }).catch(() => {});
+    // Load reviews
+    base44.entities.Review.filter({ post_id: id })
+      .then((r) => setReviews(r || []))
+      .catch(() => {});
   }, [id]);
+
+  // Save note to user profile (on blur)
+  const handleNoteSave = async () => {
+    if (!note) return;
+    try {
+      const u = await base44.auth.me();
+      const notesMap = u?.tutorial_notes || {};
+      if (notesMap[id] === note) return; // no change
+      notesMap[id] = note;
+      await base44.auth.updateMe({ tutorial_notes: notesMap });
+      setNoteSaved(true);
+      setTimeout(() => setNoteSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save note:", err);
+    }
+  };
+
+  // Toggle collected (favorites) status — persists to user profile
+  const toggleCollected = async () => {
+    const newState = !collected;
+    setCollected(newState);
+    try {
+      const u = await base44.auth.me();
+      const collectedIds = Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : [];
+      const updated = newState
+        ? [...new Set([...collectedIds, id])]
+        : collectedIds.filter((tid) => tid !== id);
+      await base44.auth.updateMe({ collected_tutorials: updated });
+    } catch (err) {
+      console.error("Failed to update favorites:", err);
+      setCollected(!newState); // revert on error
+    }
+  };
+
+  // Toggle aspired (heart) status — persists to user profile
+  const toggleAspired = async () => {
+    const newState = !aspired;
+    setAspired(newState);
+    try {
+      const u = await base44.auth.me();
+      const aspiredIds = Array.isArray(u?.aspired_tutorials) ? u.aspired_tutorials : [];
+      const updated = newState
+        ? [...new Set([...aspiredIds, id])]
+        : aspiredIds.filter((tid) => tid !== id);
+      await base44.auth.updateMe({ aspired_tutorials: updated });
+    } catch (err) {
+      console.error("Failed to update aspired:", err);
+      setAspired(!newState); // revert on error
+    }
+  };
+
+  // Submit a whisper/review
+  const handleSubmitReview = async () => {
+    const trimmed = reviewText.trim();
+    if (!trimmed) return;
+    setReviewSubmitting(true);
+    try {
+      const u = await base44.auth.me();
+      const review = await base44.entities.Review.create({
+        post_id: id,
+        review_text: trimmed,
+        author_name: u?.full_name || "Anonymous",
+      });
+      setReviews((prev) => [review, ...prev]);
+      setReviewText("");
+    } catch (err) {
+      console.error("Failed to post whisper:", err);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   const handleCopySteps = () => {
     const text = tutorial.steps?.map((s, i) => `${i + 1}. ${s}`).join("\n") || "";
@@ -465,7 +553,7 @@ export default function TutorialDetail() {
 
         {/* Aspire button */}
         <button
-          onClick={() => setAspired((v) => !v)}
+          onClick={toggleAspired}
           className={`absolute top-14 right-5 w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all ${
             aspired ? "bg-[#C8B06A]/90" : "bg-[var(--color-bg)]/80"
           }`}
@@ -544,15 +632,15 @@ export default function TutorialDetail() {
             {completed ? "Completed ✓" : "Mark Complete"}
           </button>
           <button
-            onClick={() => setCollected((v) => !v)}
+            onClick={toggleCollected}
             className={`flex-1 py-3.5 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
               collected
                 ? "bg-[#C8B06A] text-white border-[#C8B06A]"
                 : "border-[var(--color-border)] text-[var(--color-text-primary)]"
             }`}
           >
-            <Bookmark size={13} strokeWidth={1.5} />
-            {collected ? "Collected" : "Collect"}
+            <Bookmark size={13} strokeWidth={1.5} fill={collected ? "white" : "none"} />
+            {collected ? "In Favorites" : "Add to Favorites"}
           </button>
         </div>
 
@@ -748,14 +836,22 @@ export default function TutorialDetail() {
 
         {/* Add a Note */}
         <div>
-          <h2 className="font-serif text-[20px] text-[var(--color-text-primary)] font-light tracking-wide mb-4">
-            Add a Note
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-serif text-[20px] text-[var(--color-text-primary)] font-light tracking-wide">
+              Add a Note
+            </h2>
+            {noteSaved && (
+              <span className="text-[9px] text-[var(--color-accent-gold)] tracking-[0.1em] uppercase font-light">
+                Saved ✓
+              </span>
+            )}
+          </div>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            onBlur={handleNoteSave}
             placeholder="Your private notes on this look..."
-            className="w-full bg-transparent text-[14px] text-[var(--color-text-primary)]/75 font-light resize-none outline-none placeholder:text-primary-25 leading-[1.7]"
+            className="w-full bg-transparent text-[14px] text-[var(--color-text-primary)]/75 font-light resize-none outline-none placeholder:text-primary-25 leading-[1.7] border-b border-[#C8B06A]/20 pb-3 focus:border-[#C8B06A]/50 transition-colors"
             rows={3}
           />
         </div>
@@ -767,14 +863,38 @@ export default function TutorialDetail() {
           </h2>
           <div className="flex items-center gap-3 border border-[#C8B06A]/40 rounded-full px-5 py-3">
             <input
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmitReview()}
               placeholder="Add a whisper..."
               className="flex-1 bg-transparent text-[14px] text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-25"
             />
-            <button className="text-[var(--color-accent-gold)] text-[16px] font-light">→</button>
+            <button
+              onClick={handleSubmitReview}
+              disabled={reviewSubmitting || !reviewText.trim()}
+              className="text-[var(--color-accent-gold)] text-[16px] font-light disabled:opacity-30"
+            >
+              →
+            </button>
           </div>
-          <p className="font-serif text-[11px] text-primary-30 text-center mt-5 italic font-light">
-            Be the first to whisper
-          </p>
+          {reviews.length > 0 ? (
+            <div className="mt-5 space-y-4">
+              {reviews.map((r) => (
+                <div key={r.id} className="border-l-2 border-[#C8B06A]/30 pl-4">
+                  <p className="text-[14px] text-[var(--color-text-primary)]/80 font-light leading-[1.6] italic">
+                    "{r.review_text}"
+                  </p>
+                  <p className="text-[10px] text-primary-40 font-light tracking-wide mt-2">
+                    — {r.author_name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="font-serif text-[11px] text-primary-30 text-center mt-5 italic font-light">
+              Be the first to whisper
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -6,6 +6,26 @@ import { useNavigate } from "react-router-dom";
 
 const CATEGORIES = ["Makeup", "Skincare", "Hair", "Wellness"];
 
+const SOCIAL_DOMAINS = [
+  "instagram.com", "tiktok.com", "youtube.com", "youtu.be",
+  "pinterest.com", "pinterest.fr", "facebook.com", "fb.com",
+  "threads.net", "x.com", "twitter.com",
+];
+
+const isSocialLink = (url) => {
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, "");
+    return SOCIAL_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+  } catch { return false; }
+};
+
+const isInstagram = (url) => {
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, "");
+    return hostname === "instagram.com" || hostname.endsWith(".instagram.com");
+  } catch { return false; }
+};
+
 /**
  * AddEditFromLink — paste a tutorial/video link, The Muse extracts the
  * tutorial content (title, category, steps, materials, image) and saves
@@ -30,10 +50,41 @@ export default function AddEditFromLink({ onClose, onCreated }) {
     }, 400);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a luxury beauty editorial assistant. A user has shared a link to a beauty tutorial: "${trimmed}"
+      // ── Step 1: For social links, extract the actual post caption first ──
+      // Instagram/TikTok content is behind a login wall — web search can't
+      // find it. We use the same backend extractors as ScanHub to get the
+      // real caption + thumbnail, then feed them to the LLM as context.
+      let extractedCaption = null;
+      let extractedThumbnail = null;
+      let detectedPlatform = null;
 
-Search the web for the content of this tutorial (it may be a YouTube video, Instagram post, TikTok, blog article, or brand tutorial page). Extract the tutorial details.
+      if (isSocialLink(trimmed)) {
+        setProgress(15);
+        try {
+          const fnName = isInstagram(trimmed) ? "extractInstagramContent" : "extractSocialContent";
+          const res = await base44.functions.invoke(fnName, { url: trimmed });
+          const r = res?.data || res;
+          if (r?.success && r?.caption) {
+            extractedCaption = r.caption;
+            extractedThumbnail = r.thumbnailUrl || null;
+            detectedPlatform = r.platform || (isInstagram(trimmed) ? "instagram" : null);
+          }
+        } catch (err) {
+          console.error("[AddEditFromLink] caption extraction failed:", err?.message);
+        }
+      }
+
+      // ── Step 2: Build the LLM prompt with caption context if available ──
+      const captionBlock = extractedCaption
+        ? `\n\nThe post's actual caption (extracted directly from the ${detectedPlatform || "social"} post):\n"""${extractedCaption}"""\n\nUse this caption as the PRIMARY source for the tutorial content. The caption describes what the tutorial covers and often lists products used. Generate editorial-quality steps based on this content.`
+        : "";
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a luxury beauty editorial assistant. A user has shared a link to a beauty tutorial: "${trimmed}"${captionBlock}
+
+${extractedCaption
+  ? "Extract the tutorial details from the caption provided above."
+  : "Search the web for the content of this tutorial (it may be a YouTube video, Instagram post, TikTok, blog article, or brand tutorial page). Extract the tutorial details."}
 
 Return a JSON object with:
 - title: a concise, elegant editorial title (uppercase, max 6 words) capturing the tutorial's essence
@@ -41,15 +92,15 @@ Return a JSON object with:
 - difficulty: "Beginner", "Intermediate", or "Advanced"
 - duration_minutes: estimated minutes to complete the tutorial (number)
 - description: 2-3 elegant editorial sentences describing the tutorial
-- image_url: a representative, contextually accurate image URL from the tutorial's source page (e.g. YouTube thumbnail, blog hero image). The image MUST visually represent the tutorial topic — e.g. a hair tutorial should show hair/haircare, a makeup tutorial should show makeup. Do NOT use generic images of phones, hands, or unrelated objects.
-- materials: an array of 5-10 product/material names needed
-- steps: an array of 5-10 clear, numbered instruction steps
-- creator_source: the creator or source name (e.g. "Lisa Eldridge", "Vogue", "YouTube")
-- creator_platform: the platform (e.g. "YouTube", "Instagram", "TikTok", "Blog")
+- image_url: ${extractedThumbnail ? "leave this empty string — a cover image was already extracted" : "a representative, contextually accurate image URL from the tutorial's source page (e.g. YouTube thumbnail, blog hero image). The image MUST visually represent the tutorial topic — e.g. a hair tutorial should show hair/haircare, a makeup tutorial should show makeup. Do NOT use generic images of phones, hands, or unrelated objects."}
+- materials: an array of 5-10 product/material names needed (extract from the caption if products are mentioned)
+- steps: an array of 5-10 clear, numbered instruction steps — write these as elegant editorial instructions even if the caption only describes the look; infer the logical steps a professional would follow
+- creator_source: the creator or source name (e.g. "Lisa Eldridge", "Vogue", or the username from the post)
+- creator_platform: the platform (e.g. "YouTube", "Instagram", "TikTok", "Blog")${extractedCaption ? ` — this is an ${detectedPlatform || "Instagram"} post` : ""}
 
-CRITICAL: The image_url MUST be contextually accurate for the tutorial topic. A hair tutorial image must show hair. A makeup tutorial image must show makeup. Never use an image of a phone, hands, or unrelated objects.`,
+CRITICAL: ${extractedThumbnail ? "Do NOT generate an image_url — one was already extracted from the post." : "The image_url MUST be contextually accurate for the tutorial topic."}`,
         model: "gemini_3_flash",
-        add_context_from_internet: true,
+        add_context_from_internet: !extractedCaption,
         response_json_schema: {
           type: "object",
           properties: {
@@ -74,17 +125,20 @@ CRITICAL: The image_url MUST be contextually accurate for the tutorial topic. A 
         throw new Error("Could not extract tutorial content");
       }
 
+      // Use the extracted thumbnail as fallback if the LLM didn't return an image
+      const finalImageUrl = result.image_url || extractedThumbnail || "";
+
       const tutorial = await base44.entities.Tutorial.create({
         title: result.title,
         category: CATEGORIES.includes(result.category) ? result.category : "Makeup",
         difficulty: result.difficulty || "Beginner",
         duration_minutes: result.duration_minutes || 10,
         description: result.description || "",
-        image_url: result.image_url || "",
+        image_url: finalImageUrl,
         materials: result.materials || [],
         steps: result.steps || [],
         creator_source: result.creator_source || "",
-        creator_platform: result.creator_platform || "",
+        creator_platform: result.creator_platform || (detectedPlatform ? detectedPlatform.charAt(0).toUpperCase() + detectedPlatform.slice(1) : ""),
         is_muse_original: false,
         is_collected: true,
         tags: ["link"],
