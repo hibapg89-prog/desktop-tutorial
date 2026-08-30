@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import { X, Send, ScanLine, Sparkles, Droplets, Repeat2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { X, Send, ScanLine, Sparkles, Droplets, Repeat2, Mic, MicOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import SwanLogo from "./SwanLogo";
 import { base44 } from "@/api/base44Client";
 
@@ -27,13 +28,37 @@ const QUICK_ACTIONS = [
   { id: "alternative", label: "Find an alternative",   icon: Repeat2,   prompt: "I'm looking for a more affordable alternative to a luxury product." },
 ];
 
+// When The Muse mentions a navigatable feature, render a tappable chip below the bubble.
+const NAV_HINTS = [
+  { pattern: /local curator/i,          label: "Open The Local Curator",  route: "/local-curator" },
+  { pattern: /your vanity\b/i,          label: "Go to My Vanity",         route: "/vanity" },
+  { pattern: /\btutorials?\b/i,         label: "Browse Tutorials",        route: "/tutorials" },
+  { pattern: /\bscan\b.*product/i,      label: "Open Scanner",            action: "scan" },
+  { pattern: /\bfor you\b/i,            label: "Go to For You",           route: "/for-you" },
+  { pattern: /\bshopping list\b/i,      label: "Open Shopping List",      route: "/shopping-list" },
+  { pattern: /\bingredient alert/i,     label: "Ingredient Alerts",       route: "/ingredient-alerts" },
+];
+
+function detectNavHint(text) {
+  for (const h of NAV_HINTS) {
+    if (h.pattern.test(text)) return h;
+  }
+  return null;
+}
+
 export default function MuseAssistant({ onClose, onOpenScan }) {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+  const [input, setInput]       = useState("");
   const [thinking, setThinking] = useState(false);
-  const [greeted, setGreeted] = useState(false);
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
+  const [greeted, setGreeted]   = useState(false);
+  const [listening, setListening] = useState(false);
+  const bottomRef    = useRef(null);
+  const inputRef     = useRef(null);
+  const recognitionRef = useRef(null);
+  const navigate     = useNavigate();
+
+  const hasSpeech = typeof window !== "undefined" &&
+    ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -47,24 +72,55 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, thinking]);
 
-  const send = async (text) => {
-    const trimmed = (text || "").trim();
-    if (!trimmed || thinking) return;
-    setInput("");
-    setMessages(prev => [...prev, { role: "user", text: trimmed }]);
-    setThinking(true);
+  // Clean up speech recognition when unmounting
+  useEffect(() => {
+    return () => { recognitionRef.current?.stop(); };
+  }, []);
 
+  const startListening = useCallback(() => {
+    if (!hasSpeech || listening) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      setInput(transcript);
+      setListening(false);
+      // Auto-send after a brief moment so user sees the transcription
+      setTimeout(() => {
+        setInput("");
+        setMessages(prev => [...prev, { role: "user", text: transcript }]);
+        sendText(transcript);
+      }, 400);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend   = () => setListening(false);
+    recognitionRef.current = rec;
+    rec.start();
+    setListening(true);
+  }, [hasSpeech, listening]);
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  }, []);
+
+  const sendText = async (text) => {
+    if (!text.trim() || thinking) return;
+    setThinking(true);
     try {
       const history = messages.slice(-8).map(m =>
         `${m.role === "user" ? "User" : "The Muse"}: ${m.text}`
       ).join("\n");
 
       const reply = await base44.integrations.Core.InvokeLLM({
-        prompt: `${MUSE_PERSONA}\n\n${history ? `Conversation so far:\n${history}\n\n` : ""}User: ${trimmed}\n\nThe Muse:`,
+        prompt: `${MUSE_PERSONA}\n\n${history ? `Conversation so far:\n${history}\n\n` : ""}User: ${text.trim()}\n\nThe Muse:`,
         response_format: "text",
       });
 
-      setMessages(prev => [...prev, { role: "muse", text: reply }]);
+      setMessages(prev => [...prev, { role: "muse", text: reply, navHint: detectNavHint(reply) }]);
     } catch {
       setMessages(prev => [...prev, { role: "muse", text: "Something distracted me for a moment — please try again, chérie." }]);
     }
@@ -72,9 +128,22 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
+  const send = async (text) => {
+    const trimmed = (text || "").trim();
+    if (!trimmed || thinking) return;
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", text: trimmed }]);
+    await sendText(trimmed);
+  };
+
   const handleQuick = async ({ id, prompt }) => {
     if (id === "scan") { onClose(); onOpenScan(); return; }
     await send(prompt);
+  };
+
+  const handleNavHint = (hint) => {
+    if (hint.action === "scan") { onClose(); onOpenScan(); return; }
+    if (hint.route) { onClose(); navigate(hint.route); }
   };
 
   const showQuickActions = greeted && messages.length <= 1 && !thinking;
@@ -124,26 +193,47 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
-                className={`mb-4 flex ${msg.role === "user" ? "justify-end" : "justify-start items-start"}`}
+                className={`mb-4 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
-                {msg.role === "muse" && (
-                  <div className="mr-2.5 mt-0.5 flex-shrink-0 opacity-70">
-                    <SwanLogo size={18} color="#C5A070" />
+                <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start items-start"}`}>
+                  {msg.role === "muse" && (
+                    <div className="mr-2.5 mt-0.5 flex-shrink-0 opacity-70">
+                      <SwanLogo size={18} color="#C5A070" />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[78%] px-4 py-3 text-sm leading-relaxed font-light ${
+                      msg.role === "user"
+                        ? "bg-[#1A3A30] text-[#FAF7F1] rounded-2xl rounded-br-sm"
+                        : "bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] rounded-2xl rounded-bl-sm"
+                    }`}
+                    style={msg.role === "muse"
+                      ? { border: "1px solid rgba(229,217,192,0.7)", boxShadow: "0 2px 12px rgba(197,160,112,0.1)" }
+                      : {}
+                    }
+                  >
+                    {msg.text}
                   </div>
-                )}
-                <div
-                  className={`max-w-[78%] px-4 py-3 text-sm leading-relaxed font-light ${
-                    msg.role === "user"
-                      ? "bg-[#1A3A30] text-[#FAF7F1] rounded-2xl rounded-br-sm"
-                      : "bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] rounded-2xl rounded-bl-sm"
-                  }`}
-                  style={msg.role === "muse"
-                    ? { border: "1px solid rgba(229,217,192,0.7)", boxShadow: "0 2px 12px rgba(197,160,112,0.1)" }
-                    : {}
-                  }
-                >
-                  {msg.text}
                 </div>
+
+                {/* Navigation chip — appears below Muse messages that mention a feature */}
+                {msg.role === "muse" && msg.navHint && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    onClick={() => handleNavHint(msg.navHint)}
+                    className="ml-7 mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-light tracking-wide transition-all active:scale-[0.96]"
+                    style={{
+                      background: "rgba(197,160,112,0.12)",
+                      border: "1px solid rgba(197,160,112,0.35)",
+                      color: "#C5A070",
+                    }}
+                  >
+                    <span>{msg.navHint.label}</span>
+                    <span className="opacity-60">→</span>
+                  </motion.button>
+                )}
               </motion.div>
             ))}
 
@@ -173,6 +263,20 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Empty state — ghost swan fills the void on fresh open */}
+          {showQuickActions && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col items-center justify-center py-10"
+            >
+              <div style={{ opacity: 0.06 }}>
+                <SwanLogo size={80} color="var(--color-text-primary)" />
+              </div>
+            </motion.div>
+          )}
 
           {/* Quick actions — only shown on fresh open */}
           {showQuickActions && (
@@ -222,15 +326,54 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
           </p>
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-full"
             style={{ background: "var(--color-bg-elevated)", border: "1px solid rgba(229,217,192,0.8)" }}>
+
+            {/* Mic button — only shown when SpeechRecognition is available */}
+            {hasSpeech && (
+              <motion.button
+                onClick={listening ? stopListening : startListening}
+                disabled={thinking}
+                whileTap={{ scale: 0.9 }}
+                aria-label={listening ? "Stop listening" : "Speak to The Muse"}
+                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+                style={{ background: listening ? "rgba(197,160,112,0.2)" : "transparent" }}
+              >
+                <AnimatePresence mode="wait">
+                  {listening ? (
+                    <motion.div
+                      key="listening"
+                      initial={{ scale: 0.7, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.7, opacity: 0 }}
+                    >
+                      <motion.div
+                        animate={{ opacity: [1, 0.4, 1] }}
+                        transition={{ duration: 1.2, repeat: Infinity }}
+                      >
+                        <MicOff size={14} color="#C5A070" strokeWidth={1.6} />
+                      </motion.div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="idle"
+                      initial={{ scale: 0.7, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.7, opacity: 0 }}
+                    >
+                      <Mic size={14} color="rgba(var(--color-text-primary-rgb), 0.35)" strokeWidth={1.6} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            )}
+
             <input
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-              placeholder="Ask The Muse anything..."
+              placeholder={listening ? "Listening..." : "Ask The Muse anything..."}
               aria-label="Ask The Muse anything"
               className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] outline-none font-light"
-              style={{ "::placeholder": { color: "rgba(var(--color-text-primary-rgb), 0.3)" } }}
             />
             <motion.button
               onClick={() => send(input)}
