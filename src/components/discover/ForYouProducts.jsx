@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sparkles, Gem, Check } from "lucide-react";
+import { Sparkles, Check, Heart, Bookmark, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
 import { base44 } from "@/api/base44Client";
@@ -20,9 +20,11 @@ const CAT_ACCENT = {
 };
 
 export default function ForYouProducts() {
-  const [picks,        setPicks]        = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [collectedIdx, setCollectedIdx] = useState(new Set());
+  const [picks,          setPicks]          = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [collectedIdx,   setCollectedIdx]   = useState(new Set());
+  const [adoredIdx,      setAdoredIdx]      = useState(new Set());
+  const [passedAlongIdx, setPassedAlongIdx] = useState(new Set());
 
   useEffect(() => {
     (async () => {
@@ -92,6 +94,35 @@ export default function ForYouProducts() {
     }).catch(() => {});
   };
 
+  const toggleAdore = (i) => {
+    setAdoredIdx(prev => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  };
+
+  const handlePassAlong = async (p, i) => {
+    const shareData = {
+      title: `${p.brand} ${p.name}`,
+      text:  p.muse_shimmer || `Found on La Muse — ${p.brand} ${p.name}`,
+      url:   window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        setPassedAlongIdx(prev => new Set(prev).add(i));
+        setTimeout(() => setPassedAlongIdx(prev => {
+          const next = new Set(prev); next.delete(i); return next;
+        }), 2000);
+      }
+    } catch {
+      // user cancelled — no-op
+    }
+  };
+
   if (loading) {
     return (
       <div className="mb-8">
@@ -129,8 +160,10 @@ export default function ForYouProducts() {
 
       <div className="flex gap-3 -mx-5 px-5 overflow-x-auto hide-scrollbar pb-2">
         {picks.map((p, i) => {
-          const accent = CAT_ACCENT[p.category] || "#A89B6B";
+          const accent    = CAT_ACCENT[p.category] || "#A89B6B";
           const collected = collectedIdx.has(i);
+          const adored    = adoredIdx.has(i);
+          const passed    = passedAlongIdx.has(i);
           return (
             <motion.div
               key={i}
@@ -139,7 +172,7 @@ export default function ForYouProducts() {
               transition={{ delay: i * 0.07 }}
               className="flex-shrink-0 w-40 rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-surface)] flex flex-col"
             >
-              {/* Visual header with category gradient */}
+              {/* Visual header */}
               <div
                 className="h-36 relative flex items-center justify-center"
                 style={{ background: `linear-gradient(160deg, ${accent}28 0%, ${accent}0a 100%)` }}
@@ -169,25 +202,48 @@ export default function ForYouProducts() {
                   </p>
                 )}
 
-                <div className="mt-auto pt-2.5 flex items-center justify-between gap-2">
-                  {p.price_usd ? (
-                    <span className="text-[11px] text-[var(--color-text-secondary)] font-light">{formatPrice(p.price_usd)}</span>
-                  ) : (
-                    <span />
-                  )}
-                  <button
-                    onClick={() => collectToList(p, i)}
-                    disabled={collected}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[9px] tracking-[0.1em] uppercase font-light transition-all flex-shrink-0 ${
-                      collected ? "bg-[#043927] text-[#FDF5E6]" : "bg-[#C8B06A] text-white"
-                    }`}
-                  >
-                    {collected
-                      ? <><Check size={9} /> Added</>
-                      : <><Gem   size={9} /> Add</>
-                    }
-                  </button>
-                </div>
+                {p.price_usd ? (
+                  <p className="mt-auto pt-2 text-[11px] text-[var(--color-text-secondary)] font-light">
+                    {formatPrice(p.price_usd)}
+                  </p>
+                ) : (
+                  <div className="mt-auto" />
+                )}
+              </div>
+
+              {/* Compact engagement bar */}
+              <div className="px-2.5 pb-2.5 flex items-center gap-1.5">
+                <button
+                  onClick={() => toggleAdore(i)}
+                  aria-label={adored ? "Un-adore" : "Adore"}
+                  className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
+                    adored ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
+                  }`}
+                >
+                  <Heart size={11} strokeWidth={1.5} color={adored ? "white" : "var(--color-text-muted)"} fill={adored ? "white" : "none"} />
+                </button>
+                <button
+                  onClick={() => collectToList(p, i)}
+                  disabled={collected}
+                  aria-label={collected ? "Collected" : "Collect"}
+                  className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
+                    collected ? "bg-[#043927] border-[#043927]" : "border-[var(--color-border)]"
+                  }`}
+                >
+                  {collected
+                    ? <Check    size={11} strokeWidth={1.5} color="white" />
+                    : <Bookmark size={11} strokeWidth={1.5} color="var(--color-text-muted)" />
+                  }
+                </button>
+                <button
+                  onClick={() => handlePassAlong(p, i)}
+                  aria-label="Pass Along"
+                  className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
+                    passed ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
+                  }`}
+                >
+                  <Share2 size={11} strokeWidth={1.5} color={passed ? "white" : "var(--color-text-muted)"} />
+                </button>
               </div>
             </motion.div>
           );

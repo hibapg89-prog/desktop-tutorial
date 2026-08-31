@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BookOpen, Clock } from "lucide-react";
+import { BookOpen, Clock, Heart, Bookmark, Share2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -7,8 +7,11 @@ import { getUserPreferences } from "@/lib/userPreferences";
 import SwanLogo from "@/components/SwanLogo";
 
 export default function ForYouTutorials() {
-  const [tutorials, setTutorials] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tutorials,    setTutorials]    = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [adoredIds,    setAdoredIds]    = useState(new Set());
+  const [collectedIds, setCollectedIds] = useState(new Set());
+  const [passedAlongId, setPassedAlongId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -27,7 +30,65 @@ export default function ForYouTutorials() {
         setLoading(false);
       }
     })();
+    base44.auth.me().then((u) => {
+      setAdoredIds(new Set(Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : []));
+      setCollectedIds(new Set(Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : []));
+    }).catch(() => {});
   }, []);
+
+  const toggleAdore = async (tutorialId) => {
+    const wasAdored = adoredIds.has(tutorialId);
+    const next = new Set(adoredIds);
+    wasAdored ? next.delete(tutorialId) : next.add(tutorialId);
+    setAdoredIds(next);
+    try {
+      const u = await base44.auth.me();
+      const arr = Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : [];
+      const updated = wasAdored
+        ? arr.filter((id) => id !== tutorialId)
+        : [...new Set([...arr, tutorialId])];
+      await base44.auth.updateMe({ adored_tutorials: updated });
+    } catch {
+      setAdoredIds(adoredIds);
+    }
+  };
+
+  const toggleCollect = async (tutorialId) => {
+    const wasCollected = collectedIds.has(tutorialId);
+    const next = new Set(collectedIds);
+    wasCollected ? next.delete(tutorialId) : next.add(tutorialId);
+    setCollectedIds(next);
+    try {
+      const u = await base44.auth.me();
+      const arr = Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : [];
+      const updated = wasCollected
+        ? arr.filter((id) => id !== tutorialId)
+        : [...new Set([...arr, tutorialId])];
+      await base44.auth.updateMe({ collected_tutorials: updated });
+    } catch {
+      setCollectedIds(collectedIds);
+    }
+  };
+
+  const handlePassAlong = async (t) => {
+    const url = `${window.location.origin}/tutorial/${t.id}`;
+    const shareData = {
+      title: t.title || "La Muse Ritual",
+      text:  t.description ? t.description.slice(0, 100) + "…" : "A ritual from La Muse.",
+      url,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        setPassedAlongId(t.id);
+        setTimeout(() => setPassedAlongId(null), 2000);
+      }
+    } catch {
+      // user cancelled — no-op
+    }
+  };
 
   if (!loading && !tutorials.length) return null;
 
@@ -68,12 +129,9 @@ export default function ForYouTutorials() {
                   initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.07 }}
-                  className="flex-shrink-0 w-40"
+                  className="flex-shrink-0 w-40 rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-surface)] flex flex-col"
                 >
-                  <Link
-                    to={`/tutorial/${t.id}`}
-                    className="block rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-surface)]"
-                  >
+                  <Link to={`/tutorial/${t.id}`} className="block">
                     <div className="h-36 relative overflow-hidden">
                       {t.image_url ? (
                         <img
@@ -112,6 +170,37 @@ export default function ForYouTutorials() {
                       )}
                     </div>
                   </Link>
+
+                  {/* Compact engagement bar */}
+                  <div className="px-2.5 pb-2.5 pt-1 flex items-center gap-1.5 mt-auto">
+                    <button
+                      onClick={() => toggleAdore(t.id)}
+                      aria-label={adoredIds.has(t.id) ? "Un-adore" : "Adore"}
+                      className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
+                        adoredIds.has(t.id) ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
+                      }`}
+                    >
+                      <Heart size={11} strokeWidth={1.5} color={adoredIds.has(t.id) ? "white" : "var(--color-text-muted)"} fill={adoredIds.has(t.id) ? "white" : "none"} />
+                    </button>
+                    <button
+                      onClick={() => toggleCollect(t.id)}
+                      aria-label={collectedIds.has(t.id) ? "Un-collect" : "Collect"}
+                      className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
+                        collectedIds.has(t.id) ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
+                      }`}
+                    >
+                      <Bookmark size={11} strokeWidth={1.5} color={collectedIds.has(t.id) ? "white" : "var(--color-text-muted)"} fill={collectedIds.has(t.id) ? "white" : "none"} />
+                    </button>
+                    <button
+                      onClick={() => handlePassAlong(t)}
+                      aria-label="Pass Along"
+                      className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
+                        passedAlongId === t.id ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
+                      }`}
+                    >
+                      <Share2 size={11} strokeWidth={1.5} color={passedAlongId === t.id ? "white" : "var(--color-text-muted)"} />
+                    </button>
+                  </div>
                 </motion.div>
               ))}
           <div className="flex-shrink-0 w-2" />
