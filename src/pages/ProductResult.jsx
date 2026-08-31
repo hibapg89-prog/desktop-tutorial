@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, MapPin, Copy, Check, Heart, ShoppingBag } from "lucide-react";
+import { ArrowLeft, MapPin, Copy, Check, Heart, ShoppingBag, Bookmark, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
 import ProductImage from "@/components/ProductImage";
@@ -16,12 +16,16 @@ export default function ProductResult() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [inVanity, setInVanity] = useState(false);
-  const [inWishlist, setInWishlist] = useState(false);
   const [inShoppingList, setInShoppingList] = useState(false);
+  const [adored, setAdored] = useState(false);
+  const [collected, setCollected] = useState(false);
+  const [passedAlong, setPassedAlong] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [vanityHint, setVanityHint] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -30,11 +34,19 @@ export default function ProductResult() {
         if (!p) { setLoading(false); return; }
         setProduct(p);
         setInVanity(p.in_vanity || false);
-        setInWishlist(p.in_wishlist || false);
         setInShoppingList(p.in_shopping_list || false);
         setIsVisible(p.is_profile_visible || false);
         setLoading(false);
       }).catch(() => setLoading(false));
+      base44.auth.me().then((u) => {
+        const adoredIds = Array.isArray(u?.adored_products) ? u.adored_products : [];
+        setAdored(adoredIds.includes(id));
+        const collectedIds = Array.isArray(u?.collected_products) ? u.collected_products : [];
+        setCollected(collectedIds.includes(id));
+      }).catch(() => {});
+      base44.entities.Review.filter({ post_id: id })
+        .then((r) => setReviews(r || []))
+        .catch(() => {});
     }
   }, [id]);
 
@@ -57,33 +69,84 @@ export default function ProductResult() {
 
   const handleAddToVanity = async () => {
     const prevVanity = inVanity;
-    const prevWishlist = inWishlist;
     setInVanity(true);
-    setInWishlist(false);
     try {
-      await base44.entities.Product.update(product.id, { in_vanity: true, in_wishlist: false });
+      await base44.entities.Product.update(product.id, { in_vanity: true });
     } catch (err) {
       console.error("[ProductResult] add to vanity failed:", err);
       setInVanity(prevVanity);
-      setInWishlist(prevWishlist);
       showError("Could not add to vanity — please try again.");
     }
   };
 
-  const handleAddToWishlist = async () => {
-    if (inVanity) {
-      setVanityHint(true);
-      setTimeout(() => setVanityHint(false), 2200);
-      return;
-    }
-    const next = !inWishlist;
-    setInWishlist(next);
+  const toggleAdore = async () => {
+    const newState = !adored;
+    setAdored(newState);
     try {
-      await base44.entities.Product.update(product.id, { in_wishlist: next });
+      const u = await base44.auth.me();
+      const adoredIds = Array.isArray(u?.adored_products) ? u.adored_products : [];
+      const updated = newState
+        ? [...new Set([...adoredIds, id])]
+        : adoredIds.filter((pid) => pid !== id);
+      await base44.auth.updateMe({ adored_products: updated });
     } catch (err) {
-      console.error("[ProductResult] wishlist update failed:", err);
-      setInWishlist(!next);
-      showError("Could not update wishlist — please try again.");
+      console.error("[ProductResult] adore update failed:", err);
+      setAdored(!newState);
+    }
+  };
+
+  const toggleCollect = async () => {
+    const newState = !collected;
+    setCollected(newState);
+    try {
+      const u = await base44.auth.me();
+      const collectedIds = Array.isArray(u?.collected_products) ? u.collected_products : [];
+      const updated = newState
+        ? [...new Set([...collectedIds, id])]
+        : collectedIds.filter((pid) => pid !== id);
+      await base44.auth.updateMe({ collected_products: updated });
+    } catch (err) {
+      console.error("[ProductResult] collect update failed:", err);
+      setCollected(!newState);
+    }
+  };
+
+  const handlePassAlong = async () => {
+    const shareData = {
+      title: product?.name || "La Muse Product",
+      text: product?.description ? product.description.slice(0, 120) + "…" : "Found on La Muse.",
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        setPassedAlong(true);
+        setTimeout(() => setPassedAlong(false), 2000);
+      }
+    } catch {
+      // user cancelled — no-op
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    const trimmed = reviewText.trim();
+    if (!trimmed) return;
+    setReviewSubmitting(true);
+    try {
+      const u = await base44.auth.me();
+      const review = await base44.entities.Review.create({
+        post_id: id,
+        review_text: trimmed,
+        author_name: u?.full_name || "Anonymous",
+      });
+      setReviews((prev) => [review, ...prev]);
+      setReviewText("");
+    } catch (err) {
+      console.error("[ProductResult] failed to post whisper:", err);
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -152,28 +215,16 @@ export default function ProductResult() {
           <ArrowLeft size={16} color="var(--color-text-primary)" aria-hidden={true} />
         </button>
 
-        {/* Wishlist heart */}
-        <div className="absolute top-14 right-5 z-10">
-          <button
-            onClick={handleAddToWishlist}
-            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-            className="w-9 h-9 rounded-full bg-[var(--color-bg-surface)] flex items-center justify-center shadow-sm"
-          >
-            <Heart size={16} color={inWishlist ? "#BC8F8F" : "var(--color-text-primary)"} fill={inWishlist ? "#BC8F8F" : "none"} aria-hidden={true} />
-          </button>
-          <AnimatePresence>
-            {vanityHint && (
-              <motion.div
-                initial={{ opacity: 0, y: 4, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 4, scale: 0.9 }}
-                className="absolute right-0 top-11 bg-[#043927] text-[#FDF5E6] text-[0.625rem] font-light px-3 py-1.5 rounded-xl whitespace-nowrap shadow-lg"
-              >
-                Already in your vanity
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        {/* Adore button */}
+        <button
+          onClick={toggleAdore}
+          aria-label={adored ? "Un-adore" : "Adore"}
+          className={`absolute top-14 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-all ${
+            adored ? "bg-[#C8B06A]/90" : "bg-[var(--color-bg-surface)]"
+          }`}
+        >
+          <Heart size={16} color={adored ? "white" : "var(--color-text-primary)"} fill={adored ? "white" : "none"} aria-hidden={true} />
+        </button>
 
         <div className="absolute top-16 right-16 opacity-10" aria-hidden={true}>
           <SwanLogo size={100} color="var(--color-text-primary)" />
@@ -275,19 +326,31 @@ export default function ProductResult() {
           </div>
         )}
 
-        {!inVanity && (
+        {/* Engagement row: Collect · Pass Along */}
+        <div className="flex gap-2">
           <button
-            onClick={handleAddToWishlist}
-            className={`w-full py-3.5 rounded-2xl text-xs tracking-[0.25em] uppercase font-light transition-all flex items-center justify-center gap-2 border ${
-              inWishlist
-                ? "border-[#BC8F8F] bg-[#BC8F8F]/10 text-[#BC8F8F]"
+            onClick={toggleCollect}
+            className={`flex-1 py-3 rounded-2xl text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-1.5 ${
+              collected
+                ? "bg-[#C8B06A] text-white border-[#C8B06A]"
                 : "border-[var(--color-border)] text-primary-60"
             }`}
           >
-            <Heart size={12} fill={inWishlist ? "currentColor" : "none"} />
-            {inWishlist ? "In Wishlist" : "Save to Wishlist"}
+            <Bookmark size={12} strokeWidth={1.5} fill={collected ? "white" : "none"} />
+            {collected ? "Collected" : "Collect"}
           </button>
-        )}
+          <button
+            onClick={handlePassAlong}
+            className={`flex-1 py-3 rounded-2xl text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-1.5 ${
+              passedAlong
+                ? "bg-[#C8B06A] text-white border-[#C8B06A]"
+                : "border-[var(--color-border)] text-primary-60"
+            }`}
+          >
+            <Share2 size={12} strokeWidth={1.5} />
+            {passedAlong ? "Copied" : "Pass Along"}
+          </button>
+        </div>
 
         <button
           onClick={handleAddToShoppingList}
@@ -357,6 +420,47 @@ export default function ProductResult() {
             <p className="text-xs text-primary-60 leading-relaxed font-light">{product.ingredients}</p>
           </div>
         )}
+
+        {/* Whispers */}
+        <div className="bg-[var(--color-bg-surface)] rounded-2xl p-5 border border-[var(--color-border)]">
+          <h2 className="font-serif text-[18px] text-[var(--color-text-primary)] font-light tracking-wide mb-4">
+            Whispers
+          </h2>
+          <div className="flex items-center gap-3 border border-[#C8B06A]/40 rounded-full px-4 py-2.5 mb-4">
+            <input
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmitReview()}
+              placeholder="Share a thought on this product..."
+              className="flex-1 bg-transparent text-[13px] text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-25"
+            />
+            <button
+              onClick={handleSubmitReview}
+              disabled={reviewSubmitting || !reviewText.trim()}
+              className="text-[var(--color-accent-gold)] text-[16px] font-light disabled:opacity-30"
+            >
+              →
+            </button>
+          </div>
+          {reviews.length > 0 ? (
+            <div className="space-y-4">
+              {reviews.map((r) => (
+                <div key={r.id} className="border-l-2 border-[#C8B06A]/30 pl-4">
+                  <p className="text-[13px] text-[var(--color-text-primary)]/80 font-light leading-[1.6] italic">
+                    "{r.review_text}"
+                  </p>
+                  <p className="text-[10px] text-primary-40 font-light tracking-wide mt-1.5">
+                    — {r.author_name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="font-serif text-[11px] text-primary-30 text-center italic font-light">
+              Be the first to whisper
+            </p>
+          )}
+        </div>
       </div>
     </main>
   );
