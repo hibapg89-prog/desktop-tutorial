@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Copy, Check, Heart, Bookmark, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Copy, Check, Heart, Bookmark, ShoppingBag, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
 import { base44 } from "@/api/base44Client";
@@ -342,8 +342,9 @@ export default function TutorialDetail() {
   const navigate = useNavigate();
   const [tutorial, setTutorial] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [aspired, setAspired] = useState(false);
+  const [adored, setAdored] = useState(false);
   const [collected, setCollected] = useState(false);
+  const [passedAlong, setPassedAlong] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [progressMap, setProgressMap] = useState({});
@@ -377,9 +378,9 @@ export default function TutorialDetail() {
       // Load collected (favorites) status
       const collectedIds = Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : [];
       setCollected(collectedIds.includes(id));
-      // Load aspired status
-      const aspiredIds = Array.isArray(u?.aspired_tutorials) ? u.aspired_tutorials : [];
-      setAspired(aspiredIds.includes(id));
+      // Load adored status
+      const adoredIds = Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : [];
+      setAdored(adoredIds.includes(id));
     }).catch(() => {});
     // Load reviews
     base44.entities.Review.filter({ post_id: id })
@@ -420,20 +421,40 @@ export default function TutorialDetail() {
     }
   };
 
-  // Toggle aspired (heart) status — persists to user profile
-  const toggleAspired = async () => {
-    const newState = !aspired;
-    setAspired(newState);
+  // Toggle adored (heart) status — persists to user profile
+  const toggleAdore = async () => {
+    const newState = !adored;
+    setAdored(newState);
     try {
       const u = await base44.auth.me();
-      const aspiredIds = Array.isArray(u?.aspired_tutorials) ? u.aspired_tutorials : [];
+      const adoredIds = Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : [];
       const updated = newState
-        ? [...new Set([...aspiredIds, id])]
-        : aspiredIds.filter((tid) => tid !== id);
-      await base44.auth.updateMe({ aspired_tutorials: updated });
+        ? [...new Set([...adoredIds, id])]
+        : adoredIds.filter((tid) => tid !== id);
+      await base44.auth.updateMe({ adored_tutorials: updated });
     } catch (err) {
-      console.error("Failed to update aspired:", err);
-      setAspired(!newState); // revert on error
+      console.error("Failed to update adored:", err);
+      setAdored(!newState); // revert on error
+    }
+  };
+
+  // Pass Along — native share with clipboard fallback
+  const handlePassAlong = async () => {
+    const shareData = {
+      title: tutorial?.title || "La Muse Tutorial",
+      text: tutorial?.description ? tutorial.description.slice(0, 120) + "…" : "A ritual from La Muse.",
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        setPassedAlong(true);
+        setTimeout(() => setPassedAlong(false), 2000);
+      }
+    } catch {
+      // user cancelled share — no-op
     }
   };
 
@@ -551,30 +572,30 @@ export default function TutorialDetail() {
           <ArrowLeft size={16} color="var(--color-text-primary)" />
         </button>
 
-        {/* Aspire button */}
+        {/* Adore button */}
         <button
-          onClick={toggleAspired}
+          onClick={toggleAdore}
           className={`absolute top-14 right-5 w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all ${
-            aspired ? "bg-[#C8B06A]/90" : "bg-[var(--color-bg)]/80"
+            adored ? "bg-[#C8B06A]/90" : "bg-[var(--color-bg)]/80"
           }`}
         >
           <Heart
             size={16}
-            color={aspired ? "white" : "var(--color-text-primary)"}
-            fill={aspired ? "white" : "none"}
+            color={adored ? "white" : "var(--color-text-primary)"}
+            fill={adored ? "white" : "none"}
             strokeWidth={1.5}
           />
         </button>
 
-        {/* Aspire label */}
-        {aspired && (
+        {/* Adore label */}
+        {adored && (
           <motion.div
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             className="absolute top-[100px] right-5"
           >
             <span className="text-[8px] tracking-[0.22em] text-[var(--color-accent-gold)] uppercase font-light">
-              Aspired
+              Adored
             </span>
           </motion.div>
         )}
@@ -620,10 +641,10 @@ export default function TutorialDetail() {
         </div>
 
         {/* Action bar */}
-        <div className="flex gap-3">
+        <div className="space-y-3">
           <button
             onClick={() => setCompleted((v) => !v)}
-            className={`flex-1 py-3.5 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all ${
+            className={`w-full py-3.5 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all ${
               completed
                 ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
                 : "border-[var(--color-border)] text-[var(--color-text-primary)]"
@@ -631,17 +652,33 @@ export default function TutorialDetail() {
           >
             {completed ? "Completed ✓" : "Mark Complete"}
           </button>
-          <button
-            onClick={toggleCollected}
-            className={`flex-1 py-3.5 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
-              collected
-                ? "bg-[#C8B06A] text-white border-[#C8B06A]"
-                : "border-[var(--color-border)] text-[var(--color-text-primary)]"
-            }`}
-          >
-            <Bookmark size={13} strokeWidth={1.5} fill={collected ? "white" : "none"} />
-            {collected ? "In Favorites" : "Add to Favorites"}
-          </button>
+
+          {/* Engagement row: Collect · Pass Along */}
+          <div className="flex gap-3">
+            <button
+              onClick={toggleCollected}
+              className={`flex-1 py-3 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
+                collected
+                  ? "bg-[#C8B06A] text-white border-[#C8B06A]"
+                  : "border-[var(--color-border)] text-[var(--color-text-primary)]"
+              }`}
+            >
+              <Bookmark size={13} strokeWidth={1.5} fill={collected ? "white" : "none"} />
+              {collected ? "Collected" : "Collect"}
+            </button>
+
+            <button
+              onClick={handlePassAlong}
+              className={`flex-1 py-3 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
+                passedAlong
+                  ? "bg-[#C8B06A] text-white border-[#C8B06A]"
+                  : "border-[var(--color-border)] text-[var(--color-text-primary)]"
+              }`}
+            >
+              <Share2 size={13} strokeWidth={1.5} />
+              {passedAlong ? "Copied" : "Pass Along"}
+            </button>
+          </div>
         </div>
 
         {/* Description — editorial pull quote style */}
