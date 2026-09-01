@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, X, Sparkles, MessageCircle, Bookmark, Share2, Flag, Play } from "lucide-react";
+import { Plus, Search, X, Sparkles, Heart, MessageCircle, Bookmark, Share2, Flag, Play } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -402,10 +402,13 @@ export default function Community() {
             <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => setComposingSwap(true)}
-                  className="flex items-center gap-0.5 bg-white border border-[#D3CDBE] text-[#1C2E24] text-[0.6875rem] tracking-[0.1em] font-light px-2.5 py-1.5 rounded-full whitespace-nowrap"
+                  disabled
+                  className="relative flex items-center gap-0.5 bg-white border border-[#D3CDBE] text-[#1C2E24]/35 text-[0.6875rem] tracking-[0.1em] font-light px-2.5 py-1.5 rounded-full whitespace-nowrap cursor-not-allowed"
                 >
                   <Plus size={11} /> Swap
+                  <span className="absolute -top-2 -right-1 text-[7px] tracking-[0.06em] uppercase bg-[#C8B06A] text-white px-1 py-0.5 rounded-full font-light leading-none">
+                    soon
+                  </span>
                 </button>
                 <button
                   onClick={() => setComposingPoll(true)}
@@ -418,7 +421,7 @@ export default function Community() {
                   className="flex items-center gap-0.5 text-[#1C2E24] text-[0.6875rem] tracking-[0.1em] font-medium px-2.5 py-1.5 rounded-full whitespace-nowrap"
                   style={{ background: "linear-gradient(135deg, #C4B47B 0%, #DED098 100%)" }}
                 >
-                  <Plus size={11} /> Post
+                  <Plus size={11} /> Musing
                 </button>
               </div>
               <Link
@@ -695,7 +698,7 @@ export default function Community() {
           <div className="flex flex-col items-center py-20 text-center">
             <SwanLogo size={56} color="var(--color-accent-gold)" className="mb-5" />
             <p className="font-serif text-lg text-primary-40 italic leading-relaxed">
-              No reviews yet — be the first to share a find.
+              No musings yet — be the first to share a find.
             </p>
           </div>
         ) : (
@@ -752,7 +755,7 @@ export default function Community() {
               <div className="flex flex-col items-center py-20 text-center">
                 <SwanLogo size={48} color="var(--color-accent-gold)" className="mb-4" />
                 <p className="font-serif text-base text-primary-40 italic leading-relaxed px-4">
-                  Your coterie hasn't posted yet — whisper to a member from any review to connect.
+                  Your coterie hasn't shared yet — whisper to a member from any musing to connect.
                 </p>
               </div>
             )}
@@ -793,7 +796,7 @@ export default function Community() {
                 <div className="flex flex-col items-center py-16 text-center">
                   <SwanLogo size={48} color="var(--color-accent-gold)" className="mb-4" />
                   <p className="font-serif text-base text-primary-40 italic">
-                    {query ? "No reviews match your search" : `Nothing in ${activeCategory} yet`}
+                    {query ? "No musings match your search" : `Nothing in ${activeCategory} yet`}
                   </p>
                 </div>
               )
@@ -971,7 +974,7 @@ export default function Community() {
                                 transition={{ type: "spring", stiffness: 480, damping: 18 }}
                                 style={{ display: "inline-flex" }}
                               >
-                                <Sparkles size={13} />
+                                <Heart size={13} fill={adoredIds.has(post.id) ? "currentColor" : "none"} />
                               </motion.span>
                               {adoredIds.has(post.id) ? "Adored" : "Adore"}
                               {(post.adore_count || 0) > 0 && (

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   X, Plus, Trash2, ChevronLeft,
   Star, Palette, Layers, ClipboardList, Video,
-  Search, Globe, Users,
+  Search, Globe, Users, Smile,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { extractTags } from "@/utils/richText";
@@ -14,7 +14,7 @@ const POST_TYPES = [
   { key: "swatch",       label: "Shade Swatch",   Icon: Palette,       desc: "Photo · shade name · skin tone" },
   { key: "before_after", label: "Before & After",  Icon: Layers,        desc: "Show your transformation" },
   { key: "routine",      label: "Routine Share",   Icon: ClipboardList, desc: "Your step-by-step ritual" },
-  { key: "grwm",         label: "GRWM",            Icon: Video,         desc: "Link your 60 s or 4 min video" },
+  { key: "grwm",         label: "GRWM",            Icon: Video,         desc: "Share your get-ready moment" },
 ];
 
 const MONK_TONES = [
@@ -32,10 +32,109 @@ const BEAUTY_CIRCLES = [
   { key: "minimalist",   label: "Minimalist",      glyph: "○", color: "#043927" },
 ];
 
+const BEAUTY_EMOJIS = [
+  "💄","💅","💋","✨","🌹","🌸","🫦","💆","🛁","🪞",
+  "🧴","💐","🫶","❤️","🔥","💯","😍","🥰","✅","🌟",
+  "💫","🎀","🌺","💗","🥹","👑","🤌","💎","🦋","🩷",
+];
+
+const TENOR_KEY = "LIVDSRZULELA";
+
 const INPUT_CLS =
   "w-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-[var(--color-text-primary)]/30";
 const LABEL_CLS =
   "text-[10px] tracking-[0.15em] uppercase text-[var(--color-text-primary)]/40 font-light mb-1.5";
+
+// ─── emoji panel ────────────────────────────────────────────────────────────
+function EmojiPanel({ onSelect }) {
+  return (
+    <div className="flex flex-wrap gap-1 p-2 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-2xl mt-1.5">
+      {BEAUTY_EMOJIS.map(e => (
+        <button
+          key={e}
+          type="button"
+          onClick={() => onSelect(e)}
+          className="text-base leading-none p-0.5 hover:scale-110 transition-transform"
+        >
+          {e}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── gif picker panel ────────────────────────────────────────────────────────
+function GifPickerPanel({ results, loading, onSelect }) {
+  return (
+    <div className="border border-[var(--color-border)] rounded-2xl mt-1 overflow-hidden bg-[var(--color-bg-elevated)]">
+      {loading ? (
+        <div className="flex justify-center py-5">
+          <div className="animate-spin w-5 h-5 rounded-full border-2 border-[#C8B06A] border-t-transparent" />
+        </div>
+      ) : results.length > 0 ? (
+        <div className="grid grid-cols-3 gap-1 p-1.5 max-h-44 overflow-y-auto">
+          {results.map((gif, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onSelect(gif)}
+              className="aspect-square rounded-lg overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)]"
+            >
+              <img src={gif.tinygif} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="text-[10px] text-center text-[var(--color-text-primary)]/30 font-light py-5 italic">
+          No GIFs found
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── media toolbar (emoji + gif toggles + gif search input) ─────────────────
+function MediaToolbar({ showEmoji, showGif, onEmojiToggle, onGifToggle, gifSearch, onGifSearch }) {
+  return (
+    <div className="mt-1.5">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onEmojiToggle}
+          className={`flex items-center gap-1 text-[9px] tracking-[0.12em] uppercase font-light px-2.5 py-1 rounded-full border transition-all ${
+            showEmoji
+              ? "bg-[#C8B06A]/15 border-[#C8B06A]/50 text-[var(--color-text-primary)]"
+              : "border-[var(--color-border)] text-[var(--color-text-primary)]/35 hover:border-[#C8B06A]/30"
+          }`}
+        >
+          <Smile size={10} strokeWidth={1.5} /> Emoji
+        </button>
+        <button
+          type="button"
+          onClick={onGifToggle}
+          className={`flex items-center gap-1 text-[9px] tracking-[0.12em] uppercase font-light px-2.5 py-1 rounded-full border transition-all ${
+            showGif
+              ? "bg-[#C8B06A]/15 border-[#C8B06A]/50 text-[var(--color-text-primary)]"
+              : "border-[var(--color-border)] text-[var(--color-text-primary)]/35 hover:border-[#C8B06A]/30"
+          }`}
+        >
+          GIF
+        </button>
+      </div>
+      {showGif && (
+        <div className="relative mt-1.5">
+          <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none" color="var(--color-text-primary)" />
+          <input
+            value={gifSearch}
+            onChange={e => onGifSearch(e.target.value)}
+            placeholder="Search GIFs…"
+            className="w-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl pl-7 pr-3 py-1.5 text-xs text-[var(--color-text-primary)] font-light outline-none placeholder:text-[var(--color-text-primary)]/30"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── shared photo upload ────────────────────────────────────────────────────
 function PhotoUpload({ value, onChange, label = "Upload photo", compact = false }) {
@@ -111,7 +210,7 @@ function TextArea({ value, onChange, placeholder, rows = 3, max = 400 }) {
 }
 
 // ─── main composer ──────────────────────────────────────────────────────────
-export default function CommunityComposer({ onClose, onPosted }) {
+export default function CommunityComposer({ onClose, onPosted, prefillProduct }) {
   const [step, setStep]             = useState("pick");
   const [postType, setPostType]     = useState(null);
   const [vanity, setVanity]         = useState([]);
@@ -155,8 +254,32 @@ export default function CommunityComposer({ onClose, onPosted }) {
   const [grwmDuration, setGrwmDuration] = useState("60s");
   const [grwmDesc, setGrwmDesc]         = useState("");
 
+  // ── Emoji / GIF / Video
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker]     = useState(false);
+  const [gifSearch, setGifSearch]             = useState("beauty");
+  const [gifResults, setGifResults]           = useState([]);
+  const [gifLoading, setGifLoading]           = useState(false);
+  const [attachedGif, setAttachedGif]         = useState(null);
+  const [videoSource, setVideoSource]         = useState("url"); // "url" | "upload"
+  const [videoFileData, setVideoFileData]     = useState(null);
+  const [videoDuration, setVideoDuration]     = useState("");
+  const [videoError, setVideoError]           = useState("");
+  const videoInputRef = useRef(null);
+
   useEffect(() => {
     base44.auth.me().catch(() => null).then(setUser);
+  }, []);
+
+  // prefill from ScanResults → auto-select product in review
+  useEffect(() => {
+    if (prefillProduct) {
+      setPostType("review");
+      setStep("form");
+      setSelected(prefillProduct);
+      loadVanity();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // catalog search with debounce
@@ -175,6 +298,30 @@ export default function CommunityComposer({ onClose, onPosted }) {
     return () => { clearTimeout(t); setSearchingCatalog(false); };
   }, [catalogSearch, reviewSource]);
 
+  // GIF search with debounce
+  useEffect(() => {
+    if (!showGifPicker) return;
+    setGifLoading(true);
+    const q = gifSearch.trim() || "beauty makeup";
+    const t = setTimeout(() => {
+      fetch(`https://g.tenor.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&limit=12`)
+        .then(r => r.json())
+        .then(data => {
+          setGifResults(
+            (data.results || [])
+              .map(r => ({
+                url: r.media_formats?.gif?.url,
+                tinygif: r.media_formats?.tinygif?.url,
+              }))
+              .filter(g => g.url && g.tinygif)
+          );
+        })
+        .catch(() => setGifResults([]))
+        .finally(() => setGifLoading(false));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [gifSearch, showGifPicker]);
+
   const loadVanity = () => {
     if (vanity.length > 0) return;
     setLoadingVanity(true);
@@ -187,6 +334,9 @@ export default function CommunityComposer({ onClose, onPosted }) {
     setPostType(key);
     setStep("form");
     if (key === "review") loadVanity();
+    setShowEmojiPicker(false);
+    setShowGifPicker(false);
+    setAttachedGif(null);
   };
 
   const addStep    = () => setSteps((s) => [...s, { brand: "", name: "", note: "" }]);
@@ -194,13 +344,71 @@ export default function CommunityComposer({ onClose, onPosted }) {
   const updateStep = (i, field, val) =>
     setSteps((s) => s.map((st, idx) => (idx === i ? { ...st, [field]: val } : st)));
 
+  // insert emoji into the active post type's main text field
+  const insertEmoji = (emoji) => {
+    const setters = {
+      review:       setReviewText,
+      swatch:       setSwatchCaption,
+      before_after: setBaCaption,
+      routine:      setRoutineDesc,
+      grwm:         setGrwmDesc,
+    };
+    const setter = setters[postType];
+    if (setter) setter(prev => prev + emoji);
+  };
+
+  const handleGifSelect = (gif) => {
+    setAttachedGif(gif.url);
+    setShowGifPicker(false);
+  };
+
+  const handleVideoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVideoError("");
+    setVideoFileData(null);
+    const objectUrl = URL.createObjectURL(file);
+    const videoEl = document.createElement("video");
+    videoEl.preload = "metadata";
+    videoEl.onloadedmetadata = () => {
+      URL.revokeObjectURL(objectUrl);
+      if (videoEl.duration > 30) {
+        setVideoError("Please upload a video under 30 seconds. For longer videos, use a URL instead.");
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        setVideoError("File too large (max 20 MB). Please compress it or use a URL for longer videos.");
+        return;
+      }
+      setVideoDuration(Math.round(videoEl.duration) + "s");
+      const reader = new FileReader();
+      reader.onload = ev => setVideoFileData(ev.target.result);
+      reader.readAsDataURL(file);
+    };
+    videoEl.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      setVideoError("Could not read video. Try another file or use a URL.");
+    };
+    videoEl.src = objectUrl;
+  };
+
+  const toggleEmoji = () => {
+    setShowEmojiPicker(p => !p);
+    setShowGifPicker(false);
+  };
+  const toggleGif = () => {
+    setShowGifPicker(p => !p);
+    setShowEmojiPicker(false);
+  };
+
   const canPost = (() => {
     if (submitting) return false;
     if (postType === "review")       return !!selected && reviewText.trim().length > 0;
     if (postType === "swatch")       return !!swatchPhoto && shadeName.trim().length > 0;
     if (postType === "before_after") return !!beforePhoto && !!afterPhoto && baTitle.trim().length > 0;
     if (postType === "routine")      return routineTitle.trim().length > 0 && steps.some((s) => s.name.trim());
-    if (postType === "grwm")         return grwmTitle.trim().length > 0 && videoUrl.trim().length > 0;
+    if (postType === "grwm")
+      return grwmTitle.trim().length > 0 && (videoSource === "url" ? videoUrl.trim().length > 0 : !!videoFileData);
     return false;
   })();
 
@@ -210,7 +418,15 @@ export default function CommunityComposer({ onClose, onPosted }) {
     if (!canPost) return;
     setSubmitting(true);
     try {
-      const base = { post_type: postType, review_count: 0, rating: null, author_name: authorName, visibility, ...(selectedCircle ? { circle: selectedCircle } : {}) };
+      const base = {
+        post_type: postType,
+        review_count: 0,
+        rating: null,
+        author_name: authorName,
+        visibility,
+        ...(selectedCircle ? { circle: selectedCircle } : {}),
+        ...(attachedGif ? { gif_url: attachedGif } : {}),
+      };
 
       if (postType === "review") {
         await base44.entities.CommunityPost.create({
@@ -256,11 +472,13 @@ export default function CommunityComposer({ onClose, onPosted }) {
           tags: JSON.stringify(extractTags([routineDesc, routineTitle, ...steps.map((s) => s.note)].join(" "))),
         });
       } else if (postType === "grwm") {
+        const resolvedVideoUrl = videoSource === "upload" ? videoFileData : videoUrl.trim();
+        const resolvedDuration = videoSource === "upload" ? (videoDuration || grwmDuration) : grwmDuration;
         await base44.entities.CommunityPost.create({
           ...base,
           name: grwmTitle.trim(),
-          video_url: videoUrl.trim(),
-          grwm_duration: grwmDuration,
+          video_url: resolvedVideoUrl,
+          grwm_duration: resolvedDuration,
           review_text: grwmDesc.trim() || grwmTitle.trim(),
           tags: JSON.stringify(extractTags(grwmDesc)),
         });
@@ -275,6 +493,16 @@ export default function CommunityComposer({ onClose, onPosted }) {
 
   const currentType = POST_TYPES.find((t) => t.key === postType);
   const TypeIcon = currentType?.Icon;
+
+  // shared media toolbar props
+  const mediaToolbarProps = {
+    showEmoji: showEmojiPicker,
+    showGif: showGifPicker,
+    onEmojiToggle: toggleEmoji,
+    onGifToggle: toggleGif,
+    gifSearch,
+    onGifSearch: setGifSearch,
+  };
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -303,7 +531,7 @@ export default function CommunityComposer({ onClose, onPosted }) {
               </div>
             )}
             <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light">
-              {step === "pick" ? "New Post" : currentType?.label}
+              {step === "pick" ? "New Musing" : currentType?.label}
             </h2>
           </div>
           <button
@@ -321,7 +549,7 @@ export default function CommunityComposer({ onClose, onPosted }) {
         {step === "pick" && (
           <div className="flex flex-col gap-2">
             <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--color-text-primary)]/40 font-light mb-1">
-              Choose a post type
+              Choose a musing type
             </p>
             {POST_TYPES.map((t) => (
               <button
@@ -430,6 +658,21 @@ export default function CommunityComposer({ onClose, onPosted }) {
                   rows={4}
                   max={600}
                 />
+                <MediaToolbar {...mediaToolbarProps} />
+                {showEmojiPicker && <EmojiPanel onSelect={insertEmoji} />}
+                {showGifPicker && <GifPickerPanel results={gifResults} loading={gifLoading} onSelect={handleGifSelect} />}
+                {attachedGif && (
+                  <div className="relative mt-2 rounded-2xl overflow-hidden h-32">
+                    <img src={attachedGif} alt="GIF" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setAttachedGif(null)}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center"
+                    >
+                      <X size={11} color="white" />
+                    </button>
+                  </div>
+                )}
               </>
             )}
 
@@ -488,6 +731,17 @@ export default function CommunityComposer({ onClose, onPosted }) {
                     placeholder="How does it wear? Any tips for this shade?"
                     rows={3}
                   />
+                  <MediaToolbar {...mediaToolbarProps} />
+                  {showEmojiPicker && <EmojiPanel onSelect={insertEmoji} />}
+                  {showGifPicker && <GifPickerPanel results={gifResults} loading={gifLoading} onSelect={handleGifSelect} />}
+                  {attachedGif && (
+                    <div className="relative mt-2 rounded-2xl overflow-hidden h-28">
+                      <img src={attachedGif} alt="GIF" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => setAttachedGif(null)} className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center">
+                        <X size={11} color="white" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -521,6 +775,9 @@ export default function CommunityComposer({ onClose, onPosted }) {
                     placeholder="What changed? Which products made the difference?"
                     rows={3}
                   />
+                  <MediaToolbar {...mediaToolbarProps} />
+                  {showEmojiPicker && <EmojiPanel onSelect={insertEmoji} />}
+                  {showGifPicker && <GifPickerPanel results={gifResults} loading={gifLoading} onSelect={handleGifSelect} />}
                 </div>
               </>
             )}
@@ -582,6 +839,9 @@ export default function CommunityComposer({ onClose, onPosted }) {
                   placeholder="Any tips or context about this routine?"
                   rows={3}
                 />
+                <MediaToolbar {...mediaToolbarProps} />
+                {showEmojiPicker && <EmojiPanel onSelect={insertEmoji} />}
+                {showGifPicker && <GifPickerPanel results={gifResults} loading={gifLoading} onSelect={handleGifSelect} />}
               </>
             )}
 
@@ -597,39 +857,92 @@ export default function CommunityComposer({ onClose, onPosted }) {
                     className={INPUT_CLS}
                   />
                 </div>
+
+                {/* Video source toggle */}
                 <div className="mb-4">
-                  <p className={LABEL_CLS}>Video URL</p>
-                  <input
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="youtube.com/watch?v=… or tiktok.com/…"
-                    className={INPUT_CLS}
-                  />
-                </div>
-                <div className="mb-4">
-                  <p className={LABEL_CLS}>Duration</p>
-                  <div className="flex gap-2">
-                    {["60s", "4min"].map((d) => (
+                  <p className={LABEL_CLS}>Video</p>
+                  <div className="flex border border-[var(--color-border)] rounded-xl overflow-hidden mb-3">
+                    {[
+                      { key: "url",    label: "Link (YouTube / TikTok)" },
+                      { key: "upload", label: "Upload (max 30s)" },
+                    ].map(tab => (
                       <button
-                        key={d}
-                        onClick={() => setGrwmDuration(d)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-light tracking-wide border transition-all ${
-                          grwmDuration === d
-                            ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
-                            : "bg-transparent text-[var(--color-text-primary)]/60 border-[var(--color-border)]"
+                        key={tab.key}
+                        onClick={() => { setVideoSource(tab.key); setVideoError(""); setVideoFileData(null); setVideoUrl(""); }}
+                        className={`flex-1 py-2 text-[10px] tracking-[0.12em] uppercase font-light transition-all ${
+                          videoSource === tab.key
+                            ? "bg-[#043927] text-[#FDF5E6]"
+                            : "bg-transparent text-[var(--color-text-primary)]/50 hover:bg-[var(--color-bg-elevated)]"
                         }`}
                       >
-                        {d}
+                        {tab.label}
                       </button>
                     ))}
                   </div>
+
+                  {videoSource === "url" ? (
+                    <input
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="youtube.com/watch?v=… or tiktok.com/…"
+                      className={INPUT_CLS}
+                    />
+                  ) : (
+                    <>
+                      <div
+                        onClick={() => videoInputRef.current?.click()}
+                        className="cursor-pointer border-2 border-dashed border-[var(--color-border)] rounded-2xl flex items-center justify-center h-28 bg-[var(--color-bg-elevated)]/60"
+                      >
+                        {videoFileData ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <Video size={20} color="#C8B06A" strokeWidth={1.5} />
+                            <span className="text-[9px] tracking-wide text-[#C8B06A] font-light">{videoDuration} — tap to replace</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 select-none">
+                            <Video size={20} color="var(--color-text-primary)" strokeWidth={1} className="opacity-40" />
+                            <span className="text-[9px] tracking-[0.15em] uppercase text-[var(--color-text-primary)]/40 font-light">Upload video (max 30s)</span>
+                          </div>
+                        )}
+                      </div>
+                      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+                      {videoError && (
+                        <p className="text-[10px] text-[#BC8F8F] font-light mt-1.5 leading-snug">{videoError}</p>
+                      )}
+                    </>
+                  )}
                 </div>
+
+                {videoSource === "url" && (
+                  <div className="mb-4">
+                    <p className={LABEL_CLS}>Duration</p>
+                    <div className="flex gap-2">
+                      {["60s", "4min"].map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => setGrwmDuration(d)}
+                          className={`px-4 py-1.5 rounded-full text-xs font-light tracking-wide border transition-all ${
+                            grwmDuration === d
+                              ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
+                              : "bg-transparent text-[var(--color-text-primary)]/60 border-[var(--color-border)]"
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <TextArea
                   value={grwmDesc}
                   onChange={setGrwmDesc}
                   placeholder="What products are featured? Any tips?"
                   rows={3}
                 />
+                <MediaToolbar {...mediaToolbarProps} />
+                {showEmojiPicker && <EmojiPanel onSelect={insertEmoji} />}
+                {showGifPicker && <GifPickerPanel results={gifResults} loading={gifLoading} onSelect={handleGifSelect} />}
               </>
             )}
 
@@ -701,7 +1014,7 @@ export default function CommunityComposer({ onClose, onPosted }) {
                   : { background: "#E5E4E2", color: "rgba(4,57,39,0.4)", cursor: "not-allowed" }
               }
             >
-              {submitting ? "Posting…" : "POST TO FEED"}
+              {submitting ? "Sharing…" : "SHARE MUSING"}
             </button>
           </>
         )}

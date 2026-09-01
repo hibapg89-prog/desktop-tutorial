@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { ChevronLeft, Send, Sparkles, Bookmark, Share2, Flag, MessageCircle, Play } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ChevronLeft, Send, Heart, Bookmark, Share2, Flag, MessageCircle, Play, Smile, Image, X } from "lucide-react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import SwanLogo from "@/components/SwanLogo";
 import StarRating from "@/components/StarRating";
@@ -10,6 +10,13 @@ import ReportModal from "@/components/ReportModal";
 import { parseSegments } from "@/utils/richText";
 import { computeTier } from "@/utils/trustTier";
 import { createNotification } from "@/utils/notifications";
+
+const BEAUTY_EMOJIS = [
+  "💄","💅","💋","✨","🌹","🌸","🫦","💆","🛁","🪞",
+  "🧴","💐","🫶","❤️","🔥","💯","😍","🥰","✅","🌟",
+  "💫","🎀","🌺","💗","🥹","👑","🤌","💎","🦋","🩷",
+];
+const TENOR_KEY = "LIVDSRZULELA";
 
 export default function CommunityPostDetail() {
   const { id } = useParams();
@@ -23,6 +30,17 @@ export default function CommunityPostDetail() {
   const [user, setUser] = useState(null);
   const [authorTier, setAuthorTier] = useState(null);
   const [reporting, setReporting] = useState(false);
+
+  // Whisper media state
+  const [attachedPhoto, setAttachedPhoto] = useState(null);
+  const [attachedGif, setAttachedGif]     = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker]     = useState(false);
+  const [gifSearch, setGifSearch]             = useState("beauty");
+  const [gifResults, setGifResults]           = useState([]);
+  const [gifLoading, setGifLoading]           = useState(false);
+  const photoInputRef = useRef(null);
+
   const [adoredIds, setAdoredIds] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem("muse_adored") || "[]")); }
     catch { return new Set(); }
@@ -31,6 +49,32 @@ export default function CommunityPostDetail() {
     try { return new Set(JSON.parse(localStorage.getItem("muse_collected") || "[]")); }
     catch { return new Set(); }
   });
+
+  // Fetch GIFs when GIF picker is open
+  useEffect(() => {
+    if (!showGifPicker) return;
+    const t = setTimeout(async () => {
+      setGifLoading(true);
+      try {
+        const res = await fetch(
+          `https://g.tenor.com/v2/search?q=${encodeURIComponent(gifSearch)}&key=${TENOR_KEY}&limit=12`
+        );
+        const data = await res.json();
+        setGifResults(
+          (data.results || []).map(r => ({
+            id: r.id,
+            url: r.media_formats?.gif?.url || r.media_formats?.tinygif?.url || "",
+            preview: r.media_formats?.tinygif?.url || r.media_formats?.gif?.url || "",
+          })).filter(g => g.url)
+        );
+      } catch {
+        setGifResults([]);
+      } finally {
+        setGifLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [showGifPicker, gifSearch]);
 
   const load = async () => {
     const [p, rs, u] = await Promise.all([
@@ -97,7 +141,7 @@ export default function CommunityPostDetail() {
       createNotification({
         user_id: post.created_by_id,
         type: "adore",
-        title: (user.full_name || user.email || "A Muse Member") + " adored your review",
+        title: (user.full_name || user.email || "A Muse Member") + " adored your musing",
         body: (post.brand || "") + " " + (post.name || ""),
         ...(post.image_url ? { image_url: post.image_url } : {}),
         sender_id: user.id,
@@ -123,12 +167,24 @@ export default function CommunityPostDetail() {
       createNotification({
         user_id: post.created_by_id,
         type: "collect",
-        title: (user.full_name || user.email || "A Muse Member") + " saved your review",
+        title: (user.full_name || user.email || "A Muse Member") + " saved your musing",
         body: (post.brand || "") + " " + (post.name || ""),
         ...(post.image_url ? { image_url: post.image_url } : {}),
         sender_id: user.id,
       });
     }
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) return; // 10MB limit
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setAttachedPhoto(ev.target.result);
+      setAttachedGif(null);
+    };
+    reader.readAsDataURL(file);
   };
 
   const submitReview = async () => {
@@ -142,6 +198,8 @@ export default function CommunityPostDetail() {
         rating,
         review_text: text,
         author_name: user?.full_name || user?.email || "A Muse Member",
+        ...(attachedPhoto ? { image_url: attachedPhoto } : {}),
+        ...(attachedGif   ? { gif_url:   attachedGif  } : {}),
       });
       await base44.entities.CommunityPost.update(id, {
         review_count: (post.review_count || 0) + 1,
@@ -150,7 +208,7 @@ export default function CommunityPostDetail() {
         base44.entities.Notification.create({
           user_id: post.created_by_id,
           type: "whisper",
-          title: (user.full_name || user.email || "A Muse Member") + " whispered on your review",
+          title: (user.full_name || user.email || "A Muse Member") + " whispered on your musing",
           body: "“" + preview + "”",
           ...(post.image_url ? { image_url: post.image_url } : {}),
           sender_id: user.id,
@@ -158,6 +216,10 @@ export default function CommunityPostDetail() {
       }
       setReviewText("");
       setRating(5);
+      setAttachedPhoto(null);
+      setAttachedGif(null);
+      setShowEmojiPicker(false);
+      setShowGifPicker(false);
       await load();
     } finally {
       setSubmitting(false);
@@ -175,11 +237,13 @@ export default function CommunityPostDetail() {
   if (!post) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center">
-        <p className="font-serif text-lg text-primary-40 italic mb-3">This post is no longer available.</p>
+        <p className="font-serif text-lg text-primary-40 italic mb-3">This musing is no longer available.</p>
         <button onClick={() => navigate("/community")} className="text-xs text-[#BC8F8F] underline">Back to feed</button>
       </div>
     );
   }
+
+  const isVideoBase64 = post.video_url && post.video_url.startsWith("data:video");
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
@@ -193,7 +257,7 @@ export default function CommunityPostDetail() {
       </div>
 
       <div className="px-5 pb-32">
-        {/* Product + author review */}
+        {/* Product + author musing */}
         <div className="bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] overflow-hidden mb-5">
           <div className="flex gap-4 p-4">
             <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[var(--color-bg-elevated)] relative">
@@ -270,7 +334,7 @@ export default function CommunityPostDetail() {
                   onClick={toggleAdore}
                   className={`flex items-center gap-1.5 text-[12px] font-light transition-colors ${adoredIds.has(id) ? "text-[var(--color-accent-gold)]" : "text-primary-40"}`}
                 >
-                  <Sparkles size={14} />
+                  <Heart size={14} fill={adoredIds.has(id) ? "currentColor" : "none"} />
                   {adoredIds.has(id) ? "Adored" : "Adore"}
                   {(post.adore_count || 0) > 0 && (
                     <span className="text-[10px] opacity-55">{post.adore_count}</span>
@@ -323,6 +387,12 @@ export default function CommunityPostDetail() {
                   : <span key={i}>{seg.value}</span>
               )}
             </p>
+            {/* Post GIF if attached */}
+            {post.gif_url && (
+              <div className="mt-3 rounded-xl overflow-hidden border border-[var(--color-border)] max-w-xs">
+                <img src={post.gif_url} alt="gif" className="w-full object-cover" />
+              </div>
+            )}
             {post.tags && (() => {
               try {
                 const tagList = JSON.parse(post.tags);
@@ -375,20 +445,29 @@ export default function CommunityPostDetail() {
         {post.post_type === "grwm" && post.video_url && (
           <div className="bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] p-4 mb-5">
             <p className="text-[10px] tracking-[0.2em] uppercase text-primary-40 font-light mb-3">Watch</p>
-            <a
-              href={post.video_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 bg-[#043927] text-[#FDF5E6] rounded-2xl px-5 py-3.5 hover:bg-[#043927]/90 transition-colors"
-            >
-              <Play size={18} color="white" fill="white" />
-              <div>
-                <p className="text-xs tracking-[0.15em] font-light">Watch on video</p>
-                {post.grwm_duration && (
-                  <p className="text-[10px] opacity-60 font-light">{post.grwm_duration} GRWM</p>
-                )}
-              </div>
-            </a>
+            {isVideoBase64 ? (
+              <video
+                src={post.video_url}
+                controls
+                playsInline
+                className="w-full rounded-xl max-h-72 bg-black"
+              />
+            ) : (
+              <a
+                href={post.video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-[#043927] text-[#FDF5E6] rounded-2xl px-5 py-3.5 hover:bg-[#043927]/90 transition-colors"
+              >
+                <Play size={18} color="white" fill="white" />
+                <div>
+                  <p className="text-xs tracking-[0.15em] font-light">Watch on video</p>
+                  {post.grwm_duration && (
+                    <p className="text-[10px] opacity-60 font-light">{post.grwm_duration} GRWM</p>
+                  )}
+                </div>
+              </a>
+            )}
           </div>
         )}
 
@@ -441,6 +520,18 @@ export default function CommunityPostDetail() {
                   <StarRating value={r.rating || 0} readOnly size={11} />
                 </div>
                 <p className="text-sm text-primary-70 font-light leading-relaxed">{r.review_text}</p>
+                {/* Whisper photo attachment */}
+                {r.image_url && (
+                  <div className="mt-2 rounded-xl overflow-hidden border border-[var(--color-border)] max-w-xs">
+                    <img src={r.image_url} alt="attachment" className="w-full object-cover" />
+                  </div>
+                )}
+                {/* Whisper GIF attachment */}
+                {r.gif_url && (
+                  <div className="mt-2 rounded-xl overflow-hidden border border-[var(--color-border)] max-w-xs">
+                    <img src={r.gif_url} alt="gif" className="w-full object-cover" />
+                  </div>
+                )}
                 {r.created_by_id && r.created_by_id !== user?.id && (
                   <button
                     onClick={() => navigate(`/messages/${r.created_by_id}`)}
@@ -454,7 +545,7 @@ export default function CommunityPostDetail() {
           )}
         </div>
 
-        {/* Add review */}
+        {/* Add whisper */}
         <div className="bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] p-4">
           <p className="text-[10px] tracking-[0.2em] uppercase text-primary-40 font-light mb-2">Add your whisper</p>
           <StarRating value={rating} onChange={setRating} size={20} />
@@ -465,6 +556,131 @@ export default function CommunityPostDetail() {
             rows={3}
             className="mt-3 w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl p-3 text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30 resize-none"
           />
+
+          {/* Media toolbar */}
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => { setShowEmojiPicker(p => !p); setShowGifPicker(false); }}
+              className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all ${showEmojiPicker ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"}`}
+            >
+              <Smile size={14} color={showEmojiPicker ? "white" : "var(--color-text-muted)"} />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowGifPicker(p => !p); setShowEmojiPicker(false); }}
+              className={`flex items-center justify-center px-2.5 h-8 rounded-full border text-[10px] font-light tracking-wide transition-all ${showGifPicker ? "bg-[#C8B06A] border-[#C8B06A] text-white" : "border-[var(--color-border)] text-[var(--color-text-muted)]"}`}
+            >
+              GIF
+            </button>
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              className="flex items-center justify-center w-8 h-8 rounded-full border border-[var(--color-border)] transition-all hover:border-[#C8B06A]"
+            >
+              <Image size={14} color="var(--color-text-muted)" />
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+            />
+          </div>
+
+          {/* Emoji panel */}
+          <AnimatePresence>
+            {showEmojiPicker && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mt-2"
+              >
+                <div className="flex flex-wrap gap-1.5 p-2.5 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)]">
+                  {BEAUTY_EMOJIS.map(em => (
+                    <button
+                      key={em}
+                      type="button"
+                      onClick={() => setReviewText(prev => prev + em)}
+                      className="text-lg w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[var(--color-bg-elevated)] transition-colors"
+                    >
+                      {em}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* GIF picker */}
+          <AnimatePresence>
+            {showGifPicker && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mt-2"
+              >
+                <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-2.5">
+                  <input
+                    value={gifSearch}
+                    onChange={e => setGifSearch(e.target.value)}
+                    placeholder="Search GIFs…"
+                    className="w-full text-xs bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 outline-none text-[var(--color-text-primary)] font-light placeholder:text-primary-30 mb-2"
+                  />
+                  {gifLoading ? (
+                    <div className="text-center py-4">
+                      <div className="text-[10px] text-primary-40 font-light animate-pulse">Finding GIFs…</div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-1.5 max-h-40 overflow-y-auto">
+                      {gifResults.map(gif => (
+                        <button
+                          key={gif.id}
+                          type="button"
+                          onClick={() => { setAttachedGif(gif.url); setAttachedPhoto(null); setShowGifPicker(false); }}
+                          className="aspect-square rounded-lg overflow-hidden border border-[var(--color-border)] hover:border-[#C8B06A] transition-colors"
+                        >
+                          <img src={gif.preview} alt="gif" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Attached photo preview */}
+          {attachedPhoto && (
+            <div className="mt-2 relative w-fit">
+              <img src={attachedPhoto} alt="attachment" className="h-24 rounded-xl border border-[var(--color-border)] object-cover" />
+              <button
+                type="button"
+                onClick={() => setAttachedPhoto(null)}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#BC8F8F] rounded-full flex items-center justify-center"
+              >
+                <X size={10} color="white" />
+              </button>
+            </div>
+          )}
+
+          {/* Attached GIF preview */}
+          {attachedGif && (
+            <div className="mt-2 relative w-fit">
+              <img src={attachedGif} alt="gif" className="h-24 rounded-xl border border-[var(--color-border)] object-cover" />
+              <button
+                type="button"
+                onClick={() => setAttachedGif(null)}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#BC8F8F] rounded-full flex items-center justify-center"
+              >
+                <X size={10} color="white" />
+              </button>
+            </div>
+          )}
+
           <button
             onClick={submitReview}
             disabled={!reviewText.trim() || submitting}
@@ -474,7 +690,7 @@ export default function CommunityPostDetail() {
                 : "bg-[var(--color-border)] text-primary-40 cursor-not-allowed"
             }`}
           >
-            {submitting ? "Posting…" : "POST REVIEW"}
+            {submitting ? "Sharing…" : "WHISPER"}
           </button>
         </div>
       </div>
