@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   X, Plus, Trash2, ChevronLeft,
-  Star, Palette, Layers, ClipboardList, Video,
+  Star, Palette, Layers, ClipboardList, Video, Zap,
   Search, Globe, Users, Smile,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -15,6 +15,7 @@ const POST_TYPES = [
   { key: "before_after", label: "Before & After",  Icon: Layers,        desc: "Show your transformation" },
   { key: "routine",      label: "Routine Share",   Icon: ClipboardList, desc: "Your step-by-step ritual" },
   { key: "grwm",         label: "GRWM",            Icon: Video,         desc: "Share your get-ready moment" },
+  { key: "thought",      label: "Quick Take",      Icon: Zap,           desc: "A beauty thought, tip, or confession" },
 ];
 
 const MONK_TONES = [
@@ -248,6 +249,9 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
   const [routineDesc, setRoutineDesc]   = useState("");
   const [steps, setSteps]               = useState([{ brand: "", name: "", note: "" }]);
 
+  // ── Quick Take
+  const [thoughtText, setThoughtText]   = useState("");
+
   // ── GRWM
   const [grwmTitle, setGrwmTitle]       = useState("");
   const [videoUrl, setVideoUrl]         = useState("");
@@ -352,6 +356,7 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
       before_after: setBaCaption,
       routine:      setRoutineDesc,
       grwm:         setGrwmDesc,
+      thought:      setThoughtText,
     };
     const setter = setters[postType];
     if (setter) setter(prev => prev + emoji);
@@ -409,6 +414,7 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
     if (postType === "routine")      return routineTitle.trim().length > 0 && steps.some((s) => s.name.trim());
     if (postType === "grwm")
       return grwmTitle.trim().length > 0 && (videoSource === "url" ? videoUrl.trim().length > 0 : !!videoFileData);
+    if (postType === "thought") return thoughtText.trim().length > 0;
     return false;
   })();
 
@@ -481,6 +487,13 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
           grwm_duration: resolvedDuration,
           review_text: grwmDesc.trim() || grwmTitle.trim(),
           tags: JSON.stringify(extractTags(grwmDesc)),
+        });
+      } else if (postType === "thought") {
+        await base44.entities.CommunityPost.create({
+          ...base,
+          name: thoughtText.trim().slice(0, 60) || "Quick Take",
+          review_text: thoughtText.trim(),
+          tags: JSON.stringify(extractTags(thoughtText)),
         });
       }
 
@@ -943,6 +956,42 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
                 <MediaToolbar {...mediaToolbarProps} />
                 {showEmojiPicker && <EmojiPanel onSelect={insertEmoji} />}
                 {showGifPicker && <GifPickerPanel results={gifResults} loading={gifLoading} onSelect={handleGifSelect} />}
+              </>
+            )}
+
+            {/* ─── Quick Take ─── */}
+            {postType === "thought" && (
+              <>
+                <div className="mb-1">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <p className={LABEL_CLS}>Your beauty thought</p>
+                    <span className="text-[9px] text-[var(--color-text-primary)]/30 font-light">
+                      {thoughtText.length}/280
+                    </span>
+                  </div>
+                  <textarea
+                    className={INPUT_CLS + " resize-none"}
+                    value={thoughtText}
+                    onChange={e => setThoughtText(e.target.value.slice(0, 280))}
+                    placeholder="Share a tip, confession, or beauty hot take..."
+                    rows={5}
+                  />
+                  <MediaToolbar {...mediaToolbarProps} />
+                  {showEmojiPicker && <EmojiPanel onSelect={insertEmoji} />}
+                  {showGifPicker && <GifPickerPanel results={gifResults} loading={gifLoading} onSelect={handleGifSelect} />}
+                  {attachedGif && (
+                    <div className="relative mt-2 rounded-2xl overflow-hidden h-32">
+                      <img src={attachedGif} alt="GIF" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setAttachedGif(null)}
+                        className="absolute top-1 right-1 bg-black/50 rounded-full p-0.5"
+                      >
+                        <X size={10} color="white" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
 

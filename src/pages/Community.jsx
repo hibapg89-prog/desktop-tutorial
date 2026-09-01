@@ -274,8 +274,8 @@ export default function Community() {
       createNotification({
         user_id: post.created_by_id,
         type: "adore",
-        title: (user.full_name || user.email || "A Muse Member") + " adored your review",
-        body: post.brand + " " + post.name + (post.shade ? " · " + post.shade : ""),
+        title: (user.full_name || user.email || "A Muse Member") + " adored your musing",
+        body: post.brand ? post.brand + " " + post.name + (post.shade ? " · " + post.shade : "") : (post.review_text || "").slice(0, 80),
         ...(post.image_url ? { image_url: post.image_url } : {}),
         sender_id: user.id,
       });
@@ -317,8 +317,8 @@ export default function Community() {
       createNotification({
         user_id: post.created_by_id,
         type: "collect",
-        title: (user.full_name || user.email || "A Muse Member") + " saved your review",
-        body: post.brand + " " + post.name + (post.shade ? " · " + post.shade : ""),
+        title: (user.full_name || user.email || "A Muse Member") + " saved your musing",
+        body: post.brand ? post.brand + " " + post.name + (post.shade ? " · " + post.shade : "") : (post.review_text || "").slice(0, 80),
         ...(post.image_url ? { image_url: post.image_url } : {}),
         sender_id: user.id,
       });
@@ -844,6 +844,11 @@ export default function Community() {
                                     {(() => { try { return JSON.parse(post.routine_steps).length; } catch { return ""; } })()} steps
                                   </span>
                                 )}
+                              </div>
+                            ) : post.post_type === "thought" ? (
+                              <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#FDF8EE] to-[#F5EDDA]">
+                                <span className="text-[1.5rem] leading-none text-[#C8B06A]/60 font-serif">"</span>
+                                <span className="text-[0.4375rem] tracking-[0.15em] uppercase text-[#C8B06A]/70 font-light">Quick Take</span>
                               </div>
                             ) : post.post_type === "grwm" ? (
                               <>
