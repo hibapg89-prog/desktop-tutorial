@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Search } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import { formatPrice } from "@/utils/locale";
 
@@ -14,11 +14,18 @@ export default function CategoryProductCard({ product, variant = "default" }) {
     const shopUrl = product.source_url || (product.where_to_buy ? product.where_to_buy : null);
     return (
       <div className="rounded-xl bg-[var(--color-bg-surface)] border border-[var(--color-border)] overflow-hidden flex flex-col">
-        <div className="aspect-square bg-[var(--color-bg-elevated)] flex items-center justify-center overflow-hidden">
+        <div className="aspect-square bg-[var(--color-bg-elevated)] flex items-center justify-center overflow-hidden relative">
           {hasImage ? (
             <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
           ) : (
             <SwanLogo size={30} color="#C8B06A" />
+          )}
+          {product.curator_product && (
+            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(200,176,106,0.18)", border: "1px solid rgba(200,176,106,0.45)" }}
+            >
+              <Search size={9} color="var(--color-accent-gold)" strokeWidth={2} />
+            </div>
           )}
         </div>
         <div className="p-2 flex flex-col gap-0.5">
@@ -48,9 +55,18 @@ export default function CategoryProductCard({ product, variant = "default" }) {
         className="absolute inset-0 pointer-events-none"
         style={{ background: "radial-gradient(circle at 50% 40%, rgba(200,176,106,0.18), transparent 60%)" }}
       />
-      <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-[var(--color-bg-surface)] flex items-center justify-center z-10">
-        <MoreHorizontal size={12} color="var(--color-text-primary)" />
-      </div>
+      {product.curator_product ? (
+        <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center z-10"
+          style={{ background: "rgba(200,176,106,0.18)", border: "1px solid rgba(200,176,106,0.45)" }}
+          title="Curated by The Muse"
+        >
+          <Search size={10} color="var(--color-accent-gold)" strokeWidth={2} />
+        </div>
+      ) : (
+        <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-[var(--color-bg-surface)] flex items-center justify-center z-10">
+          <MoreHorizontal size={12} color="var(--color-text-primary)" />
+        </div>
+      )}
       <div className="aspect-square bg-[var(--color-bg-elevated)] flex items-center justify-center overflow-hidden">
         {hasImage ? (
           <img src={product.image_url} alt={product.name} className="block w-full h-full object-cover" />

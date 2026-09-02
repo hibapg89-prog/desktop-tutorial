@@ -75,6 +75,7 @@ export default function LocalCurator() {
         in_wishlist: true,
         muse_shimmer: curator.muse_recommendation_label,
         ingredients: curator.sustainability_note || null,
+        curator_product: true,
         ...(me?.id ? { created_by_id: me.id } : {}),
       });
       setArtisanProductId(created.id);
@@ -94,6 +95,29 @@ export default function LocalCurator() {
     const newId = await handleSaveArtisan();
     if (newId) navigate(`/product/${newId}`);
   };
+
+  if (!id) return (
+    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center px-8 text-center">
+      <div className="mb-8 opacity-15">
+        <SwanLogo size={72} color="var(--color-text-primary)" />
+      </div>
+      <p className="text-[9px] tracking-[0.25em] uppercase text-[var(--color-accent-gold)] font-light mb-3">
+        The Local Curator
+      </p>
+      <h2 className="font-serif text-xl text-[var(--color-text-primary)] font-light mb-4 leading-snug">
+        Scan a product first
+      </h2>
+      <p className="text-sm text-primary-50 font-light leading-relaxed max-w-xs">
+        The Muse reveals artisan alternatives once you've scanned a product.
+      </p>
+      <button
+        onClick={() => navigate(-1)}
+        className="mt-10 px-6 py-3 rounded-full border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] font-light"
+      >
+        Go back
+      </button>
+    </div>
+  );
 
   if (loading) return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center">

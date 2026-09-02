@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, ScanLine, Sparkles, Droplets, Repeat2, Mic, MicOff } from "lucide-react";
+import { X, Send, ScanLine, Sparkles, Droplets, Repeat2, Mic, MicOff, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwanLogo from "./SwanLogo";
@@ -30,7 +30,7 @@ const QUICK_ACTIONS = [
 
 // When The Muse mentions a navigatable feature, render a tappable chip below the bubble.
 const NAV_HINTS = [
-  { pattern: /local curator/i,          label: "Open The Local Curator",  route: "/local-curator" },
+  { pattern: /local curator/i,          label: "Open The Local Curator",  route: "/local-curator", icon: Search, isLocalCurator: true },
   { pattern: /your vanity\b/i,          label: "Go to My Vanity",         route: "/vanity" },
   { pattern: /\btutorials?\b/i,         label: "Browse Tutorials",        route: "/tutorials" },
   { pattern: /\bscan\b.*product/i,      label: "Open Scanner",            action: "scan" },
@@ -46,7 +46,7 @@ function detectNavHint(text) {
   return null;
 }
 
-export default function MuseAssistant({ onClose, onOpenScan }) {
+export default function MuseAssistant({ onClose, onOpenScan, productId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput]       = useState("");
   const [thinking, setThinking] = useState(false);
@@ -143,6 +143,11 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
 
   const handleNavHint = (hint) => {
     if (hint.action === "scan") { onClose(); onOpenScan(); return; }
+    if (hint.isLocalCurator) {
+      onClose();
+      navigate(productId ? `/local-curator/${productId}` : "/local-curator");
+      return;
+    }
     if (hint.route) { onClose(); navigate(hint.route); }
   };
 
@@ -187,55 +192,62 @@ export default function MuseAssistant({ onClose, onOpenScan }) {
         {/* ── Messages ── */}
         <div role="log" aria-live="polite" className="flex-1 overflow-y-auto px-5 pb-2">
           <AnimatePresence initial={false}>
-            {messages.map((msg, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
-                className={`mb-4 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
-              >
-                <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start items-start"}`}>
-                  {msg.role === "muse" && (
-                    <div className="mr-2.5 mt-0.5 flex-shrink-0 opacity-70">
-                      <SwanLogo size={18} color="#C5A070" />
+            {messages.map((msg, i) => {
+              const HintIcon = msg.navHint?.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className={`mb-4 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+                >
+                  <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start items-start"}`}>
+                    {msg.role === "muse" && (
+                      <div className="mr-2.5 mt-0.5 flex-shrink-0 opacity-70">
+                        <SwanLogo size={18} color="#C5A070" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[78%] px-4 py-3 text-sm leading-relaxed font-light ${
+                        msg.role === "user"
+                          ? "bg-[#1A3A30] text-[#FAF7F1] rounded-2xl rounded-br-sm"
+                          : "bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] rounded-2xl rounded-bl-sm"
+                      }`}
+                      style={msg.role === "muse"
+                        ? { border: "1px solid rgba(229,217,192,0.7)", boxShadow: "0 2px 12px rgba(197,160,112,0.1)" }
+                        : {}
+                      }
+                    >
+                      {msg.text}
                     </div>
-                  )}
-                  <div
-                    className={`max-w-[78%] px-4 py-3 text-sm leading-relaxed font-light ${
-                      msg.role === "user"
-                        ? "bg-[#1A3A30] text-[#FAF7F1] rounded-2xl rounded-br-sm"
-                        : "bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] rounded-2xl rounded-bl-sm"
-                    }`}
-                    style={msg.role === "muse"
-                      ? { border: "1px solid rgba(229,217,192,0.7)", boxShadow: "0 2px 12px rgba(197,160,112,0.1)" }
-                      : {}
-                    }
-                  >
-                    {msg.text}
                   </div>
-                </div>
 
-                {/* Navigation chip — appears below Muse messages that mention a feature */}
-                {msg.role === "muse" && msg.navHint && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    onClick={() => handleNavHint(msg.navHint)}
-                    className="ml-7 mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-light tracking-wide transition-all active:scale-[0.96]"
-                    style={{
-                      background: "rgba(197,160,112,0.12)",
-                      border: "1px solid rgba(197,160,112,0.35)",
-                      color: "#C5A070",
-                    }}
-                  >
-                    <span>{msg.navHint.label}</span>
-                    <span className="opacity-60">→</span>
-                  </motion.button>
-                )}
-              </motion.div>
-            ))}
+                  {/* Navigation chip — appears below Muse messages that mention a feature */}
+                  {msg.role === "muse" && msg.navHint && (
+                    <motion.button
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      onClick={() => handleNavHint(msg.navHint)}
+                      className="ml-7 mt-2 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-light tracking-wide transition-all active:scale-[0.96]"
+                      style={{
+                        background: msg.navHint.isLocalCurator
+                          ? "rgba(200,176,106,0.18)"
+                          : "rgba(197,160,112,0.12)",
+                        border: `1px solid ${msg.navHint.isLocalCurator ? "rgba(200,176,106,0.55)" : "rgba(197,160,112,0.35)"}`,
+                        color: "var(--color-accent-gold)",
+                        boxShadow: msg.navHint.isLocalCurator ? "0 2px 8px rgba(200,176,106,0.15)" : "none",
+                      }}
+                    >
+                      {HintIcon && <HintIcon size={12} strokeWidth={1.8} />}
+                      <span>{msg.navHint.label}</span>
+                      <span className="opacity-50">→</span>
+                    </motion.button>
+                  )}
+                </motion.div>
+              );
+            })}
 
             {/* Thinking dots */}
             {thinking && (
