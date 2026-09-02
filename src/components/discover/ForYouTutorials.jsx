@@ -17,13 +17,13 @@ export default function ForYouTutorials() {
     (async () => {
       try {
         const { tutorialCats } = await getUserPreferences();
-        if (!tutorialCats.length) {
-          setTutorials([]);
-          return;
-        }
         const all = await base44.entities.Tutorial.list("-saves_count", 20);
-        const matched = all.filter((t) => tutorialCats.includes(t.category));
-        setTutorials(matched.slice(0, 6));
+        if (tutorialCats.length) {
+          const matched = all.filter((t) => tutorialCats.includes(t.category));
+          setTutorials(matched.length ? matched.slice(0, 6) : all.slice(0, 6));
+        } else {
+          setTutorials(all.slice(0, 6));
+        }
       } catch {
         setTutorials([]);
       } finally {

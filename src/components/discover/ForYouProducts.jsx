@@ -36,6 +36,7 @@ function shuffle(arr) {
 export default function ForYouProducts() {
   const [picks,          setPicks]          = useState([]);
   const [loading,        setLoading]        = useState(true);
+  const [imgErrors,      setImgErrors]      = useState(new Set());
   const [collectedIdx,   setCollectedIdx]   = useState(new Set());
   const [adoredIdx,      setAdoredIdx]      = useState(new Set());
   const [passedAlongIdx, setPassedAlongIdx] = useState(new Set());
@@ -252,17 +253,14 @@ export default function ForYouProducts() {
             >
               {/* Visual header — real image when available, editorial gradient otherwise */}
               <div className="h-36 relative overflow-hidden flex items-center justify-center"
-                style={!p.image_url ? { background: `linear-gradient(160deg, ${accent}28 0%, ${accent}0a 100%)` } : undefined}
+                style={(!p.image_url || imgErrors.has(i)) ? { background: `linear-gradient(160deg, ${accent}28 0%, ${accent}0a 100%)` } : undefined}
               >
-                {p.image_url ? (
+                {p.image_url && !imgErrors.has(i) ? (
                   <img
                     src={p.image_url}
                     alt={`${p.brand} ${p.name}`}
                     className="w-full h-full object-cover"
-                    onError={e => {
-                      e.currentTarget.style.display = "none";
-                      e.currentTarget.parentElement.style.background = `linear-gradient(160deg, ${accent}28 0%, ${accent}0a 100%)`;
-                    }}
+                    onError={() => setImgErrors(prev => new Set(prev).add(i))}
                   />
                 ) : (
                   <SwanLogo size={30} color={accent} />
