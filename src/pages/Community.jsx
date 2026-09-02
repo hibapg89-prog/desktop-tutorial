@@ -102,6 +102,7 @@ export default function Community() {
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [creatorNudge, setCreatorNudge] = useState({});
   const [banners, setBanners] = useState([]);
+  const [showSwapTeaser, setShowSwapTeaser] = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
   const [events, setEvents] = useState([]);
   const [joinedRooms, setJoinedRooms] = useState(() => {
@@ -402,8 +403,8 @@ export default function Community() {
             <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
               <div className="flex items-center gap-1.5">
                 <button
-                  disabled
-                  className="relative flex items-center gap-0.5 bg-white border border-[#D3CDBE] text-[#1C2E24]/35 text-[0.6875rem] tracking-[0.1em] font-light px-2.5 py-1.5 rounded-full whitespace-nowrap cursor-not-allowed"
+                  onClick={() => setShowSwapTeaser(true)}
+                  className="relative flex items-center gap-0.5 bg-white border border-[#D3CDBE] text-[#1C2E24]/50 text-[0.6875rem] tracking-[0.1em] font-light px-2.5 py-1.5 rounded-full whitespace-nowrap"
                 >
                   <Plus size={11} /> Swap
                   <span className="absolute -top-2 -right-1 text-[7px] tracking-[0.06em] uppercase bg-[#C8B06A] text-white px-1 py-0.5 rounded-full font-light leading-none">
@@ -703,8 +704,6 @@ export default function Community() {
           </div>
         ) : (
           <>
-            <ReviewerLeaderboard posts={posts} />
-
             {feedMode !== "following" && polls.length > 0 && (
               <div className="space-y-3 mb-5">
                 <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
@@ -715,6 +714,8 @@ export default function Community() {
                 ))}
               </div>
             )}
+
+            <ReviewerLeaderboard posts={posts} />
 
             {feedMode !== "following" && swaps.length > 0 && (
               <div className="space-y-3 mb-5">
@@ -1041,6 +1042,61 @@ export default function Community() {
       {reportingPostId && <ReportModal postId={reportingPostId} onClose={() => setReportingPostId(null)} />}
       {composingPoll && <PollComposer onClose={() => setComposingPoll(false)} onPosted={load} />}
       {composingSwap && <SwapComposer onClose={() => setComposingSwap(false)} onPosted={load} />}
+
+      {/* Swap Teaser Modal */}
+      <AnimatePresence>
+        {showSwapTeaser && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#043927]/40 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSwapTeaser(false)}
+          >
+            <motion.div
+              className="w-full sm:max-w-sm bg-[var(--color-bg)] rounded-t-3xl sm:rounded-3xl px-7 pt-8 pb-12 text-center"
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: "spring", damping: 26, stiffness: 280 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowSwapTeaser(false)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)]/40"
+              >
+                <X size={14} />
+              </button>
+
+              <div className="w-12 h-12 rounded-full bg-[#C8B06A]/12 flex items-center justify-center mx-auto mb-5">
+                <SwanLogo size={28} color="var(--color-accent-gold)" />
+              </div>
+
+              <p className="text-[0.5625rem] tracking-[0.3em] uppercase text-[#C8B06A] font-light mb-2">The Circle · Coming Soon</p>
+
+              <h2
+                className="text-[1.75rem] font-light text-[var(--color-text-primary)] leading-tight mb-3"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              >
+                The Swap Circle
+              </h2>
+
+              <div className="w-8 h-px bg-[#C8B06A]/40 mx-auto mb-4" />
+
+              <p className="text-[0.8125rem] font-light text-[var(--color-text-primary)]/65 leading-relaxed mb-2">
+                Your gently-loved finds deserve a second life with someone who will truly cherish them.
+              </p>
+              <p className="text-[0.8125rem] font-light text-[var(--color-text-primary)]/65 leading-relaxed mb-6">
+                List what you're ready to pass along. Discover what your circle is offering. Curate each other's routines.
+              </p>
+
+              <p className="text-[0.6875rem] font-light italic text-[var(--color-text-primary)]/40 leading-relaxed">
+                Invite-only trading between members you trust — opening soon to the inner circle.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
