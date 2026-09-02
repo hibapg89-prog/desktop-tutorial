@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Sparkles, Check, Heart, Bookmark, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
-import SwanLogo from "@/components/SwanLogo";
+import ProductImage from "@/components/ProductImage";
 import { base44 } from "@/api/base44Client";
 import { formatPrice } from "@/utils/locale";
 
@@ -24,151 +24,121 @@ const CAT_ACCENT = {
 
 const BEAUTY_CATEGORIES = new Set(Object.keys(CAT_ACCENT));
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+const withTimeout = (promise, ms = 12000) =>
+  Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
 export default function ForYouProducts() {
   const [picks,          setPicks]          = useState([]);
   const [loading,        setLoading]        = useState(true);
-  const [imgErrors,      setImgErrors]      = useState(new Set());
   const [collectedIdx,   setCollectedIdx]   = useState(new Set());
   const [adoredIdx,      setAdoredIdx]      = useState(new Set());
   const [passedAlongIdx, setPassedAlongIdx] = useState(new Set());
 
   useEffect(() => {
     const controller = { cancelled: false };
-    const withTimeout = (promise, ms = 12000) =>
-      Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
     (async () => {
       try {
         const me = await withTimeout(base44.auth.me().catch(() => null));
         if (controller.cancelled) return;
 
-        // Only show curated picks for authenticated users who have scanned something
         if (!me?.id) { setPicks([]); return; }
 
-        const [myProducts, allProducts] = await withTimeout(Promise.all([
-          base44.entities.Product.filter({ created_by_id: me.id }),
-          base44.entities.Product.list("-created_date", 100),
-        ]));
+        const myProducts = await withTimeout(
+          base44.entities.Product.filter({ created_by_id: me.id })
+        );
         if (controller.cancelled) return;
 
-        const myProductIds = new Set(myProducts.map(p => p.id));
-
-        // User's preferred categories — beauty only
+        // Derive beauty categories and brands from scan history
         const userBeautyCategories = [...new Set(
           myProducts.map(p => p.category).filter(c => c && BEAUTY_CATEGORIES.has(c))
         )];
+        const userBrands = [...new Set(myProducts.map(p => p.brand).filter(Boolean))].slice(0, 8);
 
-        // If user has no beauty history yet, hide the section
         if (!userBeautyCategories.length) { setPicks([]); return; }
 
-        const candidates = allProducts.filter(p =>
-          p.image_url &&
-          p.category && BEAUTY_CATEGORIES.has(p.category) &&
-          !myProductIds.has(p.id) &&
-          (!me?.id || p.created_by_id !== me.id)
-        );
+        const prompt = `A luxury beauty concierge user has scanned and saved products in these beauty categories: ${userBeautyCategories.join(", ")} from brands including: ${userBrands.join(", ")}. Recommend 6 NEW beauty products they'd adore but don't own yet — ONLY within beauty, skincare, haircare, fragrance, or cosmetics. Do NOT suggest clothing, electronics, food, or any non-beauty item. Stay within their preferred categories. Return JSON with brand, name, shade (or empty string), category (must be one of: ${userBeautyCategories.join(", ")}), price_usd, description, muse_shimmer (poetic editorial tagline, max 8 words).`;
 
-        const targetSet = new Set(userBeautyCategories.length ? userBeautyCategories : [...BEAUTY_CATEGORIES]);
-        const preferred = candidates.filter(p => targetSet.has(p.category));
-        const others    = candidates.filter(p => !targetSet.has(p.category));
-
-        // Normalise to a common shape
-        const toCard = (p, isReal) => ({
-          _isReal:     isReal,
-          _id:         p.id || null,
-          brand:       p.brand,
-          name:        p.name,
-          shade:       p.shade,
-          category:    p.category,
-          price:       p.price || p.price_usd || null,
-          image_url:   p.image_url || null,
-          description: p.description,
-          muse_shimmer: p.muse_shimmer || null,
-        });
-
-        let finalPicks = [...shuffle(preferred), ...shuffle(others)]
-          .slice(0, 6)
-          .map(p => toCard(p, true));
-
-        // ── Step 2: if fewer than 3 real picks, supplement with LLM (15s timeout) ──
-        if (finalPicks.length < 3) {
-          try {
-            const prompt = `A luxury beauty concierge user has scanned and saved products in these beauty categories: ${userBeautyCategories.join(", ")}. Recommend ${6 - finalPicks.length} NEW beauty products they'd adore but don't own yet — ONLY within beauty, skincare, haircare, fragrance, or cosmetics. Do NOT suggest clothing, electronics, food, or any non-beauty item. Return JSON with brand, name, shade (or empty string), category (one of: ${userBeautyCategories.join(", ")}), price_usd, description, muse_shimmer (poetic tagline, max 8 words).`;
-
-            const result = await withTimeout(base44.integrations.Core.InvokeLLM({
-              prompt,
-              response_json_schema: {
-                type: "object",
-                properties: {
-                  products: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        brand:        { type: "string" },
-                        name:         { type: "string" },
-                        shade:        { type: "string" },
-                        category:     { type: "string" },
-                        price_usd:    { type: "number" },
-                        description:  { type: "string" },
-                        muse_shimmer: { type: "string" },
-                      },
-                    },
+        const result = await withTimeout(base44.integrations.Core.InvokeLLM({
+          prompt,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              products: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    brand:        { type: "string" },
+                    name:         { type: "string" },
+                    shade:        { type: "string" },
+                    category:     { type: "string" },
+                    price_usd:    { type: "number" },
+                    description:  { type: "string" },
+                    muse_shimmer: { type: "string" },
                   },
                 },
               },
-            }), 15000);
+            },
+          },
+        }), 15000);
 
-            if (!controller.cancelled) {
-              const llmPicks = (result.products || [])
-                .filter(p => p.category && BEAUTY_CATEGORIES.has(p.category))
-                .map(p => toCard(p, false));
-              finalPicks = [...finalPicks, ...llmPicks].slice(0, 6);
+        if (controller.cancelled) return;
+
+        // Hard-filter LLM output to beauty categories only
+        const initialPicks = (result.products || [])
+          .filter(p => p.category && BEAUTY_CATEGORIES.has(p.category));
+
+        setPicks(initialPicks);
+
+        // Fire-and-forget: validate and resolve product images server-side.
+        // Replaces hallucinated LLM URLs with real ones (or null so the
+        // gradient fallback inside ProductImage shows cleanly).
+        if (initialPicks.length > 0) {
+          base44.functions.invoke('resolveProductImages', {
+            products: initialPicks.map(p => ({ brand: p.brand, name: p.name, shade: p.shade })),
+          }).then((res) => {
+            if (controller.cancelled) return;
+            const r = res?.data || res;
+            if (r?.results) {
+              setPicks(prev => prev.map((p, i) => {
+                const match = r.results.find(m => m.index === i);
+                if (match?.image_url) return { ...p, image_url: match.image_url };
+                return { ...p, image_url: null };
+              }));
             }
-          } catch {
-            // LLM timed out or failed — show whatever real picks we have
-          }
+          }).catch(() => {});
         }
-
-        if (!controller.cancelled) setPicks(finalPicks);
       } catch {
         if (!controller.cancelled) setPicks([]);
       } finally {
         if (!controller.cancelled) setLoading(false);
       }
     })();
+
     return () => { controller.cancelled = true; };
   }, []);
 
   const collectToList = async (p, i) => {
     setCollectedIdx(prev => new Set(prev).add(i));
     const me = await base44.auth.me().catch(() => null);
-    if (p._isReal && p._id) {
-      await base44.entities.Product.update(p._id, {
-        in_shopping_list: true,
-        shopping_qty: 1,
-      }).catch(() => {});
-    } else {
-      await base44.entities.Product.create({
-        brand:            p.brand,
-        name:             p.name,
-        shade:            p.shade,
-        category:         p.category,
-        price:            p.price,
-        description:      p.description,
-        muse_shimmer:     p.muse_shimmer,
-        in_shopping_list: true,
-        shopping_qty:     1,
-        ...(me?.id ? { created_by_id: me.id } : {}),
+    const prod = await base44.entities.Product.create({
+      brand:            p.brand,
+      name:             p.name,
+      shade:            p.shade,
+      category:         p.category,
+      price:            p.price_usd,
+      description:      p.description,
+      muse_shimmer:     p.muse_shimmer,
+      image_url:        p.image_url || null,
+      in_shopping_list: true,
+      shopping_qty:     1,
+      ...(me?.id ? { created_by_id: me.id } : {}),
+    }).catch(() => null);
+    // Fetch a verified product image for the saved item
+    if (prod?.id && p.brand) {
+      base44.functions.invoke('fetchProductImage', {
+        product_id: prod.id, brand: p.brand, name: p.name, shade: p.shade,
       }).catch(() => {});
     }
   };
@@ -251,20 +221,9 @@ export default function ForYouProducts() {
               transition={{ delay: i * 0.07 }}
               className="flex-shrink-0 w-40 rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-surface)] flex flex-col"
             >
-              {/* Visual header — real image when available, editorial gradient otherwise */}
-              <div className="h-36 relative overflow-hidden flex items-center justify-center"
-                style={(!p.image_url || imgErrors.has(i)) ? { background: `linear-gradient(160deg, ${accent}28 0%, ${accent}0a 100%)` } : undefined}
-              >
-                {p.image_url && !imgErrors.has(i) ? (
-                  <img
-                    src={p.image_url}
-                    alt={`${p.brand} ${p.name}`}
-                    className="w-full h-full object-cover"
-                    onError={() => setImgErrors(prev => new Set(prev).add(i))}
-                  />
-                ) : (
-                  <SwanLogo size={30} color={accent} />
-                )}
+              {/* Visual header */}
+              <div className="h-36 relative">
+                <ProductImage product={p} className="w-full h-full" fittingType="fill" showStatus={false} />
                 <div className="absolute top-2.5 left-2.5">
                   <span
                     className="text-[8px] tracking-[0.15em] uppercase font-light px-1.5 py-0.5 rounded-full"
@@ -289,9 +248,9 @@ export default function ForYouProducts() {
                   </p>
                 )}
 
-                {p.price ? (
+                {p.price_usd ? (
                   <p className="mt-auto pt-2 text-[11px] text-[var(--color-text-secondary)] font-light">
-                    {formatPrice(p.price)}
+                    {formatPrice(p.price_usd)}
                   </p>
                 ) : (
                   <div className="mt-auto" />
