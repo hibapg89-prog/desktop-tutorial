@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, Send, Heart, Bookmark, Share2, Flag, MessageCircle, Play, Smile, Image, X } from "lucide-react";
+import { ChevronLeft, Send, Heart, Bookmark, Share2, Flag, MessageCircle, Play, Smile, Image, X, Trash2, Edit3 } from "lucide-react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -30,6 +30,16 @@ export default function CommunityPostDetail() {
   const [user, setUser] = useState(null);
   const [authorTier, setAuthorTier] = useState(null);
   const [reporting, setReporting] = useState(false);
+
+  // Edit / delete state — post
+  const [editingPost, setEditingPost] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [editRating, setEditRating] = useState(5);
+  const [deletingPost, setDeletingPost] = useState(false);
+  // Edit / delete state — whispers
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [editReviewText, setEditReviewText] = useState("");
+  const [deletingReviewId, setDeletingReviewId] = useState(null);
 
   // Whisper media state
   const [attachedPhoto, setAttachedPhoto] = useState(null);
@@ -226,6 +236,41 @@ export default function CommunityPostDetail() {
     }
   };
 
+  const handleDeletePost = async () => {
+    try {
+      await base44.entities.CommunityPost.delete(id);
+      navigate("/community");
+    } catch {}
+  };
+
+  const handleSavePost = async () => {
+    if (!editText.trim()) return;
+    try {
+      await base44.entities.CommunityPost.update(id, { review_text: editText, rating: editRating });
+      setPost(prev => prev ? { ...prev, review_text: editText, rating: editRating } : prev);
+      setEditingPost(false);
+    } catch {}
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await base44.entities.Review.delete(reviewId);
+      setReviews(prev => prev.filter(r => r.id !== reviewId));
+      setPost(prev => prev ? { ...prev, review_count: Math.max(0, (prev.review_count || 0) - 1) } : prev);
+      await base44.entities.CommunityPost.update(id, { review_count: Math.max(0, (post.review_count || 0) - 1) });
+      setDeletingReviewId(null);
+    } catch {}
+  };
+
+  const handleSaveReview = async (reviewId) => {
+    if (!editReviewText.trim()) return;
+    try {
+      await base44.entities.Review.update(reviewId, { review_text: editReviewText });
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, review_text: editReviewText } : r));
+      setEditingReviewId(null);
+    } catch {}
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
@@ -375,9 +420,52 @@ export default function CommunityPostDetail() {
                   </button>
                 </div>
               )}
+              {post.created_by_id && post.created_by_id === user?.id && (
+                <div className="mt-2 flex items-center gap-3">
+                  {!editingPost && !deletingPost && (
+                    <>
+                      <button
+                        onClick={() => { setEditText(post.review_text || ""); setEditRating(post.rating || 5); setEditingPost(true); }}
+                        className="inline-flex items-center gap-1 text-[10px] text-primary-40 hover:text-[var(--color-text-primary)] transition-colors"
+                      >
+                        <Edit3 size={11} /> Edit
+                      </button>
+                      <button
+                        onClick={() => setDeletingPost(true)}
+                        className="inline-flex items-center gap-1 text-[10px] text-primary-30 hover:text-[#BC8F8F] transition-colors"
+                      >
+                        <Trash2 size={11} /> Delete
+                      </button>
+                    </>
+                  )}
+                  {deletingPost && (
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <span className="text-primary-50 font-light">Remove this muse?</span>
+                      <button onClick={handleDeletePost} className="text-[#BC8F8F] underline font-light">Yes</button>
+                      <button onClick={() => setDeletingPost(false)} className="text-primary-40 underline font-light">No</button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="px-4 pb-4">
+            {editingPost ? (
+              <div className="space-y-2">
+                <StarRating value={editRating} onChange={setEditRating} size={16} />
+                <textarea
+                  value={editText}
+                  onChange={e => setEditText(e.target.value)}
+                  rows={4}
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl p-3 text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-30 resize-none"
+                />
+                <div className="flex gap-2">
+                  <button onClick={handleSavePost} className="text-[11px] bg-[#043927] text-white rounded-full px-4 py-1.5 font-light">Save</button>
+                  <button onClick={() => setEditingPost(false)} className="text-[11px] text-primary-40 font-light underline">Cancel</button>
+                </div>
+              </div>
+            ) : (
+            <>
             <p className="text-sm text-[var(--color-text-primary)]/80 font-light leading-relaxed">
               {parseSegments(post.review_text).map((seg, i) =>
                 seg.type === "tag"
@@ -416,6 +504,8 @@ export default function CommunityPostDetail() {
               <Link to={`/product/${post.product_id}`} className="inline-block mt-3 text-[11px] text-[#BC8F8F] underline underline-offset-2 font-light">
                 View product →
               </Link>
+            )}
+            </>
             )}
           </div>
         </div>
@@ -517,9 +607,49 @@ export default function CommunityPostDetail() {
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs text-[var(--color-text-primary)] font-light">{r.author_name || "A Muse Member"}</span>
-                  <StarRating value={r.rating || 0} readOnly size={11} />
+                  <div className="flex items-center gap-2">
+                    <StarRating value={r.rating || 0} readOnly size={11} />
+                    {r.created_by_id && r.created_by_id === user?.id && editingReviewId !== r.id && deletingReviewId !== r.id && (
+                      <>
+                        <button
+                          onClick={() => { setEditReviewText(r.review_text || ""); setEditingReviewId(r.id); }}
+                          className="text-primary-30 hover:text-[var(--color-text-primary)] transition-colors"
+                        >
+                          <Edit3 size={11} />
+                        </button>
+                        <button
+                          onClick={() => setDeletingReviewId(r.id)}
+                          className="text-primary-25 hover:text-[#BC8F8F] transition-colors"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
+                {deletingReviewId === r.id && (
+                  <div className="flex items-center gap-2 text-[10px] mb-1.5">
+                    <span className="text-primary-50 font-light">Remove this whisper?</span>
+                    <button onClick={() => handleDeleteReview(r.id)} className="text-[#BC8F8F] underline font-light">Yes</button>
+                    <button onClick={() => setDeletingReviewId(null)} className="text-primary-40 underline font-light">No</button>
+                  </div>
+                )}
+                {editingReviewId === r.id ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editReviewText}
+                      onChange={e => setEditReviewText(e.target.value)}
+                      rows={3}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl p-2.5 text-sm text-[var(--color-text-primary)] font-light outline-none resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={() => handleSaveReview(r.id)} className="text-[11px] bg-[#043927] text-white rounded-full px-4 py-1 font-light">Save</button>
+                      <button onClick={() => setEditingReviewId(null)} className="text-[11px] text-primary-40 font-light underline">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
                 <p className="text-sm text-primary-70 font-light leading-relaxed">{r.review_text}</p>
+                )}
                 {/* Whisper photo attachment */}
                 {r.image_url && (
                   <div className="mt-2 rounded-xl overflow-hidden border border-[var(--color-border)] max-w-xs">

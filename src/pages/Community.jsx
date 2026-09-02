@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Search, X, Sparkles, Heart, MessageCircle, Bookmark, Share2, Flag, Play } from "lucide-react";
+import { Plus, Search, X, Sparkles, Heart, MessageCircle, Bookmark, Share2, Flag, Play, Trash2 } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -87,6 +87,7 @@ export default function Community() {
     catch { return new Set(); }
   });
   const [reportingPostId, setReportingPostId] = useState(null);
+  const [deletingPostId, setDeletingPostId] = useState(null);
   const [prefillProduct, setPrefillProduct] = useState(null);
 
   // Detect a product shared from ScanResults — auto-open the composer
@@ -342,6 +343,16 @@ export default function Community() {
     }
     try { await navigator.clipboard.writeText(url); } catch {}
     navigate("/messages");
+  };
+
+  const handleDeletePost = async (e, postId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await base44.entities.CommunityPost.delete(postId);
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      setDeletingPostId(null);
+    } catch {}
   };
 
   const presentCats = ["All", ...[...new Set(posts.map(p => p.category).filter(Boolean))]];
@@ -1079,6 +1090,22 @@ export default function Community() {
                             >
                               <Flag size={12} aria-hidden={true} />
                             </button>
+                            {post.created_by_id && post.created_by_id === user?.id && (
+                              deletingPostId === post.id ? (
+                                <div className="flex items-center gap-1.5 text-[10px]" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                                  <button onClick={(e) => handleDeletePost(e, post.id)} className="text-[#BC8F8F] underline font-light">Yes</button>
+                                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingPostId(null); }} className="text-primary-40 underline font-light">No</button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingPostId(post.id); }}
+                                  aria-label="Delete post"
+                                  className="flex items-center text-primary-25 hover:text-[#BC8F8F] transition-colors"
+                                >
+                                  <Trash2 size={12} aria-hidden={true} />
+                                </button>
+                              )
+                            )}
                           </div>
                         </div>
                       </Link>
