@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Search, X, Sparkles, Heart, MessageCircle, Bookmark, Share2, Flag, Play } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -109,6 +109,12 @@ export default function Community() {
     try { return new Set(JSON.parse(localStorage.getItem("muse_beauty_rooms") || "[]")); }
     catch { return new Set(); }
   });
+
+  // Pull-to-refresh
+  const touchStartY = useRef(0);
+  const PULL_THRESHOLD = 72;
+  const [pullY, setPullY] = useState(0);
+  const [ptr, setPtr] = useState(false);
 
   const FAMILY_PRIORITY = { influence: 5, experience: 4, rituals: 3, self_connection: 2, foundations: 1 };
 
@@ -369,9 +375,12 @@ export default function Community() {
     }
 
     if (feedMode === "trending") {
+      const decay = h => 1 / (1 + h / 48);
       return [...base].sort((a, b) => {
-        const scoreA = (a.review_count || 0) * 2 + (adoredIds.has(a.id) ? 3 : 0) + (a.product_id ? 1 : 0);
-        const scoreB = (b.review_count || 0) * 2 + (adoredIds.has(b.id) ? 3 : 0) + (b.product_id ? 1 : 0);
+        const ageA = (Date.now() - new Date(a.created_date).getTime()) / 36e5;
+        const ageB = (Date.now() - new Date(b.created_date).getTime()) / 36e5;
+        const scoreA = ((a.review_count || 0) * 2 + (adoredIds.has(a.id) ? 3 : 0) + (a.product_id ? 1 : 0)) * decay(ageA);
+        const scoreB = ((b.review_count || 0) * 2 + (adoredIds.has(b.id) ? 3 : 0) + (b.product_id ? 1 : 0)) * decay(ageB);
         return scoreB - scoreA;
       });
     }
@@ -382,7 +391,50 @@ export default function Community() {
   const displayPosts = getDisplayPosts();
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)]">
+    <main
+      className="min-h-screen bg-[var(--color-bg)]"
+      onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
+      onTouchMove={e => {
+        if (window.scrollY > 0 || ptr) return;
+        const d = e.touches[0].clientY - touchStartY.current;
+        if (d > 0) setPullY(Math.min(d * 0.45, PULL_THRESHOLD * 1.3));
+      }}
+      onTouchEnd={async () => {
+        if (pullY >= PULL_THRESHOLD) {
+          setPtr(true);
+          await load();
+          setPtr(false);
+          setPullY(0);
+        } else {
+          setPullY(0);
+        }
+      }}
+    >
+      {/* ── Pull-to-refresh Swan indicator ─────────────────────────────── */}
+      <AnimatePresence>
+        {(pullY > 12 || ptr) && (
+          <motion.div
+            className="fixed top-0 inset-x-0 z-40 flex justify-center pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <motion.div
+              className="mt-12 w-10 h-10 rounded-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] flex items-center justify-center shadow-sm"
+              animate={{ scale: ptr ? 1 : Math.min(pullY / PULL_THRESHOLD, 1) }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            >
+              <motion.div
+                animate={ptr ? { rotate: 360 } : {}}
+                transition={ptr ? { duration: 0.9, repeat: Infinity, ease: "linear" } : {}}
+              >
+                <SwanLogo size={20} color="var(--color-accent-gold)" />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* ── Community header — framed banner block ─────────────────────── */}
       <div className="px-5 pt-14 pb-4">
         <div
