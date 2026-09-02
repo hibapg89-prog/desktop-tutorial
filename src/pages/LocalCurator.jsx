@@ -78,6 +78,15 @@ export default function LocalCurator() {
         curator_product: true,
         ...(me?.id ? { created_by_id: me.id } : {}),
       });
+      // Log to ScanHistory so the curated alternative is discoverable later
+      await base44.entities.ScanLog.create({
+        scan_method: "curator",
+        status: "success",
+        product_id: created.id,
+        brand: curator.brand,
+        name: curator.name,
+        product_count: 1,
+      }).catch(() => null); // non-blocking — don't fail the save if logging errors
       setArtisanProductId(created.id);
       setSavedArtisan(true);
       setSavingArtisan(false);
