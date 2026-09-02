@@ -627,7 +627,7 @@ CRITICAL: Only extract products EXPLICITLY named in the post content you found. 
       setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
       setScanError("The Muse couldn't read this post's content. Instagram reels are sometimes blocked — try saving the video and using Gallery instead, or paste a TikTok link which is easier to read.");
       setActiveMode("error");
-      logScan({ scan_method: "social_link", status: "failed", error_reason: "oEmbed, backend, and web search all failed" });
+      logScan({ scan_method: "social_link", status: "failed", error_reason: "social_all_failed" });
     } catch (error) {
       clearInterval(interval);
       console.error('[Pipeline Error]:', error);

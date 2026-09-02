@@ -33,6 +33,27 @@ function timeAgo(iso) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function friendlyError(reason) {
+  if (!reason) return "The Muse couldn't identify a product";
+  const r = reason.toLowerCase();
+  if (r.includes("oembed") || r.includes("backend") || r.includes("web search") || r.includes("all failed") || r === "social_all_failed") {
+    return "This link couldn't be read — try saving the image and scanning from Gallery";
+  }
+  if (r.includes("private") || r.includes("require a follow")) {
+    return "This post is private or requires a follow to view";
+  }
+  if (r.includes("no text caption") || r.includes("no caption")) {
+    return "No product details found in this post";
+  }
+  if (r.includes("not configured") || r.includes("apify")) {
+    return "Social link scanning is temporarily unavailable";
+  }
+  if (r.includes("network") || r.includes("fetch") || r.includes("timeout")) {
+    return "Connection timed out — please try again";
+  }
+  return "The Muse couldn't identify a product";
+}
+
 function fullTimestamp(iso) {
   if (!iso) return "";
   return new Date(iso).toLocaleString(undefined, {
@@ -159,7 +180,7 @@ export default function ScanHistory() {
                           </span>
                         </div>
                         <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light truncate mt-0.5">
-                          {log.error_reason || "The Muse couldn't identify a product"}
+                          {friendlyError(log.error_reason)}
                         </p>
                         <p className="text-[0.625rem] text-primary-35 font-light mt-0.5">{fullTimestamp(log.created_date)}</p>
                       </div>
