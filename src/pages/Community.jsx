@@ -691,6 +691,18 @@ export default function Community() {
       )}
 
       <div className="px-5 pb-32">
+        {/* Polls always visible regardless of post count */}
+        {!loading && feedMode !== "following" && polls.length > 0 && (
+          <div className="space-y-3 mb-5">
+            <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
+            {polls.map((poll, i) => (
+              <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                <PollCard poll={poll} user={user} onVoted={load} />
+              </motion.div>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="swan-float"><SwanLogo size={40} color="var(--color-accent-gold)" /></div>
@@ -704,17 +716,6 @@ export default function Community() {
           </div>
         ) : (
           <>
-            {feedMode !== "following" && polls.length > 0 && (
-              <div className="space-y-3 mb-5">
-                <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
-                {polls.map((poll, i) => (
-                  <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-                    <PollCard poll={poll} user={user} onVoted={load} />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-
             <ReviewerLeaderboard posts={posts} />
 
             {feedMode !== "following" && swaps.length > 0 && (
@@ -1054,7 +1055,7 @@ export default function Community() {
             onClick={() => setShowSwapTeaser(false)}
           >
             <motion.div
-              className="w-full sm:max-w-sm bg-[var(--color-bg)] rounded-t-3xl sm:rounded-3xl px-7 pt-8 pb-12 text-center"
+              className="w-full sm:max-w-sm bg-[var(--color-bg)] rounded-t-3xl sm:rounded-3xl px-7 pt-8 pb-28 text-center"
               initial={{ y: 80, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
