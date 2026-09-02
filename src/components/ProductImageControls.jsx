@@ -28,8 +28,8 @@ export default function ProductImageControls({
   const fileRef = useRef(null);
   const { toast } = useToast();
 
-  const dim = size === "xs" ? 16 : 20;
-  const iconSize = size === "xs" ? 10 : 11;
+  const dim = size === "xs" ? 24 : 28;
+  const iconSize = size === "xs" ? 11 : 13;
 
   const stop = (e) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }

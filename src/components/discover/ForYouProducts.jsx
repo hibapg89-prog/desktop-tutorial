@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Sparkles, Check, Heart, Bookmark, Share2 } from "lucide-react";
+import { Sparkles, Check, Heart, Bookmark } from "lucide-react";
 import { motion } from "framer-motion";
 import ProductImage from "@/components/ProductImage";
+import ShareButton from "@/components/ShareButton";
 import { base44 } from "@/api/base44Client";
 import { formatPrice } from "@/utils/locale";
 
@@ -28,11 +29,10 @@ const withTimeout = (promise, ms = 12000) =>
   Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
 export default function ForYouProducts() {
-  const [picks,          setPicks]          = useState([]);
-  const [loading,        setLoading]        = useState(true);
-  const [collectedIdx,   setCollectedIdx]   = useState(new Set());
-  const [adoredIdx,      setAdoredIdx]      = useState(new Set());
-  const [passedAlongIdx, setPassedAlongIdx] = useState(new Set());
+  const [picks,        setPicks]        = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [collectedIdx, setCollectedIdx] = useState(new Set());
+  const [adoredIdx,    setAdoredIdx]    = useState(new Set());
 
   useEffect(() => {
     const controller = { cancelled: false };
@@ -151,27 +151,6 @@ export default function ForYouProducts() {
     });
   };
 
-  const handlePassAlong = async (p, i) => {
-    const shareData = {
-      title: `${p.brand} ${p.name}`,
-      text:  p.muse_shimmer || `Found on La Muse — ${p.brand} ${p.name}`,
-      url:   window.location.href,
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        setPassedAlongIdx(prev => new Set(prev).add(i));
-        setTimeout(() => setPassedAlongIdx(prev => {
-          const next = new Set(prev); next.delete(i); return next;
-        }), 2000);
-      }
-    } catch {
-      // user cancelled — no-op
-    }
-  };
-
   if (loading) {
     return (
       <div className="mb-8">
@@ -212,7 +191,6 @@ export default function ForYouProducts() {
           const accent    = CAT_ACCENT[p.category] || "#A89B6B";
           const collected = collectedIdx.has(i);
           const adored    = adoredIdx.has(i);
-          const passed    = passedAlongIdx.has(i);
           return (
             <motion.div
               key={i}
@@ -281,15 +259,13 @@ export default function ForYouProducts() {
                     : <Bookmark size={11} strokeWidth={1.5} color="var(--color-text-muted)" />
                   }
                 </button>
-                <button
-                  onClick={() => handlePassAlong(p, i)}
-                  aria-label="Pass Along"
-                  className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
-                    passed ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
-                  }`}
-                >
-                  <Share2 size={11} strokeWidth={1.5} color={passed ? "white" : "var(--color-text-muted)"} />
-                </button>
+                <ShareButton
+                  title={`${p.brand} ${p.name}`}
+                  text={p.muse_shimmer || `${p.brand} ${p.name}`}
+                  url={window.location.href}
+                  size={11}
+                  className="flex-1 py-2 rounded-xl border border-[var(--color-border)]"
+                />
               </div>
             </motion.div>
           );
