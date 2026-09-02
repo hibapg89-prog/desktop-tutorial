@@ -41,11 +41,24 @@ export default function ForYouProducts() {
   const [passedAlongIdx, setPassedAlongIdx] = useState(new Set());
 
   useEffect(() => {
+    const controller = { cancelled: false };
+    const withTimeout = (promise, ms = 12000) =>
+      Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+
     (async () => {
       try {
-        const me = await base44.auth.me().catch(() => null);
-        const userFilter = me?.id ? { created_by_id: me.id } : {};
-        const myProducts = await base44.entities.Product.filter(userFilter);
+        const me = await withTimeout(base44.auth.me().catch(() => null));
+        if (controller.cancelled) return;
+
+        // Only show curated picks for authenticated users who have scanned something
+        if (!me?.id) { setPicks([]); return; }
+
+        const [myProducts, allProducts] = await withTimeout(Promise.all([
+          base44.entities.Product.filter({ created_by_id: me.id }),
+          base44.entities.Product.list("-created_date", 100),
+        ]));
+        if (controller.cancelled) return;
+
         const myProductIds = new Set(myProducts.map(p => p.id));
 
         // User's preferred categories — beauty only
@@ -53,8 +66,8 @@ export default function ForYouProducts() {
           myProducts.map(p => p.category).filter(c => c && BEAUTY_CATEGORIES.has(c))
         )];
 
-        // ── Step 1: try to surface real scanned products with images ──
-        const allProducts = await base44.entities.Product.list("-created_date", 300);
+        // If user has no beauty history yet, hide the section
+        if (!userBeautyCategories.length) { setPicks([]); return; }
 
         const candidates = allProducts.filter(p =>
           p.image_url &&
@@ -85,49 +98,54 @@ export default function ForYouProducts() {
           .slice(0, 6)
           .map(p => toCard(p, true));
 
-        // ── Step 2: if fewer than 3 real picks, supplement with LLM ──
-        if (finalPicks.length < 3 && userBeautyCategories.length) {
-          const prompt = `A luxury beauty concierge user has scanned and saved products in these beauty categories: ${userBeautyCategories.join(", ")}. Recommend ${6 - finalPicks.length} NEW beauty products they'd adore but don't own yet — ONLY within beauty, skincare, haircare, fragrance, or cosmetics. Do NOT suggest clothing, electronics, food, or any non-beauty item. Return JSON with brand, name, shade (or empty string), category (one of: ${userBeautyCategories.join(", ")}), price_usd, description, muse_shimmer (poetic tagline, max 8 words).`;
+        // ── Step 2: if fewer than 3 real picks, supplement with LLM (15s timeout) ──
+        if (finalPicks.length < 3) {
+          try {
+            const prompt = `A luxury beauty concierge user has scanned and saved products in these beauty categories: ${userBeautyCategories.join(", ")}. Recommend ${6 - finalPicks.length} NEW beauty products they'd adore but don't own yet — ONLY within beauty, skincare, haircare, fragrance, or cosmetics. Do NOT suggest clothing, electronics, food, or any non-beauty item. Return JSON with brand, name, shade (or empty string), category (one of: ${userBeautyCategories.join(", ")}), price_usd, description, muse_shimmer (poetic tagline, max 8 words).`;
 
-          const result = await base44.integrations.Core.InvokeLLM({
-            prompt,
-            response_json_schema: {
-              type: "object",
-              properties: {
-                products: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      brand:        { type: "string" },
-                      name:         { type: "string" },
-                      shade:        { type: "string" },
-                      category:     { type: "string" },
-                      price_usd:    { type: "number" },
-                      description:  { type: "string" },
-                      muse_shimmer: { type: "string" },
+            const result = await withTimeout(base44.integrations.Core.InvokeLLM({
+              prompt,
+              response_json_schema: {
+                type: "object",
+                properties: {
+                  products: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        brand:        { type: "string" },
+                        name:         { type: "string" },
+                        shade:        { type: "string" },
+                        category:     { type: "string" },
+                        price_usd:    { type: "number" },
+                        description:  { type: "string" },
+                        muse_shimmer: { type: "string" },
+                      },
                     },
                   },
                 },
               },
-            },
-          });
+            }), 15000);
 
-          // Only keep LLM picks that fall within beauty categories
-          const llmPicks = (result.products || [])
-            .filter(p => p.category && BEAUTY_CATEGORIES.has(p.category))
-            .map(p => toCard(p, false));
-
-          finalPicks = [...finalPicks, ...llmPicks].slice(0, 6);
+            if (!controller.cancelled) {
+              const llmPicks = (result.products || [])
+                .filter(p => p.category && BEAUTY_CATEGORIES.has(p.category))
+                .map(p => toCard(p, false));
+              finalPicks = [...finalPicks, ...llmPicks].slice(0, 6);
+            }
+          } catch {
+            // LLM timed out or failed — show whatever real picks we have
+          }
         }
 
-        setPicks(finalPicks);
+        if (!controller.cancelled) setPicks(finalPicks);
       } catch {
-        setPicks([]);
+        if (!controller.cancelled) setPicks([]);
       } finally {
-        setLoading(false);
+        if (!controller.cancelled) setLoading(false);
       }
     })();
+    return () => { controller.cancelled = true; };
   }, []);
 
   const collectToList = async (p, i) => {
