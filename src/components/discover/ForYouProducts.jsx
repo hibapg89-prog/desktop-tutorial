@@ -6,18 +6,32 @@ import { base44 } from "@/api/base44Client";
 import { formatPrice } from "@/utils/locale";
 
 const CAT_ACCENT = {
-  Makeup:             "#BC8F8F",
-  Fragrance:          "#8F8FAA",
-  Skincare:           "#6B9E6B",
-  Haircare:           "#A89B6B",
-  Body:               "#C4A882",
-  Nails:              "#B48FAA",
-  Devices:            "#7A9BA8",
-  Accessories:        "#A8906B",
-  "Men's Grooming":   "#7A8FA8",
-  "Pet Care":         "#8FA87A",
-  "Intimate Hygiene": "#A87A90",
+  Makeup:                   "#BC8F8F",
+  Fragrance:                "#8F8FAA",
+  Skincare:                 "#6B9E6B",
+  Haircare:                 "#A89B6B",
+  Body:                     "#C4A882",
+  Nails:                    "#B48FAA",
+  Devices:                  "#7A9BA8",
+  Accessories:              "#A8906B",
+  "Men's Grooming":         "#7A8FA8",
+  "Pet Care":               "#8FA87A",
+  "Intimate Hygiene":       "#A87A90",
+  "Intimate Care":          "#A87A90",
+  Tools:                    "#9B8F7A",
+  "Cosmetic Bags & Cases":  "#A8907A",
 };
+
+const BEAUTY_CATEGORIES = new Set(Object.keys(CAT_ACCENT));
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export default function ForYouProducts() {
   const [picks,          setPicks]          = useState([]);
@@ -32,43 +46,82 @@ export default function ForYouProducts() {
         const me = await base44.auth.me().catch(() => null);
         const userFilter = me?.id ? { created_by_id: me.id } : {};
         const myProducts = await base44.entities.Product.filter(userFilter);
+        const myProductIds = new Set(myProducts.map(p => p.id));
 
-        const prefs = {
-          categories: [...new Set(myProducts.map(p => p.category).filter(Boolean))],
-          brands:     [...new Set(myProducts.map(p => p.brand).filter(Boolean))].slice(0, 8),
-        };
+        // User's preferred categories — beauty only
+        const userBeautyCategories = [...new Set(
+          myProducts.map(p => p.category).filter(c => c && BEAUTY_CATEGORIES.has(c))
+        )];
 
-        if (!prefs.categories.length) {
-          setPicks([]);
-          return;
-        }
+        // ── Step 1: try to surface real scanned products with images ──
+        const allProducts = await base44.entities.Product.list("-created_date", 300);
 
-        const prompt = `A luxury beauty concierge user has scanned and saved products in these categories: ${prefs.categories.join(", ")} from brands including: ${prefs.brands.join(", ")}. Based on their scan history and saved preferences, recommend 6 NEW beauty products they'd adore but don't own yet — strictly complementary to their established taste, staying within their preferred categories. Return JSON with brand, name, shade, category, price_usd, description, muse_shimmer (poetic editorial tagline, max 8 words).`;
+        const candidates = allProducts.filter(p =>
+          p.image_url &&
+          p.category && BEAUTY_CATEGORIES.has(p.category) &&
+          !myProductIds.has(p.id) &&
+          (!me?.id || p.created_by_id !== me.id)
+        );
 
-        const result = await base44.integrations.Core.InvokeLLM({
-          prompt,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              products: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    brand:        { type: "string" },
-                    name:         { type: "string" },
-                    shade:        { type: "string" },
-                    category:     { type: "string" },
-                    price_usd:    { type: "number" },
-                    description:  { type: "string" },
-                    muse_shimmer: { type: "string" },
+        const targetSet = new Set(userBeautyCategories.length ? userBeautyCategories : [...BEAUTY_CATEGORIES]);
+        const preferred = candidates.filter(p => targetSet.has(p.category));
+        const others    = candidates.filter(p => !targetSet.has(p.category));
+
+        // Normalise to a common shape
+        const toCard = (p, isReal) => ({
+          _isReal:     isReal,
+          _id:         p.id || null,
+          brand:       p.brand,
+          name:        p.name,
+          shade:       p.shade,
+          category:    p.category,
+          price:       p.price || p.price_usd || null,
+          image_url:   p.image_url || null,
+          description: p.description,
+          muse_shimmer: p.muse_shimmer || null,
+        });
+
+        let finalPicks = [...shuffle(preferred), ...shuffle(others)]
+          .slice(0, 6)
+          .map(p => toCard(p, true));
+
+        // ── Step 2: if fewer than 3 real picks, supplement with LLM ──
+        if (finalPicks.length < 3 && userBeautyCategories.length) {
+          const prompt = `A luxury beauty concierge user has scanned and saved products in these beauty categories: ${userBeautyCategories.join(", ")}. Recommend ${6 - finalPicks.length} NEW beauty products they'd adore but don't own yet — ONLY within beauty, skincare, haircare, fragrance, or cosmetics. Do NOT suggest clothing, electronics, food, or any non-beauty item. Return JSON with brand, name, shade (or empty string), category (one of: ${userBeautyCategories.join(", ")}), price_usd, description, muse_shimmer (poetic tagline, max 8 words).`;
+
+          const result = await base44.integrations.Core.InvokeLLM({
+            prompt,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                products: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      brand:        { type: "string" },
+                      name:         { type: "string" },
+                      shade:        { type: "string" },
+                      category:     { type: "string" },
+                      price_usd:    { type: "number" },
+                      description:  { type: "string" },
+                      muse_shimmer: { type: "string" },
+                    },
                   },
                 },
               },
             },
-          },
-        });
-        setPicks(result.products || []);
+          });
+
+          // Only keep LLM picks that fall within beauty categories
+          const llmPicks = (result.products || [])
+            .filter(p => p.category && BEAUTY_CATEGORIES.has(p.category))
+            .map(p => toCard(p, false));
+
+          finalPicks = [...finalPicks, ...llmPicks].slice(0, 6);
+        }
+
+        setPicks(finalPicks);
       } catch {
         setPicks([]);
       } finally {
@@ -80,18 +133,25 @@ export default function ForYouProducts() {
   const collectToList = async (p, i) => {
     setCollectedIdx(prev => new Set(prev).add(i));
     const me = await base44.auth.me().catch(() => null);
-    await base44.entities.Product.create({
-      brand:            p.brand,
-      name:             p.name,
-      shade:            p.shade,
-      category:         p.category,
-      price:            p.price_usd,
-      description:      p.description,
-      muse_shimmer:     p.muse_shimmer,
-      in_shopping_list: true,
-      shopping_qty:     1,
-      ...(me?.id ? { created_by_id: me.id } : {}),
-    }).catch(() => {});
+    if (p._isReal && p._id) {
+      await base44.entities.Product.update(p._id, {
+        in_shopping_list: true,
+        shopping_qty: 1,
+      }).catch(() => {});
+    } else {
+      await base44.entities.Product.create({
+        brand:            p.brand,
+        name:             p.name,
+        shade:            p.shade,
+        category:         p.category,
+        price:            p.price,
+        description:      p.description,
+        muse_shimmer:     p.muse_shimmer,
+        in_shopping_list: true,
+        shopping_qty:     1,
+        ...(me?.id ? { created_by_id: me.id } : {}),
+      }).catch(() => {});
+    }
   };
 
   const toggleAdore = (i) => {
@@ -172,12 +232,23 @@ export default function ForYouProducts() {
               transition={{ delay: i * 0.07 }}
               className="flex-shrink-0 w-40 rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-surface)] flex flex-col"
             >
-              {/* Visual header */}
-              <div
-                className="h-36 relative flex items-center justify-center"
-                style={{ background: `linear-gradient(160deg, ${accent}28 0%, ${accent}0a 100%)` }}
+              {/* Visual header — real image when available, editorial gradient otherwise */}
+              <div className="h-36 relative overflow-hidden flex items-center justify-center"
+                style={!p.image_url ? { background: `linear-gradient(160deg, ${accent}28 0%, ${accent}0a 100%)` } : undefined}
               >
-                <SwanLogo size={30} color={accent} />
+                {p.image_url ? (
+                  <img
+                    src={p.image_url}
+                    alt={`${p.brand} ${p.name}`}
+                    className="w-full h-full object-cover"
+                    onError={e => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.parentElement.style.background = `linear-gradient(160deg, ${accent}28 0%, ${accent}0a 100%)`;
+                    }}
+                  />
+                ) : (
+                  <SwanLogo size={30} color={accent} />
+                )}
                 <div className="absolute top-2.5 left-2.5">
                   <span
                     className="text-[8px] tracking-[0.15em] uppercase font-light px-1.5 py-0.5 rounded-full"
@@ -202,9 +273,9 @@ export default function ForYouProducts() {
                   </p>
                 )}
 
-                {p.price_usd ? (
+                {p.price ? (
                   <p className="mt-auto pt-2 text-[11px] text-[var(--color-text-secondary)] font-light">
-                    {formatPrice(p.price_usd)}
+                    {formatPrice(p.price)}
                   </p>
                 ) : (
                   <div className="mt-auto" />
