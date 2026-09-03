@@ -120,6 +120,7 @@ export default function Profile() {
   const [user, setUser]                 = useState(null);
   const [glowMode, setGlowMode]         = useState("PUBLIC");
   const [privacy, setPrivacy]           = useState("PUBLIC");
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode,         setDarkMode] = useState(() => {
     try {
@@ -151,6 +152,8 @@ export default function Profile() {
       const u = await base44.auth.me().catch(() => null);
       setUser(u);
       if (u) {
+        if (u.glow_mode)   setGlowMode(u.glow_mode);
+        if (u.privacy_tier) setPrivacy(u.privacy_tier);
         try {
           const msgs = await base44.entities.Message.filter({ recipient_id: u.id, read: false });
           setUnreadCount(Array.isArray(msgs) ? msgs.length : 0);
@@ -208,6 +211,14 @@ export default function Profile() {
     } catch {}
   }, [darkMode]);
 
+  const savePrivacy = async (newGlow, newPrivacy) => {
+    setSavingPrivacy(true);
+    try {
+      await base44.auth.updateMe({ glow_mode: newGlow, privacy_tier: newPrivacy });
+    } catch {}
+    setSavingPrivacy(false);
+  };
+
   const sortedBadges = [...BADGES].sort((a, b) => {
     const aE = earnedKeys.has(a.key) ? 0 : 1;
     const bE = earnedKeys.has(b.key) ? 0 : 1;
@@ -247,7 +258,7 @@ export default function Profile() {
   };
 
   const adnAttrs = buildAdnAttrs(user);
-  const privateWall = !isAtelier && (glowMode === "GHOST" || privacy === "PRIVATE_MUSE");
+  const privateWall = !isAtelier && (glowMode === "GHOST" || privacy === "PRIVATE_MUSE" || privacy === "COTERIE_ONLY");
   const visitorHidden = !isAtelier && glowMode === "GHOST";
 
   return (
@@ -809,71 +820,85 @@ export default function Profile() {
                   </button>
                 </div>
 
-                {/* Glow Mode — not yet enforced, locked until backend ships */}
+                {/* Glow Mode */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light">
-                      Glow Mode
-                    </p>
-                    <span className="text-[0.5rem] tracking-[0.15em] uppercase font-light text-[#C8B06A] border border-[#C8B06A]/40 rounded-full px-2 py-0.5">
-                      Coming Soon
-                    </span>
-                  </div>
-                  <div className="space-y-2 opacity-40 pointer-events-none select-none">
+                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
+                    Glow Mode
+                  </p>
+                  <div className="space-y-2">
                     {[
                       { mode: "PUBLIC", label: "Public Glow",  desc: "Everything visible to visitors" },
                       { mode: "SOFT",   label: "Soft Glow",    desc: "Partial visibility — intimate but present" },
                       { mode: "GHOST",  label: "Ghost Glow",   desc: "Minimal presence. Just the halo." },
-                    ].map(({ mode, label, desc }) => (
-                      <button
-                        key={mode}
-                        tabIndex={-1}
-                        className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left"
-                        style={{
-                          borderColor: "var(--color-border)",
-                          background: "var(--color-bg-surface)",
-                        }}
-                      >
-                        <div>
-                          <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
-                          <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
-                        </div>
-                      </button>
-                    ))}
+                    ].map(({ mode, label, desc }) => {
+                      const active = glowMode === mode;
+                      return (
+                        <button
+                          key={mode}
+                          disabled={savingPrivacy}
+                          onClick={() => {
+                            setGlowMode(mode);
+                            savePrivacy(mode, privacy);
+                          }}
+                          className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left disabled:opacity-50"
+                          style={{
+                            borderColor: active ? "#C8B06A" : "var(--color-border)",
+                            background: active ? "rgba(200,176,106,0.08)" : "var(--color-bg-surface)",
+                          }}
+                        >
+                          <div>
+                            <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
+                            <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
+                          </div>
+                          {active && (
+                            <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#C8B06A" }}>
+                              <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Privacy Tier — not yet enforced, locked until backend ships */}
+                {/* Privacy Tier */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light">
-                      Privacy Tier
-                    </p>
-                    <span className="text-[0.5rem] tracking-[0.15em] uppercase font-light text-[#C8B06A] border border-[#C8B06A]/40 rounded-full px-2 py-0.5">
-                      Coming Soon
-                    </span>
-                  </div>
-                  <div className="space-y-2 opacity-40 pointer-events-none select-none">
+                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
+                    Privacy Tier
+                  </p>
+                  <div className="space-y-2">
                     {[
-                      { tier: "PUBLIC",        label: "Public",        desc: "Any visitor may view your profile" },
-                      { tier: "CIRCLE_ONLY",   label: "Circle Only",   desc: "Visible to your Beauty Room members only" },
-                      { tier: "PRIVATE_MUSE",  label: "Private Muse",  desc: "Your sanctuary is yours alone" },
-                    ].map(({ tier, label, desc }) => (
-                      <button
-                        key={tier}
-                        tabIndex={-1}
-                        className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left"
-                        style={{
-                          borderColor: "var(--color-border)",
-                          background: "var(--color-bg-surface)",
-                        }}
-                      >
-                        <div>
-                          <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
-                          <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
-                        </div>
-                      </button>
-                    ))}
+                      { tier: "PUBLIC",       label: "Public",       desc: "Any visitor may view your profile" },
+                      { tier: "COTERIE_ONLY", label: "Coterie Only", desc: "Visible only to those you follow" },
+                      { tier: "PRIVATE_MUSE", label: "Private Muse", desc: "Your sanctuary is yours alone" },
+                    ].map(({ tier, label, desc }) => {
+                      const active = privacy === tier;
+                      return (
+                        <button
+                          key={tier}
+                          disabled={savingPrivacy}
+                          onClick={() => {
+                            setPrivacy(tier);
+                            savePrivacy(glowMode, tier);
+                          }}
+                          className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left disabled:opacity-50"
+                          style={{
+                            borderColor: active ? "#C8B06A" : "var(--color-border)",
+                            background: active ? "rgba(200,176,106,0.08)" : "var(--color-bg-surface)",
+                          }}
+                        >
+                          <div>
+                            <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
+                            <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
+                          </div>
+                          {active && (
+                            <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#C8B06A" }}>
+                              <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

@@ -2,7 +2,19 @@
   "name": "User",
   "type": "object",
   "properties": {
-    "role": { "type": "string", "description": "The role of the user in the app", "enum": ["admin", "user"] }
+    "role": { "type": "string", "description": "The role of the user in the app", "enum": ["admin", "user"] },
+    "glow_mode": {
+      "type": "string",
+      "description": "Controls how much of the profile is visible to visitors",
+      "enum": ["PUBLIC", "SOFT", "GHOST"],
+      "default": "PUBLIC"
+    },
+    "privacy_tier": {
+      "type": "string",
+      "description": "Controls who can access the user's profile at all",
+      "enum": ["PUBLIC", "COTERIE_ONLY", "PRIVATE_MUSE"],
+      "default": "PUBLIC"
+    }
   },
   "required": ["role"]
 }

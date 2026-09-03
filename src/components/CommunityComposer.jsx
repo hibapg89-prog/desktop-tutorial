@@ -24,7 +24,7 @@ const MONK_TONES = [
   "#432B0E", "#2B1A08",
 ];
 
-const BEAUTY_CIRCLES = [
+const BEAUTY_ROOMS = [
   { key: "skin_rituals", label: "Skin Rituals",    glyph: "✦", color: "#C8A96E" },
   { key: "bold_colour",  label: "Bold Colour",     glyph: "◆", color: "#BC4A6A" },
   { key: "clean_beauty", label: "Clean Beauty",    glyph: "◉", color: "#3D7A5A" },
@@ -39,7 +39,7 @@ const BEAUTY_EMOJIS = [
   "💫","🎀","🌺","💗","🥹","👑","🤌","💎","🦋","🩷",
 ];
 
-const TENOR_KEY = "LIVDSRZULELA";
+// GIF search is proxied through the searchGifs backend function (key stays server-side)
 
 const INPUT_CLS =
   "w-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm text-[var(--color-text-primary)] font-light outline-none placeholder:text-[var(--color-text-primary)]/30";
@@ -302,26 +302,20 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
     return () => { clearTimeout(t); setSearchingCatalog(false); };
   }, [catalogSearch, reviewSource]);
 
-  // GIF search with debounce
+  // GIF search with debounce — proxied via backend to keep the API key server-side
   useEffect(() => {
     if (!showGifPicker) return;
     setGifLoading(true);
     const q = gifSearch.trim() || "beauty makeup";
-    const t = setTimeout(() => {
-      fetch(`https://g.tenor.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&limit=12`)
-        .then(r => r.json())
-        .then(data => {
-          setGifResults(
-            (data.results || [])
-              .map(r => ({
-                url: r.media_formats?.gif?.url,
-                tinygif: r.media_formats?.tinygif?.url,
-              }))
-              .filter(g => g.url && g.tinygif)
-          );
-        })
-        .catch(() => setGifResults([]))
-        .finally(() => setGifLoading(false));
+    const t = setTimeout(async () => {
+      try {
+        const res = await base44.functions.invoke("searchGifs", { q, limit: 12 });
+        setGifResults(Array.isArray(res?.gifs) ? res.gifs : []);
+      } catch {
+        setGifResults([]);
+      } finally {
+        setGifLoading(false);
+      }
     }, 400);
     return () => clearTimeout(t);
   }, [gifSearch, showGifPicker]);
@@ -1007,7 +1001,7 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
               <div className="flex border border-[var(--color-border)] rounded-full overflow-hidden">
                 {[
                   { key: "public", label: "Public" },
-                  { key: "circle", label: "Circle" },
+                  { key: "circle", label: "Room" },
                 ].map((v) => (
                   <button
                     key={v.key}
@@ -1024,14 +1018,14 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
               </div>
             </div>
 
-            {/* ── Beauty Circle picker ── */}
+            {/* ── Beauty Room picker ── */}
             <div className="mt-4">
               <p className="text-[9px] tracking-[0.2em] uppercase text-[var(--color-text-primary)]/40 font-light mb-2">
-                Share to a Beauty Circle
+                Share to a Beauty Room
                 <span className="normal-case text-[var(--color-text-primary)]/25 tracking-normal"> (optional)</span>
               </p>
               <div className="flex gap-1.5 flex-wrap">
-                {BEAUTY_CIRCLES.map(c => (
+                {BEAUTY_ROOMS.map(c => (
                   <button
                     key={c.key}
                     type="button"
