@@ -89,6 +89,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const detectAndSaveLocation = async (currentUser) => {
+    if (currentUser?.country_code) return; // already set — skip
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (!res.ok) return;
+      const { country_code, currency } = await res.json();
+      if (!country_code) return;
+      await base44.auth.updateMe({ country_code, currency_code: currency });
+      setUser(prev => prev ? { ...prev, country_code, currency_code: currency } : prev);
+    } catch {
+      // silent — location detection is best-effort, never blocks the app
+    }
+  };
+
   const checkUserAuth = async () => {
     try {
       // Now check if the user is authenticated
@@ -98,6 +112,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
       setAuthChecked(true);
+      detectAndSaveLocation(currentUser); // fire-and-forget, never blocks auth
     } catch (error) {
       console.error('User auth check failed:', error);
       setIsLoadingAuth(false);

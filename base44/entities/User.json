@@ -26,6 +26,14 @@
     "bio": {
       "type": "string",
       "description": "Short About Me text shown on the user's profile (max 160 chars)"
+    },
+    "country_code": {
+      "type": "string",
+      "description": "ISO 3166-1 alpha-2 country code detected from IP on first login (e.g. US, FR, GB)"
+    },
+    "currency_code": {
+      "type": "string",
+      "description": "Local currency code detected alongside country (e.g. USD, EUR, GBP) — used for price display"
     }
   },
   "required": ["role"]
