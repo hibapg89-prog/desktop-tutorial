@@ -40,7 +40,19 @@
     "price_alert_active": { "type": "boolean", "default": true },
     "on_sale": { "type": "boolean", "default": false },
     "sale_discount_pct": { "type": "number" },
-    "last_sale_price": { "type": "number" }
+    "last_sale_price": { "type": "number" },
+    "retailer_links": {
+      "type": "array",
+      "description": "Geo-targeted retailer URLs for Shop Now. Each entry: { country: 'US', retailer: 'Sephora', url: 'https://...' }",
+      "items": {
+        "type": "object",
+        "properties": {
+          "country": { "type": "string", "description": "ISO 3166-1 alpha-2 code (US, FR, GB, …)" },
+          "retailer": { "type": "string", "description": "Display name, e.g. Sephora, Ulta, Lookfantastic" },
+          "url": { "type": "string", "description": "Direct product page or affiliate link" }
+        }
+      }
+    }
   },
   "required": ["brand", "name", "category"]
 }

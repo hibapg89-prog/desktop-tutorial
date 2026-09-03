@@ -2,8 +2,20 @@ import { Link } from "react-router-dom";
 import { MoreHorizontal, Search } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import { formatPrice } from "@/utils/locale";
+import { useAuth } from "@/lib/AuthContext";
+
+function resolveRetailerUrl(product, countryCode) {
+  const links = Array.isArray(product.retailer_links) ? product.retailer_links : [];
+  if (links.length === 0) return product.source_url || null;
+  const exact = links.find(l => l.country?.toUpperCase() === (countryCode || "").toUpperCase());
+  if (exact?.url) return exact.url;
+  const us = links.find(l => l.country?.toUpperCase() === "US");
+  if (us?.url) return us.url;
+  return links[0]?.url || product.source_url || null;
+}
 
 export default function CategoryProductCard({ product, variant = "default" }) {
+  const { user } = useAuth();
   const hasImage = !!product.image_url;
   const priceLabel = product.price ? formatPrice(product.price) : null;
   const displayName = product.brand && product.name?.startsWith(product.brand)
@@ -11,7 +23,7 @@ export default function CategoryProductCard({ product, variant = "default" }) {
     : product.name;
 
   if (variant === "shop") {
-    const shopUrl = product.source_url || (product.where_to_buy ? product.where_to_buy : null);
+    const externalUrl = resolveRetailerUrl(product, user?.country_code);
     return (
       <div className="rounded-xl bg-[var(--color-bg-surface)] border border-[var(--color-border)] overflow-hidden flex flex-col">
         <div className="aspect-square bg-[var(--color-bg-elevated)] flex items-center justify-center overflow-hidden relative">
@@ -34,12 +46,23 @@ export default function CategoryProductCard({ product, variant = "default" }) {
           )}
           <p className="text-[10px] text-[var(--color-text-primary)] font-light leading-tight truncate">{product.name}</p>
           {priceLabel && <p className="text-[10px] text-[var(--color-text-primary)] font-medium">{priceLabel}</p>}
-          <Link
-            to={product.id ? `/product/${product.id}` : "#"}
-            className="block mt-1.5 py-1.5 bg-[#003629] text-white text-[9px] tracking-[0.15em] uppercase text-center rounded"
-          >
-            Shop Now
-          </Link>
+          {externalUrl ? (
+            <a
+              href={externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mt-1.5 py-1.5 bg-[#003629] text-white text-[9px] tracking-[0.15em] uppercase text-center rounded"
+            >
+              Shop Now
+            </a>
+          ) : (
+            <Link
+              to={product.id ? `/product/${product.id}` : "#"}
+              className="block mt-1.5 py-1.5 bg-[#003629] text-white text-[9px] tracking-[0.15em] uppercase text-center rounded"
+            >
+              Shop Now
+            </Link>
+          )}
         </div>
       </div>
     );

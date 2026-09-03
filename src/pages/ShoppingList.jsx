@@ -3,8 +3,19 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Plus, Minus, Trash2, ShoppingBag, Check, Sparkles, ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import SwanLogo from "@/components/SwanLogo";
 import { formatPrice } from "@/utils/locale";
+
+function resolveRetailerUrl(product, countryCode) {
+  const links = Array.isArray(product.retailer_links) ? product.retailer_links : [];
+  if (links.length === 0) return product.source_url || null;
+  const exact = links.find(l => l.country?.toUpperCase() === (countryCode || "").toUpperCase());
+  if (exact?.url) return exact.url;
+  const us = links.find(l => l.country?.toUpperCase() === "US");
+  if (us?.url) return us.url;
+  return links[0]?.url || product.source_url || null;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -22,7 +33,8 @@ function groupByCategory(products) {
 
 // ── Product row ───────────────────────────────────────────────────────────────
 
-function ProductRow({ product, acquired, onQty, onAcquire, onRemove }) {
+function ProductRow({ product, acquired, onQty, onAcquire, onRemove, countryCode }) {
+  const shopUrl = !acquired ? resolveRetailerUrl(product, countryCode) : null;
   return (
     <motion.div
       layout
@@ -67,6 +79,16 @@ function ProductRow({ product, acquired, onQty, onAcquire, onRemove }) {
               <span className="text-primary-35"> × {product.shopping_qty}</span>
             )}
           </p>
+        )}
+        {shopUrl && (
+          <a
+            href={shopUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[9px] tracking-[0.12em] uppercase text-[#C8B06A] font-light mt-0.5 inline-block"
+          >
+            Shop Now →
+          </a>
         )}
       </div>
 
@@ -119,6 +141,8 @@ function ProductRow({ product, acquired, onQty, onAcquire, onRemove }) {
 
 export default function ShoppingList() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const countryCode = user?.country_code || null;
   const [items,       setItems]       = useState([]);
   const [favorites,   setFavorites]   = useState([]);
   const [loading,     setLoading]     = useState(true);
@@ -287,6 +311,7 @@ export default function ShoppingList() {
                           onQty={updateQty}
                           onAcquire={toggleAcquired}
                           onRemove={remove}
+                          countryCode={countryCode}
                         />
                       ))}
                     </AnimatePresence>
@@ -327,6 +352,7 @@ export default function ShoppingList() {
                         onQty={updateQty}
                         onAcquire={toggleAcquired}
                         onRemove={remove}
+                        countryCode={countryCode}
                       />
                     ))}
                   </AnimatePresence>
