@@ -557,11 +557,22 @@ export default function TutorialDetail() {
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Full-width tutorial image */}
       <div className="relative w-full h-[420px]">
-        <img
-          src={tutorial.image_url}
-          alt={tutorial.title}
-          className="w-full h-full object-cover"
-        />
+        {tutorial.image_url ? (
+          <img
+            src={tutorial.image_url}
+            alt={tutorial.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              e.currentTarget.nextSibling?.classList.remove("hidden");
+            }}
+          />
+        ) : null}
+        <div
+          className={`${tutorial.image_url ? "hidden" : ""} w-full h-full bg-gradient-to-b from-[#0B3C26] to-[#1a5c3a] flex items-center justify-center`}
+        >
+          <SwanLogo size={56} color="#C8B06A" />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-[var(--color-bg)]" />
 
         {/* Back button */}

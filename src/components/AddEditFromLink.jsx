@@ -87,7 +87,7 @@ ${extractedCaption
   : "Search the web for the content of this tutorial (it may be a YouTube video, Instagram post, TikTok, blog article, or brand tutorial page). Extract the tutorial details."}
 
 Return a JSON object with:
-- title: a concise, elegant editorial title (uppercase, max 6 words) capturing the tutorial's essence
+- title: a concise, editorial title (uppercase, max 6 words) for a HIGH-END luxury beauty magazine. Focus on the TECHNIQUE or RESULT — never reference pop culture, collaborations, brand campaign names, cartoon characters, or IP (e.g. never use "Marge Simpson", "Simpsons", "Disney", "Barbie"). Ask: what is the user LEARNING TO DO? Name that. Examples: "THE SCULPTED BROW RITUAL", "GLASS SKIN PERFECTED", "LAMINATED ARCH EDIT"
 - category: one of ${CATEGORIES.join(", ")} — pick the CORRECT category (hair tutorial → "Hair", skincare routine → "Skincare", makeup look → "Makeup", meditation/fitness/wellness → "Wellness")
 - difficulty: "Beginner", "Intermediate", or "Advanced"
 - duration_minutes: estimated minutes to complete the tutorial (number)
