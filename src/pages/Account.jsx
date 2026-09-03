@@ -283,10 +283,10 @@ export default function Account() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-[13px] text-[var(--color-text-primary)]">
-                    {resyncing ? "Re-syncing images…" : "Re-sync all missing images"}
+                    {resyncing ? "Finding missing photos…" : "Fill in missing product photos"}
                   </p>
                   <p className="text-[10px] text-[var(--color-text-primary)]/42 mt-0.5 leading-snug">
-                    Instantly re-runs the image fetcher across your whole catalog instead of waiting for the weekly job.
+                    Finds photos only for products that don't have one yet. Won't replace photos that were already found or uploaded.
                   </p>
                 </div>
               </button>

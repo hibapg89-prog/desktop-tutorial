@@ -57,11 +57,12 @@ export default function ProductImageControls({
           title: "No image found",
           description: "The Muse couldn't find a photo — try uploading your own.",
           variant: "destructive",
+          duration: 5000,
         });
       }
     } catch {
       onUpdated?.({ ...product, image_status: "missing" });
-      toast({ title: "Refresh failed", variant: "destructive" });
+      toast({ title: "Refresh failed", variant: "destructive", duration: 5000 });
     }
     setRefreshing(false);
   };

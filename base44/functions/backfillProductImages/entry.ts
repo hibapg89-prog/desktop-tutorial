@@ -13,6 +13,8 @@ export default async function(req) {
     const products = await base44.asServiceRole.entities.Product.list('-created_date', BATCH);
     const BAD_PATH_TOKENS = ['swatch', 'chart', 'infographic', 'grid', 'texture', 'collage', 'ingredient'];
     const needsImage = (p) => {
+      // Never overwrite a product the user or scan pipeline already verified.
+      if (p.image_status === 'verified' && p.image_url) return false;
       const url = (p.image_url || '').toLowerCase();
       if (!url) return true;
       if (url.includes('base44.app/api/') || url.includes('/files/')) return true;
