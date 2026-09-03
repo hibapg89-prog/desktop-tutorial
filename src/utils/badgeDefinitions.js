@@ -284,7 +284,7 @@ export const BADGES = [
 export const BADGE_MAP = Object.fromEntries(BADGES.map((b) => [b.key, b]));
 export const FAMILY_MAP = Object.fromEntries(BADGE_FAMILIES.map((f) => [f.key, f]));
 
-export function computeEarned(posts = [], existingKeys = new Set(), totalAdores = 0) {
+export function computeEarned(posts = [], existingKeys = new Set(), totalAdores = 0, profileComplete = false) {
   const data = {
     postCount: posts.length,
     reviewCount: posts.filter((p) => !p.post_type || p.post_type === "review").length,
@@ -292,7 +292,7 @@ export function computeEarned(posts = [], existingKeys = new Set(), totalAdores 
     beforeAfterCount: posts.filter((p) => p.post_type === "before_after").length,
     routineCount: posts.filter((p) => p.post_type === "routine").length,
     grwmCount: posts.filter((p) => p.post_type === "grwm").length,
-    profileComplete: true,
+    profileComplete,
     totalAdores,
     earnedCount: existingKeys.size,
   };

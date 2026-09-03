@@ -68,12 +68,27 @@ export default function Onboarding() {
   const handleFinish = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({
-        skin_types:         skinTypes.join(","),
-        intention:          intentions.join(","),
-        budget_tier:        budget || "prestige",
+      const me = await base44.auth.updateMe({
+        skin_types:          skinTypes.join(","),
+        intention:           intentions.join(","),
+        budget_tier:         budget || "prestige",
         onboarding_complete: true,
       });
+      // Grant "The Awakening" badge now that the profile is complete
+      const userId = me?.id;
+      if (userId) {
+        try {
+          const existing = await base44.entities.UserBadge.filter({ user_id: userId });
+          const alreadyEarned = existing.some(b => b.badge_key === "the_awakening");
+          if (!alreadyEarned) {
+            await base44.entities.UserBadge.create({
+              user_id: userId,
+              badge_key: "the_awakening",
+              earned_at: new Date().toISOString(),
+            });
+          }
+        } catch {}
+      }
     } catch {}
     navigate("/home");
   };
