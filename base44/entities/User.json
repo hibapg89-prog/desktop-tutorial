@@ -14,6 +14,18 @@
       "description": "Controls who can access the user's profile at all",
       "enum": ["PUBLIC", "COTERIE_ONLY", "PRIVATE_MUSE"],
       "default": "PUBLIC"
+    },
+    "profile_photo_url": {
+      "type": "string",
+      "description": "URL of the user's uploaded profile photo"
+    },
+    "username": {
+      "type": "string",
+      "description": "Unique @handle for the user, used for mentions"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Short About Me text shown on the user's profile (max 160 chars)"
     }
   },
   "required": ["role"]
