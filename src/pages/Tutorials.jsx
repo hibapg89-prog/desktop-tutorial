@@ -172,6 +172,7 @@ export default function Tutorials() {
   const [dbTutorials, setDbTutorials] = useState([]);
   const [showAddLink, setShowAddLink] = useState(false);
   const [collectedIds, setCollectedIds] = useState([]);
+  const [adoredIds,    setAdoredIds]    = useState([]);
 
   const loadTutorials = () => {
     base44.entities.Tutorial.list("-created_date", 50).then(setDbTutorials).catch(() => {});
@@ -181,6 +182,7 @@ export default function Tutorials() {
     loadTutorials();
     base44.auth.me().then((u) => {
       setCollectedIds(Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : []);
+      setAdoredIds(Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : []);
     }).catch(() => {});
   }, []);
 
@@ -190,7 +192,7 @@ export default function Tutorials() {
   ];
 
   const filtered = activeTab === "FAVORITES"
-    ? allTutorials.filter((t) => collectedIds.includes(t.id))
+    ? allTutorials.filter((t) => collectedIds.includes(t.id) || adoredIds.includes(t.id))
     : allTutorials.filter((t) =>
         activeTab === "MAKEUP"   ? t.category === "Makeup"   :
         activeTab === "SKINCARE" ? t.category === "Skincare" :
@@ -258,7 +260,7 @@ export default function Tutorials() {
             <Bookmark size={32} color="var(--color-accent-gold)" strokeWidth={1} className="mb-4 opacity-50" />
             <p className="font-serif text-lg text-[var(--color-text-primary)]/60 italic mb-2">No favorites yet</p>
             <p className="text-xs text-primary-40 font-light tracking-wide">
-              Open a tutorial and tap "Add to Favorites" to save it here
+              Open a tutorial and tap the heart to save it here
             </p>
           </div>
         ) : (
