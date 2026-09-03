@@ -1,6 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
+// PAUSED: price data comes from an AI (Gemini) with no real retailer API,
+// which risks FTC/DGCCRF/EU Consumer Rights Directive violations on price accuracy.
+// Set to false only after replacing the InvokeLLM price lookup with a verified pricing API.
+const PRICE_ALERTS_PAUSED = true;
+
 Deno.serve(async (req) => {
+  if (PRICE_ALERTS_PAUSED) {
+    return Response.json({ paused: true, message: 'Price checking is temporarily paused pending integration with a verified pricing API.' });
+  }
   try {
     const base44 = createClientFromRequest(req);
     try {

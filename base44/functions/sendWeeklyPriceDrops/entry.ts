@@ -1,5 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
+// PAUSED: price data comes from an AI (Gemini) with no real retailer API,
+// which risks FTC/DGCCRF/EU Consumer Rights Directive violations on price accuracy.
+// Set to false only after replacing fetchPrice() with a verified pricing API.
+const PRICE_ALERTS_PAUSED = true;
+
 function utf8ToB64(str) { return btoa(unescape(encodeURIComponent(str))); }
 
 function buildRawMessage({ fromName, fromEmail, to, subject, html }) {
@@ -25,6 +30,9 @@ async function fetchPrice(base44, p) {
 }
 
 export default async function (req) {
+  if (PRICE_ALERTS_PAUSED) {
+    return Response.json({ paused: true, message: 'Price alert emails are temporarily paused pending integration with a verified pricing API.' });
+  }
   try {
     const base44 = createClientFromRequest(req);
     try { const user = await base44.auth.me(); if (user && user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 }); } catch {}
