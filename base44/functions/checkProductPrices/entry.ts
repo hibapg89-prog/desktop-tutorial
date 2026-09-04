@@ -109,8 +109,8 @@ Deno.serve(async (req) => {
           await base44.asServiceRole.entities.Notification.create({
             user_id: p.created_by_id,
             type: 'price_drop',
-            title: (p.brand || '') + ' ' + (p.name || '') + ' is on sale',
-            body: 'Now $' + currentPrice.toFixed(2) + ' (was $' + baseline.toFixed(2) + ') — ' + discountPct + '% off at ' + (priceData.retailer || 'a major retailer') + '.',
+            title: (p.brand || '') + ' ' + (p.name || '') + ' — price update',
+            body: 'Now $' + currentPrice.toFixed(2) + ' at ' + (priceData.retailer || 'a major retailer') + '. Confirm price at checkout.',
             product_id: p.id,
             product_name: (p.brand || '') + ' ' + (p.name || ''),
             image_url: p.image_url || '',
@@ -127,8 +127,8 @@ Deno.serve(async (req) => {
           try {
             await base44.asServiceRole.integrations.Core.SendEmail({
               to: userEmail,
-              subject: (p.brand || '') + ' ' + (p.name || '') + ' is on sale',
-              body: 'Good news — a product you scanned is now on sale.\n\n' + (p.brand || '') + ' ' + (p.name || '') + '\nNow $' + currentPrice.toFixed(2) + ' (was $' + baseline.toFixed(2) + ') — ' + discountPct + '% off at ' + (priceData.retailer || 'a major retailer') + '.\n\nOpen The Muse to view it.',
+              subject: (p.brand || '') + ' ' + (p.name || '') + ' — price update',
+              body: 'A product you scanned has a new price.\n\n' + (p.brand || '') + ' ' + (p.name || '') + '\nNow $' + currentPrice.toFixed(2) + ' at ' + (priceData.retailer || 'a major retailer') + '.\n\nAlways confirm the final price on the retailer\'s site before purchasing.\n\nOpen The Muse to view it.',
             });
           } catch {}
         }

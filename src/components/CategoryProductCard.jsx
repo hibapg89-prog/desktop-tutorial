@@ -47,14 +47,19 @@ export default function CategoryProductCard({ product, variant = "default" }) {
           <p className="text-[10px] text-[var(--color-text-primary)] font-light leading-tight truncate">{product.name}</p>
           {priceLabel && <p className="text-[10px] text-[var(--color-text-primary)] font-medium">{priceLabel}</p>}
           {externalUrl ? (
-            <a
-              href={externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block mt-1.5 py-1.5 bg-[#003629] text-white text-[9px] tracking-[0.15em] uppercase text-center rounded"
-            >
-              Shop Now
-            </a>
+            <>
+              <a
+                href={externalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mt-1.5 py-1.5 bg-[#003629] text-white text-[9px] tracking-[0.15em] uppercase text-center rounded"
+              >
+                Shop Now
+              </a>
+              <p className="text-[7px] text-primary-35 text-center mt-0.5 leading-tight">
+                Confirm price at checkout
+              </p>
+            </>
           ) : (
             <Link
               to={product.id ? `/product/${product.id}` : "#"}

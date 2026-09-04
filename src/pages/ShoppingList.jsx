@@ -7,6 +7,14 @@ import { useAuth } from "@/lib/AuthContext";
 import SwanLogo from "@/components/SwanLogo";
 import { formatPrice } from "@/utils/locale";
 
+function priceFreshness(ts) {
+  if (!ts) return null;
+  const h = Math.round((Date.now() - new Date(ts).getTime()) / 3_600_000);
+  if (h < 1) return "just now";
+  if (h < 24) return `${h}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+}
+
 function resolveRetailerUrl(product, countryCode) {
   const links = Array.isArray(product.retailer_links) ? product.retailer_links : [];
   if (links.length === 0) return product.source_url || null;
@@ -80,6 +88,14 @@ function ProductRow({ product, acquired, onQty, onAcquire, onRemove, countryCode
             )}
           </p>
         )}
+        {product.current_price > 0 && !acquired && (() => {
+          const fresh = priceFreshness(product.last_price_checked);
+          return (
+            <p className="text-[8px] text-primary-35 font-light leading-tight mt-0.5">
+              {fresh ? `Price as of ${fresh}` : "Retailer price"} — confirm at checkout
+            </p>
+          );
+        })()}
         {shopUrl && (
           <a
             href={shopUrl}
