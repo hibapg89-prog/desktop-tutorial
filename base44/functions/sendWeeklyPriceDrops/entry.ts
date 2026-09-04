@@ -134,6 +134,16 @@ export default async function (req: Request) {
         try { await base44.asServiceRole.entities.Product.update(p.id, update); } catch {}
 
         if (isDrop && p.created_by_id) {
+          // Check if the user has opted out of product alerts in-app notifications
+          let productAlertsEnabled = true;
+          try {
+            const owner = await base44.asServiceRole.entities.User.get(p.created_by_id);
+            if (owner?.notification_prefs) {
+              const prefs = JSON.parse(owner.notification_prefs);
+              if (prefs.productAlerts === false) productAlertsEnabled = false;
+            }
+          } catch {}
+          if (!productAlertsEnabled) continue;
           const discountPct = update.sale_discount_pct;
           const drop = {
             user_id: p.created_by_id,

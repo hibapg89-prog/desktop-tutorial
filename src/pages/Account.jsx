@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Download, AlertTriangle, Check, RefreshCw } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -387,6 +387,21 @@ export default function Account() {
                       className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${priceEmails ? "left-5" : "left-1"}`}
                     />
                   </button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">In-App Notifications</p>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="flex-1">
+                    Price drops, new arrivals, and other in-app alerts — manage which categories you receive.
+                  </p>
+                  <Link
+                    to="/notifications-settings"
+                    className="flex-shrink-0 text-[10px] tracking-[0.14em] uppercase text-[var(--color-accent-gold)] font-light"
+                  >
+                    Manage →
+                  </Link>
                 </div>
               </div>
 

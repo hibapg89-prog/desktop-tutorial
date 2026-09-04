@@ -38,6 +38,10 @@
     "price_emails_opted_in": {
       "type": "boolean",
       "description": "Whether the user has opted in to weekly price-drop emails (default true; set to false on unsubscribe)"
+    },
+    "notification_prefs": {
+      "type": "string",
+      "description": "JSON string of per-category in-app notification preferences. Parsed keys: museDuMatin, nouveautes, rappelsRituel, offresPrivees, productAlerts, communityUpdates, messages, ingredientAlerts (all boolean, default true unless otherwise noted)"
     }
   },
   "required": ["role"]
