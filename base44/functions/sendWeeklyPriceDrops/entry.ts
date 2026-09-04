@@ -21,11 +21,12 @@ function buildRawMessage({ fromName, fromEmail, to, subject, html }: any) {
 
 function fmtPrice(n: number | null | undefined) { return n == null ? '—' : `$${Number(n).toFixed(2)}`; }
 
-function buildReportHtml(drops: any[]) {
+function buildReportHtml(drops: any[], userId: string) {
   const rows = drops.map((d) =>
     `<tr><td style="padding:14px 0;border-bottom:1px solid #F0E6D6;"><div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#043927;line-height:1.3;">${d.product_name || 'A favourite'}</div>${d.retailer ? `<div style="font-size:10px;color:#9a8f80;letter-spacing:0.08em;margin-top:3px;">at ${d.retailer}</div>` : ''}</td><td style="padding:14px 0;border-bottom:1px solid #F0E6D6;text-align:right;vertical-align:middle;white-space:nowrap;"><span style="font-family:'Cormorant Garamond',Georgia,serif;color:#C8B06A;font-size:20px;">${fmtPrice(d.price_now)}</span></td></tr>`
   ).join('');
-  const disclaimer = `<p style="font-size:10px;color:#9a8f80;margin:24px 0 6px;line-height:1.5;">Prices are pulled from retailer listings and may have changed. Always confirm the final price on the retailer's site before purchasing.</p><p style="font-size:10px;color:#9a8f80;margin:0;line-height:1.5;">Some links are affiliate links — LuxeBeauty may earn a commission at no extra cost to you.</p>`;
+  const unsubscribeUrl = `https://luxebeauty.app/unsubscribe?uid=${encodeURIComponent(userId)}`;
+  const disclaimer = `<p style="font-size:10px;color:#9a8f80;margin:24px 0 6px;line-height:1.5;">Prices are pulled from retailer listings and may have changed. Always confirm the final price on the retailer's site before purchasing.</p><p style="font-size:10px;color:#9a8f80;margin:0 0 6px;line-height:1.5;">Some links are affiliate links — LuxeBeauty may earn a commission at no extra cost to you.</p><p style="font-size:10px;color:#9a8f80;margin:0;line-height:1.5;"><a href="${unsubscribeUrl}" style="color:#9a8f80;text-decoration:underline;">Unsubscribe from price emails</a></p>`;
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#FDF5E6;"><div style="max-width:520px;margin:0 auto;background:#FDF5E6;padding:36px 28px 32px;"><div style="text-align:center;margin-bottom:30px;"><div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;color:#043927;letter-spacing:0.02em;font-weight:300;">The Muse</div><div style="font-size:9px;letter-spacing:0.42em;color:#C8B06A;text-transform:uppercase;margin-top:7px;">Weekly Price Edit</div><div style="height:1px;background:#C8B06A;width:54px;margin:14px auto 0;"></div></div><p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#043927;font-style:italic;text-align:center;line-height:1.5;margin:0 0 26px;">${drops.length} of your favourites ${drops.length > 1 ? 'have' : 'has'} a better price this week.</p><table style="width:100%;border-collapse:collapse;">${rows}</table><div style="text-align:center;margin-top:34px;"><a href="https://luxebeauty.app/shopping-list" style="display:inline-block;padding:12px 30px;background:#043927;color:#FDF5E6;font-size:10px;letter-spacing:0.26em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Open Your Shopping List</a></div>${disclaimer}<p style="text-align:center;font-size:10px;color:#9a8f80;margin-top:20px;letter-spacing:0.06em;">Curated by The Muse · LuxeBeauty</p></div></body></html>`;
 }
 
@@ -171,11 +172,17 @@ export default async function (req: Request) {
 
     for (const uid of userIds) {
       let email = null;
-      try { const u = await base44.asServiceRole.entities.User.get(uid); email = u?.email; } catch {}
+      let optedIn = true;
+      try {
+        const u = await base44.asServiceRole.entities.User.get(uid);
+        email = u?.email;
+        if (u?.price_emails_opted_in === false) optedIn = false;
+      } catch {}
+      if (!optedIn) { failures.push({ user_id: uid, reason: 'unsubscribed' }); continue; }
       if (!email) { failures.push({ user_id: uid, reason: 'no email' }); continue; }
       const drops = byUser[uid].sort((a: any, b: any) => (b.discount_pct || 0) - (a.discount_pct || 0));
       const subject = `Your Weekly Edit — ${drops.length} Price Drop${drops.length > 1 ? 's' : ''}`;
-      const html = buildReportHtml(drops);
+      const html = buildReportHtml(drops, uid);
       const raw = buildRawMessage({ fromName: 'The Muse · LuxeBeauty', fromEmail, to: email, subject, html });
       const sendRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
         method: 'POST',

@@ -35,9 +35,13 @@ export default function Account() {
   const [favBrands, setFavBrands]   = useState("");
 
   // Delete modal state
-  const [deleteOpen, setDeleteOpen]   = useState(false);
-  const [deleteInput, setDeleteInput] = useState("");
-  const [deleting, setDeleting]       = useState(false);
+  const [deleteOpen, setDeleteOpen]       = useState(false);
+  const [deleteInput, setDeleteInput]     = useState("");
+  const [deleting, setDeleting]           = useState(false);
+
+  // Email preferences state
+  const [priceEmails, setPriceEmails]     = useState(true);
+  const [savingEmail, setSavingEmail]     = useState(false);
 
   // Catalog re-sync state
   const [resyncing,   setResyncing]   = useState(false);
@@ -54,6 +58,7 @@ export default function Account() {
         setConcerns(sp.concerns         || []);
         setBudget(sp.budget_tier        || "");
         setFavBrands(sp.favorite_brands || "");
+        setPriceEmails(u.price_emails_opted_in !== false);
       } catch {}
     }).catch(() => {});
   }, []);
@@ -95,6 +100,20 @@ export default function Account() {
       setResyncResult({ error: true });
     }
     setResyncing(false);
+  };
+
+  // ── EMAIL PREFERENCES ─────────────────────────────────────────────────────
+  const togglePriceEmails = async () => {
+    if (savingEmail) return;
+    const next = !priceEmails;
+    setPriceEmails(next);
+    setSavingEmail(true);
+    try {
+      await base44.auth.updateMe({ price_emails_opted_in: next });
+    } catch {
+      setPriceEmails(!next);
+    }
+    setSavingEmail(false);
   };
 
   // ── EXPORT ────────────────────────────────────────────────────────────────
@@ -350,6 +369,25 @@ export default function Account() {
                 <p className="mt-2 text-[var(--color-text-primary)]/38 italic">
                   Nous utilisons votre adresse IP pour estimer votre pays et votre devise, afin de vous proposer des revendeurs et des prix pertinents dans votre devise locale. Cette estimation se fait automatiquement et n'implique aucun suivi de localisation précise (comme le GPS). Nous ne partageons pas cette information avec des tiers à des fins publicitaires.
                 </p>
+              </div>
+
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">Email Preferences</p>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="flex-1">
+                    Weekly price-drop emails — a curated digest of price changes on your shopping list.
+                  </p>
+                  <button
+                    onClick={togglePriceEmails}
+                    disabled={savingEmail}
+                    aria-label={priceEmails ? "Unsubscribe from price emails" : "Subscribe to price emails"}
+                    className={`flex-shrink-0 w-10 h-6 rounded-full transition-colors relative ${priceEmails ? "bg-[#043927]" : "bg-[var(--color-border)]"} ${savingEmail ? "opacity-50" : ""}`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${priceEmails ? "left-5" : "left-1"}`}
+                    />
+                  </button>
+                </div>
               </div>
 
               <div>

@@ -34,6 +34,10 @@
     "currency_code": {
       "type": "string",
       "description": "Local currency code detected alongside country (e.g. USD, EUR, GBP) — used for price display"
+    },
+    "price_emails_opted_in": {
+      "type": "boolean",
+      "description": "Whether the user has opted in to weekly price-drop emails (default true; set to false on unsubscribe)"
     }
   },
   "required": ["role"]
