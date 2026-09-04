@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+
+function priceFreshness(ts) {
+  if (!ts) return null;
+  const h = Math.round((Date.now() - new Date(ts).getTime()) / 3_600_000);
+  if (h < 1) return "just now";
+  if (h < 24) return `${h}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+}
 import { ArrowLeft, MapPin, Copy, Check, Heart, ShoppingBag, Bookmark, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
@@ -258,13 +266,28 @@ export default function ProductResult() {
               <p className="text-xs tracking-[0.25em] text-primary-30 uppercase font-light mb-1 italic">Brand not identified</p>
             )}
             <p className="font-serif text-lg text-primary-70 font-light italic mb-2">{product.name}{displayShade ? ` — ${displayShade}` : ""}</p>
-            {product.price > 0 && (
-              <div className="flex items-center justify-center gap-2">
-                <p className="text-xl font-light text-[var(--color-text-primary)]">{formatPrice(product.price)}</p>
-                {product.on_sale && product.sale_discount_pct > 0 && (
-                  <span className="text-xs bg-[var(--color-accent-gold)] text-white rounded-full px-2 py-0.5 font-medium">
-                    -{Math.round(product.sale_discount_pct)}%
-                  </span>
+            {(product.current_price > 0 || product.price > 0) && (
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-xl font-light text-[var(--color-text-primary)]">
+                    {formatPrice(product.current_price > 0 ? product.current_price : product.price)}
+                  </p>
+                  {product.on_sale && product.sale_discount_pct > 0 && (
+                    <span className="text-xs bg-[var(--color-accent-gold)] text-white rounded-full px-2 py-0.5 font-medium">
+                      -{Math.round(product.sale_discount_pct)}%
+                    </span>
+                  )}
+                </div>
+                {product.current_price > 0 ? (
+                  <p className="text-[10px] text-primary-40 font-light">
+                    {product.last_price_checked
+                      ? `Live price · as of ${priceFreshness(product.last_price_checked)} · confirm at checkout`
+                      : "Retailer price · confirm at checkout"}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-primary-40 font-light">
+                    Scan price · confirm at checkout
+                  </p>
                 )}
               </div>
             )}
