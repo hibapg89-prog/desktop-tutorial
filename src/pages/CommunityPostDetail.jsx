@@ -16,8 +16,6 @@ const BEAUTY_EMOJIS = [
   "🧴","💐","🫶","❤️","🔥","💯","😍","🥰","✅","🌟",
   "💫","🎀","🌺","💗","🥹","👑","🤌","💎","🦋","🩷",
 ];
-const TENOR_KEY = "LIVDSRZULELA";
-
 export default function CommunityPostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -60,21 +58,18 @@ export default function CommunityPostDetail() {
     catch { return new Set(); }
   });
 
-  // Fetch GIFs when GIF picker is open
+  // Fetch GIFs when GIF picker is open — proxied via server-side searchGifs function
   useEffect(() => {
     if (!showGifPicker) return;
     const t = setTimeout(async () => {
       setGifLoading(true);
       try {
-        const res = await fetch(
-          `https://g.tenor.com/v2/search?q=${encodeURIComponent(gifSearch)}&key=${TENOR_KEY}&limit=12`
-        );
-        const data = await res.json();
+        const res = await base44.functions.invoke("searchGifs", { q: gifSearch || "beauty", limit: 12 });
         setGifResults(
-          (data.results || []).map(r => ({
-            id: r.id,
-            url: r.media_formats?.gif?.url || r.media_formats?.tinygif?.url || "",
-            preview: r.media_formats?.tinygif?.url || r.media_formats?.gif?.url || "",
+          (Array.isArray(res?.gifs) ? res.gifs : []).map(g => ({
+            id: g.id,
+            url: g.url || "",
+            preview: g.tinygif || g.url || "",
           })).filter(g => g.url)
         );
       } catch {

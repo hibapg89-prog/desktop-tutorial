@@ -189,8 +189,7 @@ export default function Profile() {
           setAdoredCount(Array.isArray(stats) && stats[0] ? (stats[0].total_adores || 0) : 0);
         } catch {}
         try {
-          const tutorials = await base44.entities.Tutorial.filter({ is_collected: true, created_by_id: u.id });
-          setRituelsCount(Array.isArray(tutorials) ? tutorials.length : 0);
+          setRituelsCount((u?.collected_tutorials ?? []).length);
         } catch {}
         try {
           const allProducts = await base44.entities.Product.list("-updated_date", 200);
@@ -235,7 +234,9 @@ export default function Profile() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       await base44.auth.updateMe({ profile_photo_url: file_url });
       setUser(prev => ({ ...prev, profile_photo_url: file_url }));
-    } catch {}
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+    }
     setUploadingAvatar(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -360,7 +361,7 @@ export default function Profile() {
                     }}
                   >
                     {user?.profile_photo_url ? (
-                      <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                     ) : (
                       <SwanLogo size={46} color="var(--color-accent-gold)" />
                     )}
@@ -446,7 +447,7 @@ export default function Profile() {
                   }}
                 >
                   {user?.profile_photo_url ? (
-                    <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                   ) : (
                     <SwanLogo size={38} color="var(--color-accent-gold)" />
                   )}
@@ -905,7 +906,7 @@ export default function Profile() {
                     >
                       <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-[#C8B06A]/40 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #F5EDD8 0%, #EDE3CC 100%)" }}>
                         {user?.profile_photo_url
-                          ? <img src={user.profile_photo_url} alt="" className="w-full h-full object-cover" />
+                          ? <img src={user.profile_photo_url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                           : <SwanLogo size={18} color="var(--color-accent-gold)" />}
                       </div>
                       <div className="text-left">

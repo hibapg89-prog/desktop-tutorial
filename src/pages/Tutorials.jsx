@@ -268,13 +268,13 @@ export default function Tutorials() {
           {/* Column 1 */}
           <div className="flex-1 flex flex-col gap-8">
             {col1.map((tutorial, i) => (
-              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2} collectedIds={collectedIds} />
+              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2} collectedIds={collectedIds} adoredIds={adoredIds} />
             ))}
           </div>
           {/* Column 2 — offset for stagger */}
           <div className="flex-1 flex flex-col gap-8 mt-14">
             {col2.map((tutorial, i) => (
-              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2 + 1} collectedIds={collectedIds} />
+              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2 + 1} collectedIds={collectedIds} adoredIds={adoredIds} />
             ))}
           </div>
         </div>
@@ -302,30 +302,26 @@ export default function Tutorials() {
   );
 }
 
-function TutorialCard({ tutorial, index, collectedIds = [], onToggleFavorite }) {
-  const [aspired, setAspired] = useState(false);
+function TutorialCard({ tutorial, index, collectedIds = [], adoredIds = [] }) {
+  const [adored, setAdored] = useState(adoredIds.includes(tutorial.id));
   const isCollected = collectedIds.includes(tutorial.id);
 
-  // Load aspire state from user profile
   useEffect(() => {
-    base44.auth.me().then((u) => {
-      const aspiredIds = Array.isArray(u?.aspired_tutorials) ? u.aspired_tutorials : [];
-      setAspired(aspiredIds.includes(tutorial.id));
-    }).catch(() => {});
-  }, [tutorial.id]);
+    setAdored(adoredIds.includes(tutorial.id));
+  }, [adoredIds, tutorial.id]);
 
-  const toggleAspired = async () => {
-    const newState = !aspired;
-    setAspired(newState);
+  const toggleAdored = async () => {
+    const newState = !adored;
+    setAdored(newState);
     try {
       const u = await base44.auth.me();
-      const aspiredIds = Array.isArray(u?.aspired_tutorials) ? u.aspired_tutorials : [];
+      const ids = Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : [];
       const updated = newState
-        ? [...new Set([...aspiredIds, tutorial.id])]
-        : aspiredIds.filter((tid) => tid !== tutorial.id);
-      await base44.auth.updateMe({ aspired_tutorials: updated });
+        ? [...new Set([...ids, tutorial.id])]
+        : ids.filter((tid) => tid !== tutorial.id);
+      await base44.auth.updateMe({ adored_tutorials: updated });
     } catch {
-      setAspired(!newState);
+      setAdored(!newState);
     }
   };
 
@@ -395,16 +391,16 @@ function TutorialCard({ tutorial, index, collectedIds = [], onToggleFavorite }) 
             {tutorial.duration_minutes ? `${tutorial.duration_minutes} min read` : ""}
           </p>
           <button
-            onClick={toggleAspired}
+            onClick={toggleAdored}
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-              aspired ? "bg-[#C8B06A]/15" : "bg-transparent"
+              adored ? "bg-[#C8B06A]/15" : "bg-transparent"
             }`}
-            aria-label="Aspire"
+            aria-label="Favourite"
           >
             <Heart
               size={13}
-              color={aspired ? "#C8B06A" : "var(--color-text-primary)"}
-              fill={aspired ? "#C8B06A" : "none"}
+              color={adored ? "#C8B06A" : "var(--color-text-primary)"}
+              fill={adored ? "#C8B06A" : "none"}
               strokeWidth={1.5}
             />
           </button>
