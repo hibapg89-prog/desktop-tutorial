@@ -57,7 +57,7 @@ export default function CategoryProductCard({ product, variant = "default" }) {
                 Shop Now
               </a>
               <p className="text-[7px] text-primary-35 text-center mt-0.5 leading-tight">
-                Confirm price at checkout
+                Affiliate link · Confirm price at checkout
               </p>
             </>
           ) : (

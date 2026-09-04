@@ -97,14 +97,17 @@ function ProductRow({ product, acquired, onQty, onAcquire, onRemove, countryCode
           );
         })()}
         {shopUrl && (
-          <a
-            href={shopUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[9px] tracking-[0.12em] uppercase text-[#C8B06A] font-light mt-0.5 inline-block"
-          >
-            Shop Now →
-          </a>
+          <span className="flex flex-col">
+            <a
+              href={shopUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[9px] tracking-[0.12em] uppercase text-[#C8B06A] font-light mt-0.5 inline-block"
+            >
+              Shop Now →
+            </a>
+            <span className="text-[7px] text-primary-30 font-light leading-tight">Affiliate link</span>
+          </span>
         )}
       </div>
 
