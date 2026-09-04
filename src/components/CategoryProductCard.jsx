@@ -17,7 +17,10 @@ function resolveRetailerUrl(product, countryCode) {
 export default function CategoryProductCard({ product, variant = "default" }) {
   const { user } = useAuth();
   const hasImage = !!product.image_url;
-  const priceLabel = product.price ? formatPrice(product.price) : null;
+  const livePrice = product.current_price > 0;
+  const displayPrice = livePrice ? product.current_price : (product.price > 0 ? product.price : null);
+  const priceLabel = displayPrice ? formatPrice(displayPrice) : null;
+  const isScanPrice = !!displayPrice && !livePrice;
   const displayName = product.brand && product.name?.startsWith(product.brand)
     ? product.name.slice(product.brand.length).trim()
     : product.name;
@@ -45,7 +48,14 @@ export default function CategoryProductCard({ product, variant = "default" }) {
             <p className="text-[8px] text-primary-50 uppercase tracking-wide font-light truncate">{product.brand}</p>
           )}
           <p className="text-[10px] text-[var(--color-text-primary)] font-light leading-tight truncate">{product.name}</p>
-          {priceLabel && <p className="text-[10px] text-[var(--color-text-primary)] font-medium">{priceLabel}</p>}
+          {priceLabel && (
+            <>
+              <p className="text-[10px] text-[var(--color-text-primary)] font-medium">{priceLabel}</p>
+              {isScanPrice && (
+                <p className="text-[7px] text-primary-35 font-light leading-tight">Scan price</p>
+              )}
+            </>
+          )}
           {externalUrl ? (
             <>
               <a
@@ -107,7 +117,14 @@ export default function CategoryProductCard({ product, variant = "default" }) {
           <p className="text-[8px] text-primary-50 uppercase tracking-wide font-light truncate">{product.brand}</p>
         )}
         <p className="text-[10px] text-[var(--color-text-primary)] font-light leading-tight truncate">{displayName}</p>
-        {priceLabel && <p className="text-[10px] text-[var(--color-text-primary)] font-medium mt-0.5">{priceLabel}</p>}
+        {priceLabel && (
+          <>
+            <p className="text-[10px] text-[var(--color-text-primary)] font-medium mt-0.5">{priceLabel}</p>
+            {isScanPrice && (
+              <p className="text-[7px] text-primary-35 font-light leading-tight">Scan price</p>
+            )}
+          </>
+        )}
       </div>
     </Link>
   );

@@ -80,20 +80,26 @@ function ProductRow({ product, acquired, onQty, onAcquire, onRemove, countryCode
         >
           {product.name}
         </p>
-        {product.price > 0 && (
-          <p className={`text-xs font-light ${acquired ? "text-primary-25" : "text-primary-50"}`}>
-            {formatPrice(product.price)}
-            {(product.shopping_qty || 1) > 1 && (
-              <span className="text-primary-35"> × {product.shopping_qty}</span>
-            )}
-          </p>
-        )}
-        {product.current_price > 0 && !acquired && (() => {
-          const fresh = priceFreshness(product.last_price_checked);
+        {(product.current_price > 0 || product.price > 0) && (() => {
+          const livePrice = product.current_price > 0;
+          const displayPrice = livePrice ? product.current_price : product.price;
+          const fresh = livePrice ? priceFreshness(product.last_price_checked) : null;
           return (
-            <p className="text-[8px] text-primary-35 font-light leading-tight mt-0.5">
-              {fresh ? `Price as of ${fresh}` : "Retailer price"} — confirm at checkout
-            </p>
+            <>
+              <p className={`text-xs font-light ${acquired ? "text-primary-25" : "text-primary-50"}`}>
+                {formatPrice(displayPrice)}
+                {(product.shopping_qty || 1) > 1 && (
+                  <span className="text-primary-35"> × {product.shopping_qty}</span>
+                )}
+              </p>
+              {!acquired && (
+                <p className="text-[8px] text-primary-35 font-light leading-tight mt-0.5">
+                  {livePrice
+                    ? (fresh ? `Live price · ${fresh}` : "Retailer price") + " · confirm at checkout"
+                    : "Scan price · confirm at checkout"}
+                </p>
+              )}
+            </>
           );
         })()}
         {shopUrl && (
