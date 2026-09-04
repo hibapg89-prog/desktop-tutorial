@@ -131,6 +131,15 @@ export default function Onboarding() {
         transition={{ delay: 1.1, duration: 0.6 }}
         className="w-12 h-px bg-[var(--color-accent-gold)] mx-auto mt-4"
       />
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5, duration: 0.7 }}
+        className="text-[9px] text-[var(--color-text-muted)] font-light mt-8 max-w-[240px] leading-relaxed text-center"
+      >
+        We use your general location to show local prices and retailers. No GPS — just your IP. See our Privacy Policy in Account settings.
+      </motion.p>
     </div>
   );
 
