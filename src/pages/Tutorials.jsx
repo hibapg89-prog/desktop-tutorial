@@ -304,6 +304,7 @@ export default function Tutorials() {
 
 function TutorialCard({ tutorial, index, collectedIds = [], adoredIds = [] }) {
   const [adored, setAdored] = useState(adoredIds.includes(tutorial.id));
+  const [imgError, setImgError] = useState(false);
   const isCollected = collectedIds.includes(tutorial.id);
 
   useEffect(() => {
@@ -335,14 +336,21 @@ function TutorialCard({ tutorial, index, collectedIds = [], adoredIds = [] }) {
         {/* Full-width Photo */}
         <Link to={`/tutorial/${tutorial.id}`} className="block">
           <div
-            className="relative overflow-hidden rounded-sm"
+            className="relative overflow-hidden rounded-sm bg-gradient-to-b from-[#0B3C26] to-[#1a5c3a]"
             style={{ aspectRatio: tutorial.aspect || "3/4" }}
           >
-            <img
-              src={tutorial.image_url}
-              alt={tutorial.title}
-              className="w-full h-full object-cover"
-            />
+            {tutorial.image_url && !imgError ? (
+              <img
+                src={tutorial.image_url}
+                alt={tutorial.title}
+                className="w-full h-full object-cover"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <SwanLogo size={32} color="#C8B06A" />
+              </div>
+            )}
             {/* Subtle bottom gradient for depth */}
             <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/30 to-transparent" />
             {/* Difficulty badge */}

@@ -345,6 +345,7 @@ export default function TutorialDetail() {
   const [adored, setAdored] = useState(false);
   const [collected, setCollected] = useState(false);
   const [passedAlong, setPassedAlong] = useState(false);
+  const [heroImgError, setHeroImgError] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [progressMap, setProgressMap] = useState({});
@@ -438,24 +439,25 @@ export default function TutorialDetail() {
     }
   };
 
-  // Pass Along — native share with clipboard fallback
+  // Pass Along — native share with clipboard fallback, always shows feedback
   const handlePassAlong = async () => {
     const shareData = {
       title: tutorial?.title || "La Muse Tutorial",
       text: tutorial?.description ? tutorial.description.slice(0, 120) + "…" : "A ritual from La Muse.",
       url: window.location.href,
     };
+    let shared = false;
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        setPassedAlong(true);
-        setTimeout(() => setPassedAlong(false), 2000);
+        shared = true;
       }
-    } catch {
-      // user cancelled share — no-op
+    } catch { /* share failed or user cancelled */ }
+    if (!shared) {
+      try { await navigator.clipboard.writeText(window.location.href); } catch {}
     }
+    setPassedAlong(true);
+    setTimeout(() => setPassedAlong(false), 2000);
   };
 
   // Submit a whisper/review
@@ -557,22 +559,18 @@ export default function TutorialDetail() {
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Full-width tutorial image */}
       <div className="relative w-full h-[420px]">
-        {tutorial.image_url ? (
+        {tutorial.image_url && !heroImgError ? (
           <img
             src={tutorial.image_url}
             alt={tutorial.title}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-              e.currentTarget.nextSibling?.classList.remove("hidden");
-            }}
+            onError={() => setHeroImgError(true)}
           />
-        ) : null}
-        <div
-          className={`${tutorial.image_url ? "hidden" : ""} w-full h-full bg-gradient-to-b from-[#0B3C26] to-[#1a5c3a] flex items-center justify-center`}
-        >
-          <SwanLogo size={56} color="#C8B06A" />
-        </div>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-[#0B3C26] to-[#1a5c3a] flex items-center justify-center">
+            <SwanLogo size={56} color="#C8B06A" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-[var(--color-bg)]" />
 
         {/* Back button */}
