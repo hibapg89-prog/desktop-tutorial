@@ -48,9 +48,7 @@ export default function ForYouTutorials() {
         ? arr.filter((id) => id !== tutorialId)
         : [...new Set([...arr, tutorialId])];
       await base44.auth.updateMe({ adored_tutorials: updated });
-    } catch {
-      setAdoredIds(adoredIds);
-    }
+    } catch { /* keep optimistic state; don't revert */ }
   };
 
   const toggleCollect = async (tutorialId) => {
@@ -65,9 +63,7 @@ export default function ForYouTutorials() {
         ? arr.filter((id) => id !== tutorialId)
         : [...new Set([...arr, tutorialId])];
       await base44.auth.updateMe({ collected_tutorials: updated });
-    } catch {
-      setCollectedIds(collectedIds);
-    }
+    } catch { /* keep optimistic state; don't revert */ }
   };
 
   const handlePassAlong = async (t) => {
@@ -77,17 +73,18 @@ export default function ForYouTutorials() {
       text:  t.description ? t.description.slice(0, 100) + "…" : "A ritual from La Muse.",
       url,
     };
+    let shared = false;
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(url);
-        setPassedAlongId(t.id);
-        setTimeout(() => setPassedAlongId(null), 2000);
+        shared = true;
       }
-    } catch {
-      // user cancelled — no-op
+    } catch { /* share failed or user cancelled */ }
+    if (!shared) {
+      try { await navigator.clipboard.writeText(url); } catch {}
     }
+    setPassedAlongId(t.id);
+    setTimeout(() => setPassedAlongId(null), 2000);
   };
 
   if (!loading && !tutorials.length) return null;
