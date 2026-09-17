@@ -760,7 +760,7 @@ export default function Community() {
             <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
             {polls.map((poll, i) => (
               <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-                <PollCard poll={poll} user={user} onVoted={load} />
+                <PollCard poll={poll} user={user} onVoted={load} onDelete={load} />
               </motion.div>
             ))}
           </div>

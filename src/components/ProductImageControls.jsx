@@ -57,7 +57,7 @@ export default function ProductImageControls({
           title: "No image found",
           description: "The Muse couldn't find a photo — try uploading your own.",
           variant: "destructive",
-          duration: 5000,
+          duration: 3000,
         });
       }
     } catch {
