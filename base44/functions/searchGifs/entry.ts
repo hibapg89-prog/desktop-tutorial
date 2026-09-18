@@ -1,8 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
-// Proxies Tenor GIF search so the API key stays server-side.
-// Add your Tenor v2 key as a Base44 secret named TENOR_API_KEY.
-// Free keys: https://developers.google.com/tenor/guides/quickstart
+// Proxies GIPHY search so the API key stays server-side.
+// Add your GIPHY key as a Base44 secret named GIPHY_API_KEY.
+// Free keys: https://developers.giphy.com/dashboard/
 export default async function(req) {
   try {
     const createClient = createClientFromRequest;
@@ -12,21 +12,22 @@ export default async function(req) {
     const q     = url.searchParams.get("q")?.trim() || "beauty makeup";
     const limit = Math.min(Number(url.searchParams.get("limit") || "12"), 30);
 
-    const key = Deno.env.get("TENOR_API_KEY");
+    const key = Deno.env.get("GIPHY_API_KEY");
     if (!key) {
-      return Response.json({ error: "TENOR_API_KEY secret not set" }, { status: 503 });
+      return Response.json({ error: "GIPHY_API_KEY secret not set" }, { status: 503 });
     }
 
-    const tenorUrl =
-      `https://g.tenor.com/v2/search?q=${encodeURIComponent(q)}&key=${key}&limit=${limit}&media_filter=gif,tinygif`;
+    const giphyUrl =
+      `https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(q)}&limit=${limit}&rating=pg&lang=en`;
 
-    const res  = await fetch(tenorUrl);
+    const res  = await fetch(giphyUrl);
     const data = await res.json();
 
-    const gifs = (data.results || [])
+    const gifs = (data.data || [])
       .map((r: any) => ({
-        url:     r.media_formats?.gif?.url,
-        tinygif: r.media_formats?.tinygif?.url,
+        url:     r.images?.original?.url,
+        tinygif: r.images?.fixed_width?.url,
+        title:   r.title || "",
       }))
       .filter((g: any) => g.url && g.tinygif);
 
