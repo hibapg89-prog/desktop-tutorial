@@ -455,7 +455,7 @@ export default function Community() {
           {/* Top bar — title + action buttons */}
           <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3" style={{ background: "#F8F3E6" }}>
             <div className="flex-shrink-0">
-              <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">The Circle</p>
+              <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">Community</p>
               <h1 className="font-serif text-2xl text-[#1C2E24] font-light mt-0.5 leading-tight flex items-baseline gap-2">
                 Community
                 {posts.length > 0 && (
@@ -502,7 +502,7 @@ export default function Community() {
           <div className="relative" style={{ height: "230px" }}>
             <Image
               src={COMMUNITY_BANNER_URL}
-              alt="The Circle — luxury beauty flat-lay"
+              alt="Community — luxury beauty flat-lay"
               fittingType="fill"
               className="w-full h-full"
             />
@@ -1152,7 +1152,7 @@ export default function Community() {
                 <SwanLogo size={28} color="var(--color-accent-gold)" />
               </div>
 
-              <p className="text-[0.5625rem] tracking-[0.3em] uppercase text-[#C8B06A] font-light mb-2">The Circle · Coming Soon</p>
+              <p className="text-[0.5625rem] tracking-[0.3em] uppercase text-[#C8B06A] font-light mb-2">Community · Coming Soon</p>
 
               <h2
                 className="text-[1.75rem] font-light text-[var(--color-text-primary)] leading-tight mb-3"

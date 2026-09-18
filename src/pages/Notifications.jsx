@@ -48,9 +48,9 @@ const TYPE_CONFIG = {
   allergen:       { Icon: ShieldAlert,    color: "#A0522D", bg: "rgba(160,82,45,0.10)",   label: "Allergen"   },
   swap:           { Icon: ArrowLeftRight, color: "#BC8F8F", bg: "rgba(188,143,143,0.10)", label: "Swap"       },
   recommendation: { Icon: Sparkles,       color: "#C8B06A", bg: "rgba(200,176,106,0.10)", label: "For You"    },
-  community:      { Icon: Users,          color: "#BC8F8F", bg: "rgba(188,143,143,0.10)", label: "Le Cercle"  },
-  post:           { Icon: Users,          color: "#BC8F8F", bg: "rgba(188,143,143,0.10)", label: "Le Cercle"  },
-  comment:        { Icon: Users,          color: "#BC8F8F", bg: "rgba(188,143,143,0.10)", label: "Le Cercle"  },
+  community:      { Icon: Users,          color: "#BC8F8F", bg: "rgba(188,143,143,0.10)", label: "Community"  },
+  post:           { Icon: Users,          color: "#BC8F8F", bg: "rgba(188,143,143,0.10)", label: "Community"  },
+  comment:        { Icon: Users,          color: "#BC8F8F", bg: "rgba(188,143,143,0.10)", label: "Community"  },
   adore:          { Icon: Sparkles,       color: "#C8B06A", bg: "rgba(200,176,106,0.08)", label: "Adored"     },
   whisper:        { Icon: MessageCircle,  color: "#BC8F8F", bg: "rgba(188,143,143,0.10)", label: "Whisper"    },
   collect:        { Icon: Tag,            color: "#043927", bg: "rgba(4,57,39,0.07)",     label: "Collected"  },
@@ -77,7 +77,7 @@ const EMPTY_MSGS = {
   recommendation: { title: "No picks yet",    body: "The Muse is studying your vanity — curated finds will appear here." },
   message:        { title: "No messages yet", body: "When someone reaches out, you'll see it here." },
   deal:           { title: "No deals yet",    body: "We'll let you know when a product you love drops in price." },
-  community:      { title: "Quiet circle",    body: "Activity from Le Cercle will surface here." },
+  community:      { title: "Quiet circle",    body: "Activity from Community will surface here." },
 };
 
 // ── Notification card ─────────────────────────────────────────────────────────

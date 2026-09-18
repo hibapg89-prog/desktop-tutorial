@@ -11,7 +11,7 @@ export default function MuseNavBar() {
     { to: "/home",     label: "L'Atelier",  icon: Home },
     { to: "/discover", label: "For You",   icon: Search },
     { to: "/vanity",   label: "Vanity",   icon: ShoppingBag },
-    { to: "/community", label: "Le Cercle",  icon: Users },
+    { to: "/community", label: "Community",  icon: Users },
     { to: "/profile",  label: "La Muse",     icon: User },
   ];
 

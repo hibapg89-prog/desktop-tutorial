@@ -111,7 +111,7 @@ export default function TryOnShareSheet({ capturedUrl, shade, category, onRetake
             <Check size={24} color="#C8B06A" />
           </div>
           <p className="font-serif text-lg text-white font-light">
-            {communityDone ? "Shared to Le Cercle" : "Sent!"}
+            {communityDone ? "Shared to Community" : "Sent!"}
           </p>
           <p className="text-[9px] tracking-[0.15em] uppercase text-white/40 mt-1">
             {communityDone ? "Your look is live" : "Message delivered"}
@@ -124,7 +124,7 @@ export default function TryOnShareSheet({ capturedUrl, shade, category, onRetake
             <p className="text-sm text-white/40 italic text-center py-4">Loading…</p>
           ) : convos.length === 0 ? (
             <p className="text-xs text-white/40 text-center py-4 max-w-[220px] mx-auto leading-relaxed">
-              No conversations yet. Message a member from Le Cercle first.
+              No conversations yet. Message a member from Community first.
             </p>
           ) : (
             <div className="max-h-48 overflow-y-auto space-y-2 hide-scrollbar">
@@ -162,7 +162,7 @@ export default function TryOnShareSheet({ capturedUrl, shade, category, onRetake
             className="flex items-center justify-center gap-2 py-3.5 rounded-full text-[10px] tracking-[0.2em] uppercase font-light transition-opacity"
             style={{ background: "#043927", color: "#FDF5E6", border: "1px solid rgba(200,176,106,0.2)" }}
           >
-            <Users size={14} /> {busy === "community" ? "Sharing…" : "Share to Le Cercle"}
+            <Users size={14} /> {busy === "community" ? "Sharing…" : "Share to Community"}
           </button>
           <button
             onClick={() => { setShowRecipients(true); loadRecipients(); }}

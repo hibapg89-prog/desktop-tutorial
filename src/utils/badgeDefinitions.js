@@ -80,7 +80,7 @@ export const BADGES = [
     family: "foundations",
     label: "First Bloom",
     subtitle: "Your first post in the community",
-    howToEarn: "Share your first post in Le Cercle",
+    howToEarn: "Share your first post in Community",
     earn: (d) => d.postCount >= 1,
     icon: "lotus",
     progress: (d) => ({ current: d.postCount, target: 1, label: "post" }),
