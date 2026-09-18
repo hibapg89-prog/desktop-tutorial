@@ -175,7 +175,22 @@ export default function Tutorials() {
   const [adoredIds,    setAdoredIds]    = useState([]);
 
   const loadTutorials = () => {
-    base44.entities.Tutorial.list("-created_date", 50).then(setDbTutorials).catch(() => {});
+    base44.entities.Tutorial.list("-created_date", 50).then((list) => {
+      setDbTutorials(list);
+      // Fire-and-forget: enrich DB tutorials missing an image
+      (Array.isArray(list) ? list : []).filter(t => !t.image_url).forEach(async (t) => {
+        try {
+          const res = await base44.functions.invoke('fetchContentImage', {
+            entity_type: 'Tutorial', entity_id: t.id,
+            title: t.title, category: t.category,
+          });
+          const r = res?.data || res;
+          if (r?.image_url) {
+            setDbTutorials(prev => (Array.isArray(prev) ? prev : []).map(p => p.id === t.id ? { ...p, image_url: r.image_url } : p));
+          }
+        } catch {}
+      });
+    }).catch(() => {});
   };
 
   useEffect(() => {

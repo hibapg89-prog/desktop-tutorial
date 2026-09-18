@@ -18,12 +18,28 @@ export default function ForYouTutorials() {
       try {
         const { tutorialCats } = await getUserPreferences();
         const all = await base44.entities.Tutorial.list("-saves_count", 20);
+        let picks;
         if (tutorialCats.length) {
           const matched = all.filter((t) => tutorialCats.includes(t.category));
-          setTutorials(matched.length ? matched.slice(0, 6) : all.slice(0, 6));
+          picks = matched.length ? matched.slice(0, 6) : all.slice(0, 6);
         } else {
-          setTutorials(all.slice(0, 6));
+          picks = all.slice(0, 6);
         }
+        setTutorials(picks);
+
+        // Fire-and-forget: fetch Unsplash images for tutorials missing one
+        picks.filter(t => !t.image_url).forEach(async (t) => {
+          try {
+            const res = await base44.functions.invoke('fetchContentImage', {
+              entity_type: 'Tutorial', entity_id: t.id,
+              title: t.title, category: t.category,
+            });
+            const r = res?.data || res;
+            if (r?.image_url) {
+              setTutorials(prev => prev.map(p => p.id === t.id ? { ...p, image_url: r.image_url } : p));
+            }
+          } catch {}
+        });
       } catch {
         setTutorials([]);
       } finally {

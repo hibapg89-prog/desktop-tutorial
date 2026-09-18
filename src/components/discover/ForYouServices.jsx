@@ -23,7 +23,22 @@ export default function ForYouServices() {
         }
         const all = await base44.entities.VenueService.list("-rating", 20);
         const matched = all.filter((v) => serviceTypes.includes(v.type));
-        setVenues(matched.slice(0, 4));
+        const picks = matched.slice(0, 4);
+        setVenues(picks);
+
+        // Fire-and-forget: fetch Unsplash images for venues missing one
+        picks.filter(v => !v.image_url).forEach(async (v) => {
+          try {
+            const res = await base44.functions.invoke('fetchContentImage', {
+              entity_type: 'VenueService', entity_id: v.id,
+              type: v.type, city: v.city,
+            });
+            const r = res?.data || res;
+            if (r?.image_url) {
+              setVenues(prev => prev.map(p => p.id === v.id ? { ...p, image_url: r.image_url } : p));
+            }
+          } catch {}
+        });
       } catch {
         setVenues([]);
       } finally {
