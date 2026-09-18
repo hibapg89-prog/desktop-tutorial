@@ -122,7 +122,25 @@ export default function ForYouProducts() {
   const collectToList = async (p, i) => {
     setCollectedIdx(prev => new Set(prev).add(i));
     const me = await base44.auth.me().catch(() => null);
-    const prod = await base44.entities.Product.create({
+
+    // Check for an existing cart entry with the same brand + name to avoid duplicates
+    let prod = null;
+    if (me?.id) {
+      const existing = await base44.entities.Product.filter({
+        created_by_id: me.id,
+        in_shopping_list: true,
+        name: p.name,
+        brand: p.brand,
+      }).catch(() => []);
+      const match = Array.isArray(existing) ? existing[0] : null;
+      if (match) {
+        const newQty = (match.shopping_qty || 1) + 1;
+        prod = await base44.entities.Product.update(match.id, { shopping_qty: newQty }).catch(() => null);
+        return; // quantity incremented — no new entity needed
+      }
+    }
+
+    prod = await base44.entities.Product.create({
       brand:            p.brand,
       name:             p.name,
       shade:            p.shade,

@@ -182,11 +182,39 @@ export default function ShoppingList() {
       ]);
       const safeList   = Array.isArray(list)   ? list   : [];
       const safeVanity = Array.isArray(vanity) ? vanity : [];
-      setItems(safeList);
+
+      // Deduplicate by brand+name: keep first entry, sum quantities, clean up extras
+      const seen = new Map();
+      const duplicateIds = [];
+      for (const p of safeList) {
+        const key = `${(p.brand || "").toLowerCase()}|${(p.name || "").toLowerCase()}`;
+        if (seen.has(key)) {
+          const keeper = seen.get(key);
+          seen.set(key, { ...keeper, shopping_qty: (keeper.shopping_qty || 1) + (p.shopping_qty || 1) });
+          duplicateIds.push(p.id);
+        } else {
+          seen.set(key, p);
+        }
+      }
+      if (duplicateIds.length > 0) {
+        // Update consolidated quantities and remove duplicate flags silently
+        for (const p of seen.values()) {
+          const original = safeList.find(o => o.id === p.id);
+          if (original && original.shopping_qty !== p.shopping_qty) {
+            base44.entities.Product.update(p.id, { shopping_qty: p.shopping_qty }).catch(() => {});
+          }
+        }
+        duplicateIds.forEach(id =>
+          base44.entities.Product.update(id, { in_shopping_list: false, shopping_qty: 1 }).catch(() => {})
+        );
+      }
+      const deduped = [...seen.values()];
+
+      setItems(deduped);
       const favs = safeVanity.filter(
         (p) => (p.rating || 0) >= 4 || (p.tags || []).includes("daily use")
       );
-      setFavorites(favs.filter((p) => !safeList.find((i) => i.id === p.id)));
+      setFavorites(favs.filter((p) => !deduped.find((i) => i.id === p.id)));
     } catch {}
     setLoading(false);
   }, []);
