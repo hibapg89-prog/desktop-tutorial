@@ -870,7 +870,7 @@ export default function Profile() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="settings-panel-title"
-              className="fixed right-0 top-0 h-full z-50 flex flex-col w-[min(88vw,360px)] bg-[var(--color-bg)] border-l border-[#C8B06A]/[0.22]"
+              className="fixed right-0 top-0 h-dvh z-50 flex flex-col w-[min(88vw,360px)] bg-[var(--color-bg)] border-l border-[#C8B06A]/[0.22]"
             >
               <div className="flex items-center justify-between px-6 pt-14 pb-5 border-b border-[#C8B06A]/15">
                 <h3 id="settings-panel-title" className="text-xl text-[var(--color-text-primary)] font-light font-serif">
@@ -889,7 +889,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 pt-6 pb-28 space-y-8">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-6 pt-6 pb-28 space-y-8">
 
                 {/* Profile Identity */}
                 <div>
