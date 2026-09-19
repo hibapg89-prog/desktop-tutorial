@@ -207,6 +207,23 @@ export default function ScanHub({ onClose }) {
     } catch {}
   };
 
+  // Returns { blocked, count, resetAt } based on ScanLog entries in the last 24h.
+  // Fails open (blocked: false) so a query error never locks the user out.
+  const checkScanRateLimit = async () => {
+    try {
+      const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const allLogs = await base44.entities.ScanLog.list();
+      const recent = allLogs.filter(s => s.created_date && new Date(s.created_date) >= windowStart);
+      const count = recent.length;
+      if (count < 10) return { blocked: false, count };
+      const sorted = [...recent].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+      const resetAt = new Date(new Date(sorted[0].created_date).getTime() + 24 * 60 * 60 * 1000);
+      return { blocked: true, count, resetAt };
+    } catch {
+      return { blocked: false, count: 0, resetAt: null };
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -234,6 +251,15 @@ export default function ScanHub({ onClose }) {
   ];
 
   const analyzeSocialLink = async (url) => {
+    const rateCheck = await checkScanRateLimit();
+    if (rateCheck.blocked) {
+      const resetTime = rateCheck.resetAt
+        ? rateCheck.resetAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : "tomorrow";
+      setScanError(`You've reached your daily scan limit (10 scans). Your limit resets at ${resetTime}.`);
+      setActiveMode("error");
+      return;
+    }
     setScanError(null);
     setActiveMode("loading");
     setIsAnalyzing(true);
@@ -685,6 +711,15 @@ CRITICAL: Only extract products EXPLICITLY named in the post content you found. 
   };
 
   const analyzeProduct = async ({ type, file, url, text, imageUrl, isSocial }) => {
+    const rateCheck = await checkScanRateLimit();
+    if (rateCheck.blocked) {
+      const resetTime = rateCheck.resetAt
+        ? rateCheck.resetAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : "tomorrow";
+      setScanError(`You've reached your daily scan limit (10 scans). Your limit resets at ${resetTime}.`);
+      setActiveMode("error");
+      return;
+    }
     setScanError(null);
     setActiveMode("loading");
     setIsAnalyzing(true);
