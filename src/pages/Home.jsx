@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useOutletContext } from "react-router-dom";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useOutletContext, useNavigate } from "react-router-dom";
 import { ChevronRight, Star } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import { motion } from "framer-motion";
