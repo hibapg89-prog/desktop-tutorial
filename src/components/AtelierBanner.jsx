@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 
 const BANNER_IMAGE =
-  "https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/815685766_IMG_5270.jpeg";
+  "https://media.base44.com/images/public/6a57507f2558691b9c2c4bcf/3d2fb00ac_IMG_5270.jpeg";
 
 const NAV_LINKS = [
   { label: "Alerts",   to: "/ingredient-alerts" },
@@ -46,7 +46,7 @@ export default function AtelierBanner({ onScan, guidedPath, onDismissGuide }) {
           style={{ top: "16%", left: "5%" }}
         >
           <p
-            className="text-[0.5rem] tracking-[0.28em] uppercase font-light"
+            className="text-[0.75rem] tracking-[0.22em] uppercase font-light"
             style={{ color: "#C8B06A" }}
           >
             {getGreeting()}
@@ -84,7 +84,7 @@ export default function AtelierBanner({ onScan, guidedPath, onDismissGuide }) {
         {/* Nav buttons row — invisible overlays over baked image buttons */}
         <div
           className="absolute flex gap-2"
-          style={{ top: "29%", left: "4%", right: "4%" }}
+          style={{ top: "28%", left: "3%", right: "3%", bottom: "37%" }}
         >
           {NAV_LINKS.map(({ label, to }) => (
             <Link
@@ -92,7 +92,6 @@ export default function AtelierBanner({ onScan, guidedPath, onDismissGuide }) {
               to={to}
               aria-label={label}
               className="flex-1 rounded-2xl"
-              style={{ aspectRatio: "1 / 1" }}
             />
           ))}
         </div>
@@ -149,6 +148,7 @@ export default function AtelierBanner({ onScan, guidedPath, onDismissGuide }) {
             top: "56%", left: "4%", right: "4%", bottom: "6%",
             ...(guidedPath ? { boxShadow: "0 0 0 2.5px #C8B06A, 0 0 14px rgba(200,176,106,0.35)" } : {}),
           }}
+          style={{ top: "63%", left: "3%", right: "3%", bottom: "3%" }}
         />
       </div>
     </div>

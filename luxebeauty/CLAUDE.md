@@ -49,7 +49,7 @@ echo '<base44-result>' | jq -r '.content' > /tmp/MyFile.jsx
 - Text: `#0B3C26`
 - Accent: `#C8B06A`
 - Headings: Cormorant Garamond
-- Body: Inter / DM Sans
+- Body: Inter / DM Sanshttps://github.com/hibapg89-prog/desktop-tutorial/pull/6/conflict?name=luxebeauty%252FCLAUDE.md&base_oid=13c12d5bb374d3a0f88d479421939866ee340277&head_oid=43c994c2d3617f947bcb5adf1933e21dabe46bb5
 - Scan CTA / Sort tab / Save / Compare: `bg-[#043927]`
 - Shop Now: `bg-[#003629]`
 - No purple, no emojis in UI, real photos only, English-only copy
