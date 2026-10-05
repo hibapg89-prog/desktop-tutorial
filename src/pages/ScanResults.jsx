@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Heart, Sparkles, Share2 } from "lucide-react";
-import { ArrowLeft, Camera, Upload } from "lucide-react";
+import { ArrowLeft, Heart, Sparkles, Share2, Camera, Upload } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import ScanShareSheet from "@/components/ScanShareSheet";
 import { base44 } from "@/api/base44Client";

@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, Plus, Bookmark } from "lucide-react";
+import { ChevronLeft, Plus, Bookmark, Heart } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import { motion } from "framer-motion";
-import { Heart } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AddEditFromLink from "@/components/AddEditFromLink";
 
