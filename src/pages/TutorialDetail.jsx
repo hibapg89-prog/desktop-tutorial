@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Copy, Check, Heart, Bookmark, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Copy, Check, Heart, Bookmark, ShoppingBag, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import SwanLogo from "@/components/SwanLogo";
 import { base44 } from "@/api/base44Client";
@@ -129,7 +129,7 @@ const SAMPLE_TUTORIALS = {
     category: "Hair",
     difficulty: "Beginner",
     duration_minutes: 15,
-    image_url: "https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?w=600&q=80",
     description: "Hair is a crown you never take off. This ritual treats it as such. A weekly deep-treatment ceremony that restores moisture, repairs damage, and returns your hair to its most luminous state.",
     materials: ["Moisturising shampoo", "Deep conditioner or hair mask", "Wide-tooth comb", "Hair oil (argan or jojoba)", "Shower cap"],
     steps: [
@@ -150,7 +150,7 @@ const SAMPLE_TUTORIALS = {
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 10,
-    image_url: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1578747763484-51b21a33e4fa?w=600&q=80",
     description: "The morning ritual is not preparation for the day — it is the first gift you give yourself. Ten minutes that set the tone for everything that follows.",
     materials: ["Jade roller or gua sha tool", "Facial mist", "Eye cream", "SPF moisturiser"],
     steps: [
@@ -233,7 +233,7 @@ const SAMPLE_TUTORIALS = {
     category: "Skincare",
     difficulty: "Beginner",
     duration_minutes: 10,
-    image_url: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1643379855889-850035817d24?w=600&q=80",
     description: "Ancient ritual, modern skin. Gua sha activates the lymphatic system, reduces puffiness, sculpts the face, and brings a natural flush of circulation — all in ten minutes.",
     materials: ["Gua sha tool (rose quartz or bian stone)", "Facial oil (2–3 drops minimum)"],
     steps: [
@@ -255,7 +255,7 @@ const SAMPLE_TUTORIALS = {
     category: "Hair",
     difficulty: "Intermediate",
     duration_minutes: 25,
-    image_url: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=600&q=80",
     description: "Salon volume at home. The technique relies on tension, heat, and the correct direction of airflow. Once understood, this changes everything.",
     materials: ["Round brush (medium to large barrel)", "Hair dryer with concentrator nozzle", "Heat protectant", "Smoothing serum or blowout cream", "Sectioning clips"],
     steps: [
@@ -299,7 +299,7 @@ const SAMPLE_TUTORIALS = {
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 5,
-    image_url: "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1564512480295-86e479d9b87c?w=600&q=80",
     description: "Cryotherapy for the face. The cold contracts blood vessels, reduces inflammation, tightens pores, and stimulates circulation — leaving skin visibly awake and luminous.",
     materials: ["Ice cubes or ice roller", "Clean cloth or gauze (for ice cubes)", "Facial oil or balm (optional barrier)"],
     steps: [
@@ -320,7 +320,7 @@ const SAMPLE_TUTORIALS = {
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 12,
-    image_url: "https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=600&q=80",
+    image_url: "https://images.unsplash.com/photo-1556760544-74068565f05c?w=600&q=80",
     description: "Anoint your skin as an act of devotion. The body oil ceremony is not skincare — it is attention. Slow, deliberate contact with your own body as a form of care.",
     materials: ["Dry body oil (marula, rosehip, or jojoba)", "Warm towel (optional)"],
     steps: [
@@ -342,16 +342,23 @@ export default function TutorialDetail() {
   const navigate = useNavigate();
   const [tutorial, setTutorial] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [aspired, setAspired] = useState(false);
+  const [adored, setAdored] = useState(false);
   const [collected, setCollected] = useState(false);
+  const [passedAlong, setPassedAlong] = useState(false);
+  const [heroImgError, setHeroImgError] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [progressMap, setProgressMap] = useState({});
   const [copiedSteps, setCopiedSteps] = useState(false);
   const [copiedMaterials, setCopiedMaterials] = useState(false);
   const [gotLook, setGotLook] = useState(false);
+  const [addingToVanity, setAddingToVanity] = useState(false);
   const [note, setNote] = useState("");
+  const [noteSaved, setNoteSaved] = useState(false);
   const [checkedMaterials, setCheckedMaterials] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   useEffect(() => {
     if (SAMPLE_TUTORIALS[id]) {
@@ -366,8 +373,113 @@ export default function TutorialDetail() {
       const map = u?.tutorial_progress || {};
       setProgressMap(map);
       setCompletedSteps(Array.isArray(map[id]) ? map[id] : []);
+      // Load saved note
+      const notesMap = u?.tutorial_notes || {};
+      setNote(notesMap[id] || "");
+      // Load collected (favorites) status
+      const collectedIds = Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : [];
+      setCollected(collectedIds.includes(id));
+      // Load adored status
+      const adoredIds = Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : [];
+      setAdored(adoredIds.includes(id));
     }).catch(() => {});
+    // Load reviews
+    base44.entities.Review.filter({ post_id: id })
+      .then((r) => setReviews(r || []))
+      .catch(() => {});
   }, [id]);
+
+  // Save note to user profile (on blur)
+  const handleNoteSave = async () => {
+    if (!note) return;
+    try {
+      const u = await base44.auth.me();
+      const notesMap = u?.tutorial_notes || {};
+      if (notesMap[id] === note) return; // no change
+      notesMap[id] = note;
+      await base44.auth.updateMe({ tutorial_notes: notesMap });
+      setNoteSaved(true);
+      setTimeout(() => setNoteSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save note:", err);
+    }
+  };
+
+  // Toggle collected (favorites) status — persists to user profile
+  const toggleCollected = async () => {
+    const newState = !collected;
+    setCollected(newState);
+    try {
+      const u = await base44.auth.me();
+      const collectedIds = Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : [];
+      const updated = newState
+        ? [...new Set([...collectedIds, id])]
+        : collectedIds.filter((tid) => tid !== id);
+      await base44.auth.updateMe({ collected_tutorials: updated });
+    } catch (err) {
+      console.error("Failed to update favorites:", err);
+      setCollected(!newState); // revert on error
+    }
+  };
+
+  // Toggle adored (heart) status — persists to user profile
+  const toggleAdore = async () => {
+    const newState = !adored;
+    setAdored(newState);
+    try {
+      const u = await base44.auth.me();
+      const adoredIds = Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : [];
+      const updated = newState
+        ? [...new Set([...adoredIds, id])]
+        : adoredIds.filter((tid) => tid !== id);
+      await base44.auth.updateMe({ adored_tutorials: updated });
+    } catch (err) {
+      console.error("Failed to update adored:", err);
+      setAdored(!newState); // revert on error
+    }
+  };
+
+  // Pass Along — native share with clipboard fallback, always shows feedback
+  const handlePassAlong = async () => {
+    const shareData = {
+      title: tutorial?.title || "La Muse Tutorial",
+      text: tutorial?.description ? tutorial.description.slice(0, 120) + "…" : "A ritual from La Muse.",
+      url: window.location.href,
+    };
+    let shared = false;
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        shared = true;
+      }
+    } catch { /* share failed or user cancelled */ }
+    if (!shared) {
+      try { await navigator.clipboard.writeText(window.location.href); } catch {}
+    }
+    setPassedAlong(true);
+    setTimeout(() => setPassedAlong(false), 2000);
+  };
+
+  // Submit a whisper/review
+  const handleSubmitReview = async () => {
+    const trimmed = reviewText.trim();
+    if (!trimmed) return;
+    setReviewSubmitting(true);
+    try {
+      const u = await base44.auth.me();
+      const review = await base44.entities.Review.create({
+        post_id: id,
+        review_text: trimmed,
+        author_name: u?.full_name || "Anonymous",
+      });
+      setReviews((prev) => [review, ...prev]);
+      setReviewText("");
+    } catch (err) {
+      console.error("Failed to post whisper:", err);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   const handleCopySteps = () => {
     const text = tutorial.steps?.map((s, i) => `${i + 1}. ${s}`).join("\n") || "";
@@ -383,9 +495,31 @@ export default function TutorialDetail() {
     setTimeout(() => setCopiedMaterials(false), 2000);
   };
 
-  const handleGetTheLook = () => {
-    setGotLook(true);
-    setTimeout(() => setGotLook(false), 2500);
+  const handleGetTheLook = async () => {
+    if (materials.length === 0) return;
+    setAddingToVanity(true);
+    try {
+      const categoryMap = {
+        Makeup: "Makeup",
+        Skincare: "Skincare",
+        Hair: "Haircare",
+        Wellness: "Body",
+      };
+      const productCategory = categoryMap[tutorial.category] || "Makeup";
+      const products = materials.map((m) => ({
+        name: m,
+        brand: "To Source",
+        category: productCategory,
+        in_vanity: true,
+      }));
+      await base44.entities.Product.bulkCreate(products);
+      setGotLook(true);
+      setTimeout(() => setGotLook(false), 2500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAddingToVanity(false);
+    }
   };
 
   const toggleMaterial = (m) =>
@@ -425,11 +559,18 @@ export default function TutorialDetail() {
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Full-width tutorial image */}
       <div className="relative w-full h-[420px]">
-        <img
-          src={tutorial.image_url}
-          alt={tutorial.title}
-          className="w-full h-full object-cover"
-        />
+        {tutorial.image_url && !heroImgError ? (
+          <img
+            src={tutorial.image_url}
+            alt={tutorial.title}
+            className="w-full h-full object-cover"
+            onError={() => setHeroImgError(true)}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-[#0B3C26] to-[#1a5c3a] flex items-center justify-center">
+            <SwanLogo size={56} color="#C8B06A" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-[var(--color-bg)]" />
 
         {/* Back button */}
@@ -440,30 +581,30 @@ export default function TutorialDetail() {
           <ArrowLeft size={16} color="var(--color-text-primary)" />
         </button>
 
-        {/* Aspire button */}
+        {/* Adore button */}
         <button
-          onClick={() => setAspired((v) => !v)}
+          onClick={toggleAdore}
           className={`absolute top-14 right-5 w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all ${
-            aspired ? "bg-[#C8B06A]/90" : "bg-[var(--color-bg)]/80"
+            adored ? "bg-[#C8B06A]/90" : "bg-[var(--color-bg)]/80"
           }`}
         >
           <Heart
             size={16}
-            color={aspired ? "white" : "var(--color-text-primary)"}
-            fill={aspired ? "white" : "none"}
+            color={adored ? "white" : "var(--color-text-primary)"}
+            fill={adored ? "white" : "none"}
             strokeWidth={1.5}
           />
         </button>
 
-        {/* Aspire label */}
-        {aspired && (
+        {/* Adore label */}
+        {adored && (
           <motion.div
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             className="absolute top-[100px] right-5"
           >
             <span className="text-[8px] tracking-[0.22em] text-[var(--color-accent-gold)] uppercase font-light">
-              Aspired
+              Adored
             </span>
           </motion.div>
         )}
@@ -495,6 +636,11 @@ export default function TutorialDetail() {
           <h1 className="font-serif text-[30px] text-[var(--color-text-primary)] font-light leading-[1.2] tracking-[0.02em] mb-2">
             {tutorial.title}
           </h1>
+          {(tutorial.creator_source || tutorial.is_muse_original) && (
+            <p className="text-[11px] text-primary-50 font-light tracking-[0.08em] italic mb-3">
+              by {tutorial.creator_source || "The Muse"}{tutorial.creator_platform ? ` · ${tutorial.creator_platform}` : ""}
+            </p>
+          )}
           <div className="flex items-center gap-3">
             <div className="w-8 h-px bg-[#C8B06A]" />
             <p className="text-[10px] text-primary-40 font-light tracking-[0.16em] uppercase">
@@ -504,10 +650,10 @@ export default function TutorialDetail() {
         </div>
 
         {/* Action bar */}
-        <div className="flex gap-3">
+        <div className="space-y-3">
           <button
             onClick={() => setCompleted((v) => !v)}
-            className={`flex-1 py-3.5 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all ${
+            className={`w-full py-3.5 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all ${
               completed
                 ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
                 : "border-[var(--color-border)] text-[var(--color-text-primary)]"
@@ -515,17 +661,33 @@ export default function TutorialDetail() {
           >
             {completed ? "Completed ✓" : "Mark Complete"}
           </button>
-          <button
-            onClick={() => setCollected((v) => !v)}
-            className={`flex-1 py-3.5 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
-              collected
-                ? "bg-[#C8B06A] text-white border-[#C8B06A]"
-                : "border-[var(--color-border)] text-[var(--color-text-primary)]"
-            }`}
-          >
-            <Bookmark size={13} strokeWidth={1.5} />
-            {collected ? "Collected" : "Collect"}
-          </button>
+
+          {/* Engagement row: Collect · Pass Along */}
+          <div className="flex gap-3">
+            <button
+              onClick={toggleCollected}
+              className={`flex-1 py-3 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
+                collected
+                  ? "bg-[#C8B06A] text-white border-[#C8B06A]"
+                  : "border-[var(--color-border)] text-[var(--color-text-primary)]"
+              }`}
+            >
+              <Bookmark size={13} strokeWidth={1.5} fill={collected ? "white" : "none"} />
+              {collected ? "Collected" : "Collect"}
+            </button>
+
+            <button
+              onClick={handlePassAlong}
+              className={`flex-1 py-3 rounded-full text-[10px] tracking-[0.2em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
+                passedAlong
+                  ? "bg-[#C8B06A] text-white border-[#C8B06A]"
+                  : "border-[var(--color-border)] text-[var(--color-text-primary)]"
+              }`}
+            >
+              <Share2 size={13} strokeWidth={1.5} />
+              {passedAlong ? "Copied" : "Pass Along"}
+            </button>
+          </div>
         </div>
 
         {/* Description — editorial pull quote style */}
@@ -594,13 +756,16 @@ export default function TutorialDetail() {
             <div className="mt-6 pt-5 border-t border-[#C8B06A]/25">
               <button
                 onClick={handleGetTheLook}
+                disabled={addingToVanity || gotLook}
                 className={`w-full py-3 rounded-full text-[9px] tracking-[0.24em] uppercase font-light border transition-all flex items-center justify-center gap-2 ${
                   gotLook
                     ? "bg-[#043927] text-[#FDF5E6] border-[#043927]"
-                    : "border-[var(--color-border)] text-[var(--color-text-primary)]"
-                }`}
+                    : "border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-elevated)]"
+                } ${addingToVanity ? "opacity-60" : ""}`}
               >
-                {gotLook ? (
+                {addingToVanity ? (
+                  <><span className="w-3 h-3 border border-[var(--color-text-primary)] border-t-transparent rounded-full animate-spin" /> Adding to La Vanity...</>
+                ) : gotLook ? (
                   <><Check size={11} strokeWidth={1.5} /> Added to La Vanity</>
                 ) : (
                   <><ShoppingBag size={11} strokeWidth={1.5} /> Get the Look — Add All to La Vanity</>
@@ -717,14 +882,22 @@ export default function TutorialDetail() {
 
         {/* Add a Note */}
         <div>
-          <h2 className="font-serif text-[20px] text-[var(--color-text-primary)] font-light tracking-wide mb-4">
-            Add a Note
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-serif text-[20px] text-[var(--color-text-primary)] font-light tracking-wide">
+              Add a Note
+            </h2>
+            {noteSaved && (
+              <span className="text-[9px] text-[var(--color-accent-gold)] tracking-[0.1em] uppercase font-light">
+                Saved ✓
+              </span>
+            )}
+          </div>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            onBlur={handleNoteSave}
             placeholder="Your private notes on this look..."
-            className="w-full bg-transparent text-[14px] text-[var(--color-text-primary)]/75 font-light resize-none outline-none placeholder:text-primary-25 leading-[1.7]"
+            className="w-full bg-transparent text-[14px] text-[var(--color-text-primary)]/75 font-light resize-none outline-none placeholder:text-primary-25 leading-[1.7] border-b border-[#C8B06A]/20 pb-3 focus:border-[#C8B06A]/50 transition-colors"
             rows={3}
           />
         </div>
@@ -736,14 +909,38 @@ export default function TutorialDetail() {
           </h2>
           <div className="flex items-center gap-3 border border-[#C8B06A]/40 rounded-full px-5 py-3">
             <input
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmitReview()}
               placeholder="Add a whisper..."
               className="flex-1 bg-transparent text-[14px] text-[var(--color-text-primary)] font-light outline-none placeholder:text-primary-25"
             />
-            <button className="text-[var(--color-accent-gold)] text-[16px] font-light">→</button>
+            <button
+              onClick={handleSubmitReview}
+              disabled={reviewSubmitting || !reviewText.trim()}
+              className="text-[var(--color-accent-gold)] text-[16px] font-light disabled:opacity-30"
+            >
+              →
+            </button>
           </div>
-          <p className="font-serif text-[11px] text-primary-30 text-center mt-5 italic font-light">
-            Be the first to whisper
-          </p>
+          {reviews.length > 0 ? (
+            <div className="mt-5 space-y-4">
+              {reviews.map((r) => (
+                <div key={r.id} className="border-l-2 border-[#C8B06A]/30 pl-4">
+                  <p className="text-[14px] text-[var(--color-text-primary)]/80 font-light leading-[1.6] italic">
+                    "{r.review_text}"
+                  </p>
+                  <p className="text-[10px] text-primary-40 font-light tracking-wide mt-2">
+                    — {r.author_name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="font-serif text-[11px] text-primary-30 text-center mt-5 italic font-light">
+              Be the first to whisper
+            </p>
+          )}
         </div>
       </div>
     </div>

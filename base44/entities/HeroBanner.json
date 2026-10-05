@@ -1,0 +1,15 @@
+{
+  "name": "HeroBanner",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string", "title": "Title" },
+    "subtitle": { "type": "string", "title": "Subtitle" },
+    "tag": { "type": "string", "title": "Tag label (e.g. Featured, New)" },
+    "image_url": { "type": "string", "title": "Image URL" },
+    "cta_label": { "type": "string", "title": "CTA button label" },
+    "cta_url": { "type": "string", "title": "CTA URL" },
+    "active": { "type": "boolean", "title": "Active", "default": true },
+    "display_order": { "type": "number", "title": "Display order" }
+  },
+  "required": ["title"]
+}

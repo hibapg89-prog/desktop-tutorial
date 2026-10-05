@@ -65,7 +65,7 @@ const CATEGORIES = [
   },
   {
     key: "communityUpdates",
-    label: "Le Cercle",
+    label: "Community",
     desc: "Replies to your posts and new community dispatches",
   },
   {

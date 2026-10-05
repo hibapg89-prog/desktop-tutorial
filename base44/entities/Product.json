@@ -1,0 +1,58 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "brand": { "type": "string" },
+    "name": { "type": "string" },
+    "shade": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": ["Makeup", "Fragrance", "Skincare", "Haircare", "Body", "Nails", "Devices", "Intimate Care", "Tools", "Cosmetic Bags & Cases", "Men's", "Pet Care"]
+    },
+    "subcategory": { "type": "string" },
+    "price": { "type": "number" },
+    "currency": { "type": "string", "default": "USD" },
+    "image_url": { "type": "string" },
+    "fallback_image_url": { "type": "string", "title": "Web-fetched backup image URL" },
+    "image_status": {
+      "type": "string",
+      "enum": ["pending", "verified", "missing"],
+      "default": "pending",
+      "title": "Product image fetch status"
+    },
+    "description": { "type": "string" },
+    "ingredients": { "type": "string" },
+    "where_to_buy": { "type": "string" },
+    "muse_shimmer": { "type": "string" },
+    "rating": { "type": "number" },
+    "review_count": { "type": "number" },
+    "in_vanity": { "type": "boolean", "default": false },
+    "in_wishlist": { "type": "boolean", "default": false },
+    "in_shopping_list": { "type": "boolean", "default": false },
+    "shopping_qty": { "type": "number", "default": 1 },
+    "tags": { "type": "array", "items": { "type": "string", "enum": ["daily use", "travel", "wishlist"] } },
+    "source_url": { "type": "string" },
+    "scan_method": { "type": "string" },
+    "expiry_date": { "type": "string", "format": "date" },
+    "current_price": { "type": "number" },
+    "lowest_price": { "type": "number" },
+    "last_price_checked": { "type": "string", "format": "date-time" },
+    "price_alert_active": { "type": "boolean", "default": true },
+    "on_sale": { "type": "boolean", "default": false },
+    "sale_discount_pct": { "type": "number" },
+    "last_sale_price": { "type": "number" },
+    "retailer_links": {
+      "type": "array",
+      "description": "Geo-targeted retailer URLs for Shop Now. Each entry: { country: 'US', retailer: 'Sephora', url: 'https://...' }",
+      "items": {
+        "type": "object",
+        "properties": {
+          "country": { "type": "string", "description": "ISO 3166-1 alpha-2 code (US, FR, GB, …)" },
+          "retailer": { "type": "string", "description": "Display name, e.g. Sephora, Ulta, Lookfantastic" },
+          "url": { "type": "string", "description": "Direct product page or affiliate link" }
+        }
+      }
+    }
+  },
+  "required": ["brand", "name", "category"]
+}

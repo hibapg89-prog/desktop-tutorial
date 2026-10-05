@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Camera, Image as ImageIcon, Link as LinkIcon, Mic, Sparkles } from "lucide-react";
+import { X, Camera, Image as ImageIcon, Link as LinkIcon, Mic, Sparkles, Feather } from "lucide-react";
 
 // Vanity mirror icon — matches the gold oval-mirror illustration
 const MirrorIcon = ({ size = 24, color = "currentColor" }) => (
@@ -31,6 +31,8 @@ import MuseAssistant from "./MuseAssistant";
 import TryOnMirror from "./TryOnMirror";
 import StudioComingSoon from "./StudioComingSoon";
 import GalleryPicker from "./GalleryPicker";
+import ManualProductEntry from "./ManualProductEntry";
+import { normalizeBrand, normalizeBrandForCompare } from "@/utils/brandNormalizer";
 
 const CATEGORY_LIST = Object.keys(CATEGORY_SUBCATEGORIES);
 const SUBCATEGORY_GUIDE = CATEGORY_LIST
@@ -43,17 +45,44 @@ const SOCIAL_DOMAINS = [
   "facebook.com", "fb.com", "snapchat.com", "threads.net",
 ];
 
+// Maps specific product-type keywords (returned by the LLM) to the grid
+// subcategory labels used by the app. The LLM often returns "Eyeliner" or
+// "Mascara" even when told to use "Eyes" — this catches those cases so
+// products land in the right section instead of getting null subcategory.
+const SUBCATEGORY_KEYWORD_MAP = {
+  Makeup: {
+    Face: ["foundation", "concealer", "powder", "primer", "bb cream", "cc cream", "face tint", "contour", "face base", "bb", "cc"],
+    Cheek: ["blush", "bronzer", "highlighter", "cheek", "contour powder"],
+    Lips: ["lipstick", "lip gloss", "lip liner", "lip oil", "lip tint", "lip balm", "lip plumper", "lip stain", "lip palette", "lip"],
+    Eyes: ["mascara", "eyeliner", "eyeshadow", "eyebrow", "brow", "eye palette", "eye primer", "false lash", "lash", "eye tint", "eye"],
+    "Sets & Palettes": ["palette", "set", "kit", "duo", "trio", "collection"],
+    "Makeup Tools": ["brush", "sponge", "applicator", "makeup tool"],
+  },
+};
+
 const normalizeSubcategory = (category, subcategory) => {
   if (!subcategory) return null;
   const valid = CATEGORY_SUBCATEGORIES[category] || [];
   const s = String(subcategory).trim();
+  // 1. Exact match
   const exact = valid.find(v => v === s);
   if (exact) return exact;
+  // 2. Case-insensitive exact match
   const ci = valid.find(v => v.toLowerCase() === s.toLowerCase());
-  return ci || null;
+  if (ci) return ci;
+  // 3. Keyword-based fallback for Makeup (LLM returns product types like "Eyeliner")
+  const keywordMap = SUBCATEGORY_KEYWORD_MAP[category];
+  if (keywordMap) {
+    const sLower = s.toLowerCase();
+    for (const [gridSub, keywords] of Object.entries(keywordMap)) {
+      if (keywords.some(kw => sLower.includes(kw))) return gridSub;
+    }
+  }
+  return null;
 };
 
 const inputMethods = [
+  { id: "manual",  label: "Manual",  icon: Feather   },
   { id: "camera",  label: "Camera",  icon: Camera    },
   { id: "gallery", label: "Gallery", icon: ImageIcon  },
   { id: "link",    label: "Link",    icon: LinkIcon   },
@@ -61,13 +90,14 @@ const inputMethods = [
   { id: "mirror",  label: "Studio",  icon: MirrorIcon },
 ];
 
-// Fan arc positions for the 5 tiles, anchored at (150, 260)
+// Fan arc positions for the 6 tiles, anchored at (190, 240)
 const tilePositions = [
-  { x: -155, y:  -20 },   // camera  (far left)
-  { x:  -78, y: -100 },   // gallery
-  { x:    0, y: -130 },   // link    (top center)
-  { x:   78, y: -100 },   // audio
-  { x:  155, y:  -20 },   // effects (far right)
+  { x: -140, y:   20 },   // history (far left, below)
+  { x:  -98, y:  -80 },   // camera
+  { x:  -38, y: -122 },   // gallery
+  { x:   38, y: -122 },   // link    (top)
+  { x:   98, y:  -80 },   // audio
+  { x:  140, y:   20 },   // mirror  (far right, below)
 ];
 
 export default function ScanHub({ onClose }) {
@@ -82,6 +112,9 @@ export default function ScanHub({ onClose }) {
   const [previewFile,  setPreviewFile] = useState(null);
   const [previewUrl,   setPreviewUrl]  = useState(null);
   const [showMuse,     setShowMuse]   = useState(false);
+  const [duplicateProduct, setDuplicateProduct] = useState(null);
+  const [pendingSave,      setPendingSave]      = useState(null);
+  const [loadingHint,      setLoadingHint]      = useState(null);
 
   const fileInputRef    = useRef(null);
   const cameraInputRef  = useRef(null);
@@ -154,6 +187,43 @@ export default function ScanHub({ onClose }) {
     })();
   };
 
+  const checkForDuplicate = async (brand, name, existingList = null) => {
+    try {
+      const existing = existingList || await base44.entities.Product.list();
+      const b = normalizeBrandForCompare(brand);
+      const n = (name || "").toLowerCase().trim().replace(/\s+/g, " ");
+      return existing.find(p =>
+        normalizeBrandForCompare(p.brand) === b &&
+        (p.name || "").toLowerCase().trim().replace(/\s+/g, " ") === n
+      ) || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const logScan = async ({ scan_method, status, product_id = null, brand = null, name = null, shade = null, product_count = 0, error_reason = null }) => {
+    try {
+      await base44.entities.ScanLog.create({ scan_method, status, product_id, brand, name, shade, product_count, error_reason });
+    } catch {}
+  };
+
+  // Returns { blocked, count, resetAt } based on ScanLog entries in the last 24h.
+  // Fails open (blocked: false) so a query error never locks the user out.
+  const checkScanRateLimit = async () => {
+    try {
+      const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const allLogs = await base44.entities.ScanLog.list();
+      const recent = allLogs.filter(s => s.created_date && new Date(s.created_date) >= windowStart);
+      const count = recent.length;
+      if (count < 10) return { blocked: false, count };
+      const sorted = [...recent].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+      const resetAt = new Date(new Date(sorted[0].created_date).getTime() + 24 * 60 * 60 * 1000);
+      return { blocked: true, count, resetAt };
+    } catch {
+      return { blocked: false, count: 0, resetAt: null };
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -171,23 +241,485 @@ export default function ScanHub({ onClose }) {
     }, 1200);
   };
 
+  const SOCIAL_EXTRACTABLE = [
+    "instagram.com", "tiktok.com",
+    "youtube.com", "youtu.be",
+    "pinterest.com", "pinterest.fr", "pinterest.co.uk",
+    "facebook.com", "fb.com",
+    "threads.net",
+    "x.com", "twitter.com",
+  ];
+
+  const analyzeSocialLink = async (url) => {
+    const rateCheck = await checkScanRateLimit();
+    if (rateCheck.blocked) {
+      const resetTime = rateCheck.resetAt
+        ? rateCheck.resetAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : "tomorrow";
+      setScanError(`You've reached your daily scan limit (10 scans). Your limit resets at ${resetTime}.`);
+      setActiveMode("error");
+      return;
+    }
+    setScanError(null);
+    setActiveMode("loading");
+    setIsAnalyzing(true);
+    setLoadingHint("Scanning post for beauty products...");
+    let p = 0;
+    // Slower animation — Level 3 video analysis can take up to a minute
+    const interval = setInterval(() => {
+      p += Math.random() * 5;
+      if (p > 88) p = 88;
+      setProgress(Math.floor(p));
+    }, 800);
+
+    const finishWithProducts = async (products, thumbnailUrl) => {
+      clearInterval(interval);
+      if (!products.length) return false;
+      setProgress(100);
+
+      // Normalize brand names and assign per-product category (BUG 1 + BUG 4)
+      const normalized = products.map(p => ({
+        ...p,
+        brand: normalizeBrand(p.brand),
+        category: p.category || "Makeup",
+      }));
+
+      // Duplicate check per product — skip creating if already exists (BUG 3)
+      // Fetch the full product list ONCE and reuse for all duplicate checks
+      // (avoids N database fetches for an N-product post).
+      let existingProducts = null;
+      try { existingProducts = await base44.entities.Product.list(); } catch {}
+      const createdProducts = [];
+      for (const p of normalized) {
+        const dup = await checkForDuplicate(p.brand, p.product_name, existingProducts);
+        if (dup) {
+          createdProducts.push(dup);
+        } else {
+          const validCategory = CATEGORY_LIST.includes(p.category) ? p.category : "Makeup";
+          const prod = await base44.entities.Product.create({
+            brand: p.brand,
+            name: p.product_name,
+            category: validCategory,
+            subcategory: normalizeSubcategory(validCategory, p.subcategory),
+            source_url: url,
+            scan_method: "social_link",
+          });
+          createdProducts.push(prod);
+          // Fire-and-forget: fetch real product image
+          enrichProductImage(prod.id, p.brand, p.product_name, null);
+        }
+      }
+      logScan({
+        scan_method: "social_link",
+        status: "success",
+        product_id: createdProducts[0]?.id,
+        brand: normalized[0]?.brand,
+        name: normalized[0]?.product_name,
+        product_count: createdProducts.length,
+      });
+      setIsAnalyzing(false); setLoadingHint(null);
+      if (createdProducts.length === 1) {
+        setTimeout(() => { onClose(); navigate(`/product/${createdProducts[0].id}`); }, 500);
+      } else {
+        setTimeout(() => {
+          onClose();
+          navigate("/scan-results", {
+            state: {
+              products: createdProducts.map((prod, i) => ({
+                id: prod.id,
+                brand: normalized[i].brand,
+                name: normalized[i].product_name,
+                category: normalized[i].category,
+              })),
+            }
+          });
+        }, 500);
+      }
+      return true;
+    };
+
+    try {
+      // Detect platform — oEmbed only works for TikTok
+      const isTikTokUrl = (() => {
+        try { const h = new URL(url).hostname.replace(/^www./, ''); return h === 'tiktok.com' || h.endsWith('.tiktok.com'); } catch { return false; }
+      })();
+
+      let caption = null;
+      let thumbnailUrl = null;
+
+      // ── PRIMARY (TikTok only): Direct oEmbed API call from the browser ──
+      // Free, public, no API key, no rate limits, ~1s response.
+      // Instagram oEmbed requires a Facebook access token, so skip it.
+      if (isTikTokUrl) {
+        setLoadingHint("Reading the post...");
+        try {
+          const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
+          const res = await fetch(oembedUrl, { redirect: 'follow' });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.title) {
+              caption = data.title;
+              thumbnailUrl = data.thumbnail_url || null;
+            }
+          }
+        } catch (err) {
+          console.error('[oEmbed direct error]:', err);
+        }
+
+        // FALLBACK 1: CORS proxy if the direct call was blocked
+        if (!caption) {
+          setLoadingHint("Connecting to the post...");
+          try {
+            const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`)}`;
+            const res = await fetch(proxyUrl);
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.title) {
+                caption = data.title;
+                thumbnailUrl = data.thumbnail_url || null;
+              }
+            }
+          } catch (err) {
+            console.error('[oEmbed proxy error]:', err);
+          }
+        }
+      }
+
+      // Detect platform for specific extractors
+      const getHost = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+      const urlHost = getHost(url);
+      const isInstagram = urlHost === 'instagram.com' || urlHost.endsWith('.instagram.com');
+      const isThreads   = urlHost === 'threads.net'   || urlHost.endsWith('.threads.net');
+      const isFacebook  = urlHost === 'facebook.com'  || urlHost.endsWith('.facebook.com') || urlHost === 'fb.com' || urlHost === 'fb.watch';
+
+      // ── Instagram: Apify scraper ──
+      if (!caption && isInstagram) {
+        setLoadingHint("Reading Instagram post...");
+        try {
+          const res = await base44.functions.invoke('extractInstagramContent', { url });
+          const r = res?.data || res;
+          if (r?.success && r.caption) { caption = r.caption; thumbnailUrl = r.thumbnailUrl || null; }
+          else if (r?.thumbnailUrl) { thumbnailUrl = r.thumbnailUrl; }
+        } catch (err) { console.error('[Instagram extractor error]:', err); }
+      }
+
+      // ── Threads: og: scraping ──
+      if (!caption && isThreads) {
+        setLoadingHint("Reading Threads post...");
+        try {
+          const res = await base44.functions.invoke('extractThreadsContent', { url });
+          const r = res?.data || res;
+          if (r?.success && r.caption) { caption = r.caption; thumbnailUrl = r.thumbnailUrl || null; }
+        } catch (err) { console.error('[Threads extractor error]:', err); }
+      }
+
+      // ── Facebook: og: scraping ──
+      if (!caption && isFacebook) {
+        setLoadingHint("Reading Facebook post...");
+        try {
+          const res = await base44.functions.invoke('extractFacebookContent', { url });
+          const r = res?.data || res;
+          if (r?.success && r.caption) { caption = r.caption; thumbnailUrl = r.thumbnailUrl || null; }
+        } catch (err) { console.error('[Facebook extractor error]:', err); }
+      }
+
+      // FALLBACK: Backend function (Apify for TikTok & generic)
+      if (!caption) {
+        setLoadingHint("Scanning post for beauty products...");
+        try {
+          const res = await base44.functions.invoke('extractSocialContent', { url });
+          const r = res?.data || res;
+          if (r?.success && r.caption) {
+            caption = r.caption;
+            thumbnailUrl = r.thumbnailUrl || null;
+          } else if (r?.thumbnailUrl) {
+            // Post exists but caption unavailable — use thumbnail for vision analysis
+            thumbnailUrl = r.thumbnailUrl;
+          }
+        } catch (err) {
+          console.error('[Backend fallback error]:', err);
+        }
+      }
+
+      // ── VERIFICATION: check that extracted brands actually appear in the source text ──
+      const verifyProductsAgainstText = (products, sourceText) => {
+        if (!sourceText || !products.length) return [];
+        const textLower = sourceText.toLowerCase();
+        // Aggressively normalized text — removes spaces, underscores, @ for handle matching
+        const textNorm = textLower.replace(/[\s_@]+/g, '');
+        // A value matches if it appears as a substring (plain or normalized), OR if any
+        // significant word (len > 2) from it appears in the text — handles cases where the
+        // LLM returns "Christian Dior" but the caption says "Dior".
+        const matchesText = (value) => {
+          if (!value) return false;
+          const v = value.toLowerCase().trim();
+          if (!v) return false;
+          const vNorm = v.replace(/[\s_@]+/g, '');
+          if (textLower.includes(v) || (vNorm && textNorm.includes(vNorm))) return true;
+          const words = v.split(/[\s_@]+/).filter(w => w.length > 2);
+          return words.some(w => textLower.includes(w));
+        };
+        return products.filter(p => {
+          const brand = (p.brand || "").trim();
+          const product_name = (p.product_name || p.name || "").trim();
+          if (!brand && !product_name) return false;
+          return matchesText(brand) || matchesText(product_name);
+        });
+      };
+
+      // ── PARALLEL: caption extraction + vision analysis ────────────
+      // When both caption AND thumbnail are available, run both analyses in
+      // parallel and merge — catches products shown on camera but not mentioned
+      // in the caption, AND products mentioned but not clearly visible. Falls
+      // through to the web-search fallback if neither path yields products.
+      const runCaptionExtraction = async () => {
+        if (!caption) return [];
+        try {
+        const data = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a luxury beauty product identification expert analyzing a social media post. Extract all beauty products explicitly mentioned.
+
+Post content:
+"${caption}"
+
+For EACH beauty product explicitly mentioned, extract:
+- brand: the brand name as written in the post (e.g. "YSL Beauty", "MaybellineUK", "@Lancome")
+- product_name: exact product name as written in the post
+- category: the product category from this list: ${CATEGORY_LIST.join(', ')}. Pick the CORRECT category for THIS product — a hair oil is "Haircare", a moisturizer is "Skincare", a sunscreen is "Skincare", mascara is "Makeup", etc.
+- subcategory: MUST be one of these exact values for the category: ${SUBCATEGORY_GUIDE}. For example, a mascara or eyeliner is "Eyes", a foundation or concealer is "Face", a lipstick or lip liner is "Lips", a blush or highlighter is "Cheek".
+
+CRITICAL: Only extract products EXPLICITLY named in the post. Do NOT invent or infer products that aren't mentioned. If no beauty products are mentioned, return an empty products_identified array.`,
+          model: 'gemini_3_flash',
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              products_identified: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    brand:        { type: 'string' },
+                    product_name: { type: 'string' },
+                    category:     { type: 'string' },
+                    subcategory:  { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        });
+        const products = data?.products_identified || [];
+        // Verify products against the caption to prevent hallucination
+        return verifyProductsAgainstText(products, caption);
+        } catch (err) {
+          console.error('[Caption extraction error]:', err);
+          return [];
+        }
+      };
+
+      const runVisionExtraction = async () => {
+        // Harvest multiple frames throughout the video (not just the cover)
+        setLoadingHint("Extracting video frames...");
+        let frameUrls = [];
+        try {
+          const frameRes = await base44.functions.invoke('extractVideoFrames', { url, thumbnailUrl });
+          frameUrls = ((frameRes?.data || frameRes)?.frames || []).filter(Boolean);
+        } catch (err) {
+          console.error('[Frame extraction error]:', err);
+          frameUrls = thumbnailUrl ? [thumbnailUrl] : [];
+        }
+        if (frameUrls.length === 0) return [];
+        setLoadingHint(frameUrls.length > 1 ? `Analyzing ${frameUrls.length} video frames...` : "Looking at the video frame...");
+        try {
+          const imgResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are a luxury beauty product identification expert with exceptional attention to label detail. These images are frames from a social media video, captured at different points throughout the reel — they may feature one or more beauty products being used or reviewed. Analyze ALL frames and identify every DISTINCT beauty product visible in ANY frame.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase or generalize.\n- Read the EXACT shade name and number as printed. If no shade is visible, return null.\n- Read the EXACT brand name as it appears on the product.\n- If the same product appears in multiple frames, list it only ONCE.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (MUST be one of these exact values for the category: ${SUBCATEGORY_GUIDE} — e.g. mascara/eyeliner → "Eyes", foundation/concealer → "Face", lipstick/lip liner → "Lips", blush/highlighter → "Cheek"), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`,
+            file_urls: frameUrls,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                products: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      identified:          { type: "boolean" },
+                      brand:               { type: "string"  },
+                      name:                { type: "string"  },
+                      shade:               { type: "string"  },
+                      category:            { type: "string"  },
+                      subcategory:         { type: "string"  },
+                      price_usd:           { type: "number"  },
+                      description:         { type: "string"  },
+                      muse_shimmer:        { type: "string"  },
+                      where_to_buy:        { type: "array", items: { type: "string" } },
+                      ingredients_summary: { type: "string"  },
+                      safety_score:        { type: "number"  },
+                    }
+                  }
+                }
+              }
+            }
+          });
+          const BAD_BRANDS_V = ["not identified", "unknown", "n/a", "none", "unidentified", "unclear", "not available", "not specified", "not determined", "undefined"];
+          const raw = (imgResult.products || []).filter(p => {
+            const bl = (p.brand || "").trim().toLowerCase();
+            return p.identified !== false && p.brand && !BAD_BRANDS_V.includes(bl) && !bl.startsWith("not ");
+          }).map(p => ({ ...p, product_name: p.name }));
+          // Dedupe by normalized brand + product name (same product may appear in multiple frames)
+          const seen = new Set();
+          const deduped = [];
+          for (const p of raw) {
+            const key = `${normalizeBrandForCompare(p.brand)}|${(p.product_name || "").toLowerCase().trim().replace(/\s+/g, " ")}`;
+            if (key && !seen.has(key)) { seen.add(key); deduped.push(p); }
+          }
+          return deduped;
+        } catch (err) {
+          console.error('[Vision analysis error]:', err);
+          return [];
+        }
+      };
+
+      // ── STEP 1: Caption-based extraction ────────────────────────
+      if (caption) {
+        setLoadingHint("Reading the beauty edit...");
+        const captionProducts = await runCaptionExtraction();
+        if (captionProducts.length > 0) {
+          await finishWithProducts(captionProducts, thumbnailUrl);
+          return;
+        }
+      }
+
+      // ── STEP 2: Multi-frame vision analysis (fallback) ──
+      // Only runs if the caption didn't identify any products.
+      // Extracts multiple frames throughout the video and analyzes them all
+      // in a single merged vision call, then dedupes by brand + product name.
+      {
+        const visionProducts = await runVisionExtraction();
+        if (visionProducts.length > 0) {
+          await finishWithProducts(visionProducts, thumbnailUrl);
+          return;
+        }
+      }
+
+      // ── PATH 2: Gemini web search fallback ────────────────────────
+      // Ask Gemini to find the post content AND return it, so we can verify
+      // extracted products against the actual text it found.
+      setLoadingHint("Searching the web for this post...");
+      const webData = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a luxury beauty product identification expert. A user shared this social media link: "${url}"
+
+Search the web for the EXACT content of this post. Look for the post caption, description, or any page that reproduces or discusses the exact content of this specific post.
+
+Step 1: Find the exact post content (caption text). If you cannot find the actual post content for THIS specific post, set found_post_content to an empty string and return an empty products_identified array.
+
+Step 2: From the post content you found, extract beauty products:
+- brand: exact brand name as written in the post
+- product_name: exact product name as written in the post
+- category: the product category from this list: ${CATEGORY_LIST.join(', ')}. Pick the CORRECT category for THIS product — a hair oil is "Haircare", a moisturizer is "Skincare", a sunscreen is "Skincare", mascara is "Makeup", etc.
+- subcategory: MUST be one of these exact values for the category: ${SUBCATEGORY_GUIDE}.
+
+CRITICAL: Only extract products EXPLICITLY named in the post content you found. Do NOT invent products. If you cannot find the exact post content, return an empty products_identified array and empty found_post_content.`,
+        model: 'gemini_3_flash',
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            found_post_content: { type: 'string' },
+            products_identified: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  brand:        { type: 'string' },
+                  product_name: { type: 'string' },
+                  category:     { type: 'string' },
+                  subcategory:  { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      });
+      const webProducts = webData?.products_identified || [];
+      const webSourceText = webData?.found_post_content || '';
+      // Verify products against the web-found post content to prevent hallucination
+      const verifiedWeb = verifyProductsAgainstText(webProducts, webSourceText);
+      if (verifiedWeb.length > 0) {
+        await finishWithProducts(verifiedWeb, null);
+        return;
+      }
+
+      // ── Both paths failed ──────────────────────────────────────────
+      clearInterval(interval);
+      setProgress(0); setIsAnalyzing(false); setLoadingHint(null);
+      setScanError("The Muse couldn't read this post's content. Instagram reels are sometimes blocked — try saving the video and using Gallery instead, or paste a TikTok link which is easier to read.");
+      setActiveMode("error");
+      logScan({ scan_method: "social_link", status: "failed", error_reason: "social_all_failed" });
+    } catch (error) {
+      clearInterval(interval);
+      console.error('[Pipeline Error]:', error);
+      setScanError("Something went wrong. Please try again.");
+      setActiveMode("error");
+      setIsAnalyzing(false);
+      setProgress(0);
+      setLoadingHint(null);
+      logScan({ scan_method: "social_link", status: "failed", error_reason: error?.message || String(error) });
+    }
+  };
+
   const handleLinkSubmit = async () => {
     const trimmed = linkInput.trim();
     if (!trimmed) return;
     try {
       const hostname = new URL(trimmed).hostname.replace(/^www\./, "");
-      if (SOCIAL_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d))) {
-        setScanError(
-          "Social media links can't be scanned — please paste a direct product URL from a retailer or brand website (e.g. sephora.com, lookfantastic.com)."
-        );
-        setActiveMode("error");
+      if (SOCIAL_EXTRACTABLE.some(d => hostname === d || hostname.endsWith("." + d))) {
+        await analyzeSocialLink(trimmed);
         return;
       }
     } catch {}
-    await analyzeProduct({ type: "url", url: trimmed });
+    const isSocial = (() => {
+      try {
+        const hostname = new URL(trimmed).hostname.replace(/^www\./, "");
+        return SOCIAL_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+      } catch { return false; }
+    })();
+    await analyzeProduct({ type: "url", url: trimmed, isSocial });
   };
 
-  const analyzeProduct = async ({ type, file, url, text, imageUrl }) => {
+  const handleSaveAnyway = async () => {
+    if (!pendingSave) return;
+    const { entityData, enrichBrand, enrichName, enrichShade } = pendingSave;
+    setDuplicateProduct(null);
+    setPendingSave(null);
+    setActiveMode("loading");
+    setIsAnalyzing(true);
+    let p = 0;
+    const iv = setInterval(() => { p += 25; if (p > 90) p = 90; setProgress(Math.floor(p)); }, 300);
+    try {
+      const prod = await base44.entities.Product.create(entityData);
+      enrichProductImage(prod.id, enrichBrand, enrichName, enrichShade);
+      logScan({ scan_method: entityData.scan_method || "image", status: "success", product_id: prod.id, brand: enrichBrand, name: enrichName, shade: enrichShade, product_count: 1 });
+      clearInterval(iv);
+      setProgress(100);
+      setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
+    } catch {
+      clearInterval(iv);
+      setScanError("Something went wrong. Please try again.");
+      setActiveMode("error");
+      setIsAnalyzing(false);
+      setProgress(0);
+    }
+  };
+
+  const analyzeProduct = async ({ type, file, url, text, imageUrl, isSocial }) => {
+    const rateCheck = await checkScanRateLimit();
+    if (rateCheck.blocked) {
+      const resetTime = rateCheck.resetAt
+        ? rateCheck.resetAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : "tomorrow";
+      setScanError(`You've reached your daily scan limit (10 scans). Your limit resets at ${resetTime}.`);
+      setActiveMode("error");
+      return;
+    }
     setScanError(null);
     setActiveMode("loading");
     setIsAnalyzing(true);
@@ -201,6 +733,7 @@ export default function ScanHub({ onClose }) {
     try {
       let prompt = "";
       let file_urls = undefined;
+      let useImageAnalysis = type === "image";
 
       if (type === "image") {
         if (file) {
@@ -209,11 +742,28 @@ export default function ScanHub({ onClose }) {
         } else if (imageUrl) {
           file_urls = [imageUrl];
         }
-        prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. Analyze this image carefully and identify ALL visible beauty products — there may be one, two, or more.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase, simplify, or translate it. If the label says "3D Hydra Brillant à Lèvres", use that exact text for the name field.\n- Read the EXACT shade name and number as printed — include the shade number if visible (e.g. "51 Frozen Light Blue", NOT just "Light Blue"). If no shade is printed, return null.\n- Read the EXACT brand name as it appears on the product.\n- Do NOT summarize or generalize. Transcribe visible text verbatim.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string — exact as on packaging), name (string — exact as on packaging), shade (string or null — exact shade name+number as on packaging), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (from: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
+        prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. Analyze this image carefully and identify ALL visible beauty products — there may be one, two, or more.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase, simplify, or translate it. If the label says "3D Hydra Brillant à Lèvres", use that exact text for the name field.\n- Read the EXACT shade name and number as printed — include the shade number if visible (e.g. "51 Frozen Light Blue", NOT just "Light Blue"). If no shade is printed, return null.\n- Read the EXACT brand name as it appears on the product.\n- Do NOT summarize or generalize. Transcribe visible text verbatim.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string — exact as on packaging), name (string — exact as on packaging), shade (string or null — exact shade name+number as on packaging), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (MUST be one of these exact values for the category: ${SUBCATEGORY_GUIDE} — e.g. mascara/eyeliner → "Eyes", foundation/concealer → "Face", lipstick/lip liner → "Lips", blush/highlighter → "Cheek"), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
       } else if (type === "url") {
-        prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL text alone (brand name, product name in the URL path), set identified to false — do not fabricate details.`;
+        if (isSocial) {
+          // Attempt server-side OG image fetch — runs during the loading animation
+          try {
+            const ogResult = await base44.functions.invoke('fetchSocialOGImage', { url });
+            const og = ogResult?.data || ogResult;
+            if (og?.image_url) {
+              file_urls = [og.image_url];
+              useImageAnalysis = true;
+            }
+          } catch {}
+          if (useImageAnalysis) {
+            prompt = `You are a luxury beauty product identification expert with exceptional attention to label detail. This image is from a social media post — it may feature one or more beauty products being used or reviewed.\n\nCRITICAL ACCURACY RULES:\n- Read the EXACT product name as printed on the packaging — do NOT paraphrase or generalize.\n- Read the EXACT shade name and number as printed. If no shade is visible, return null.\n- Read the EXACT brand name as it appears on the product.\n\nReturn a JSON object with a "products" array. For EACH identifiable beauty product include: identified (boolean — true ONLY if clearly a real beauty product), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (MUST be one of these exact values for the category: ${SUBCATEGORY_GUIDE} — e.g. mascara/eyeliner → "Eyes", foundation/concealer → "Face", lipstick/lip liner → "Lips", blush/highlighter → "Cheek"), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). Return an empty products array if no beauty products are visible.`;
+          } else {
+            prompt = `You are a luxury beauty product identification expert. A user has shared this social media post link: "${url}". This may be an Instagram, TikTok, YouTube, Pinterest or similar post featuring beauty products. Based on any available context in the URL itself (username, post tags, or product names in the URL path), try to identify the beauty product being shown. If you cannot identify a specific real beauty product from the URL alone, set identified to false — do not fabricate details. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (MUST be one of these exact values for the category: ${SUBCATEGORY_GUIDE} — e.g. mascara/eyeliner → "Eyes", foundation/concealer → "Face", lipstick/lip liner → "Lips", blush/highlighter → "Cheek"), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
+          }
+        } else {
+          prompt = `You are a luxury beauty product identification expert. Analyze this URL/product link and identify the beauty product: "${url}". Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (MUST be one of these exact values for the category: ${SUBCATEGORY_GUIDE} — e.g. mascara/eyeliner → "Eyes", foundation/concealer → "Face", lipstick/lip liner → "Lips", blush/highlighter → "Cheek"), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10). If you cannot clearly identify the product from the URL text alone (brand name, product name in the URL path), set identified to false — do not fabricate details.`;
+        }
       } else if (type === "voice") {
-        prompt = `You are a luxury beauty product identification expert. The user said: "${text}". Identify this beauty product. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (choose the single most fitting subcategory from this guide: ${SUBCATEGORY_GUIDE}), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
+        prompt = `You are a luxury beauty product identification expert. The user said: "${text}". Identify this beauty product. Return a JSON object with: identified (boolean), brand (string), name (string), shade (string or null), category (one of: ${CATEGORY_LIST.join(", ")}), subcategory (MUST be one of these exact values for the category: ${SUBCATEGORY_GUIDE} — e.g. mascara/eyeliner → "Eyes", foundation/concealer → "Face", lipstick/lip liner → "Lips", blush/highlighter → "Cheek"), price_usd (number estimate), description (2-3 editorial sentences), muse_shimmer (short editorial tagline), where_to_buy (list of 3 retailers), ingredients_summary (brief), safety_score (1-10).`;
       }
 
       const BAD_BRANDS = [
@@ -226,7 +776,8 @@ export default function ScanHub({ onClose }) {
         return ["null", "none", "n/a", "na", "", "no shade", "not applicable"].includes(s.toLowerCase()) ? null : s;
       };
 
-if (type === "image") {
+// TODO: InvokeLLM below uses Anthropic (no API key) — migrate to a backend function using Gemini
+      if (useImageAnalysis) {
         const imgResult = await base44.integrations.Core.InvokeLLM({
           prompt,
           file_urls,
@@ -263,6 +814,7 @@ if (type === "image") {
         });
         if (validProducts.length === 0) {
           setProgress(0); setIsAnalyzing(false);
+          logScan({ scan_method: type, status: "failed", product_count: 0 });
           setScanError("The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging.");
           setActiveMode("error");
           return;
@@ -270,30 +822,43 @@ if (type === "image") {
         setProgress(100);
         if (validProducts.length === 1) {
           const p = validProducts[0];
-          const prod = await base44.entities.Product.create({
-            brand: p.brand, name: p.name, shade: computeSafeShade(p.shade),
+          const normBrand = normalizeBrand(p.brand);
+          const entityData = {
+            brand: normBrand, name: p.name, shade: computeSafeShade(p.shade),
             category: p.category || "Makeup", subcategory: normalizeSubcategory(p.category, p.subcategory),
             price: p.price_usd || 0, currency: "USD", description: p.description,
             muse_shimmer: p.muse_shimmer, where_to_buy: JSON.stringify(p.where_to_buy || []),
             ingredients: p.ingredients_summary, scan_method: type, image_url: file_urls?.[0] || null,
-          });
-          enrichProductImage(prod.id, p.brand, p.name, p.shade);
+          };
+          const dup = await checkForDuplicate(normBrand, p.name);
+          if (dup) {
+            setIsAnalyzing(false);
+            setDuplicateProduct(dup);
+            setPendingSave({ entityData, enrichBrand: normBrand, enrichName: p.name, enrichShade: p.shade });
+            setActiveMode("duplicate");
+            return;
+          }
+          const prod = await base44.entities.Product.create(entityData);
+          enrichProductImage(prod.id, normBrand, p.name, p.shade);
+          logScan({ scan_method: type, status: "success", product_id: prod.id, brand: normBrand, name: p.name, shade: p.shade, product_count: 1 });
           setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
         } else {
           const createdProducts = await Promise.all(
-            validProducts.map(p =>
-              base44.entities.Product.create({
-                brand: p.brand, name: p.name, shade: computeSafeShade(p.shade),
+            validProducts.map(p => {
+              const normBrand = normalizeBrand(p.brand);
+              return base44.entities.Product.create({
+                brand: normBrand, name: p.name, shade: computeSafeShade(p.shade),
                 category: p.category || "Makeup", subcategory: normalizeSubcategory(p.category, p.subcategory),
                 price: p.price_usd || 0, currency: "USD", description: p.description,
                 muse_shimmer: p.muse_shimmer, where_to_buy: JSON.stringify(p.where_to_buy || []),
                 ingredients: p.ingredients_summary, scan_method: type, image_url: file_urls?.[0] || null,
-              })
-            )
+              });
+            })
           );
           createdProducts.forEach((prod, i) => {
-            enrichProductImage(prod.id, validProducts[i].brand, validProducts[i].name, validProducts[i].shade);
+            enrichProductImage(prod.id, normalizeBrand(validProducts[i].brand), validProducts[i].name, validProducts[i].shade);
           });
+          logScan({ scan_method: type, status: "success", product_count: createdProducts.length });
           setIsAnalyzing(false);
           setProgress(100);
           setTimeout(() => {
@@ -313,6 +878,7 @@ if (type === "image") {
           }, 500);
         }
       } else {
+        // TODO: InvokeLLM below uses Anthropic (no API key) — migrate to a backend function using Gemini
         const result = await base44.integrations.Core.InvokeLLM({
           prompt,
           file_urls,
@@ -339,24 +905,41 @@ if (type === "image") {
         const isBadBrand = !result.brand || BAD_BRANDS.includes(brandLower) || brandLower.startsWith("not ");
         if (result.identified === false || isBadBrand) {
           setProgress(0); setIsAnalyzing(false);
-          setScanError("The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging.");
+          logScan({ scan_method: type, status: "failed", product_count: 0 });
+          setScanError(isSocial
+            ? "The Muse couldn't identify a product from this post — try saving the image and using Gallery instead for best results."
+            : "The Muse couldn't identify a beauty product here. Try a clearer photo showing the product label or packaging."
+          );
           setActiveMode("error");
           return;
         }
         setProgress(100);
-        const prod = await base44.entities.Product.create({
-          brand: result.brand, name: result.name, shade: computeSafeShade(result.shade),
+        const normBrand = normalizeBrand(result.brand);
+        const entityData = {
+          brand: normBrand, name: result.name, shade: computeSafeShade(result.shade),
           category: result.category || "Makeup", subcategory: normalizeSubcategory(result.category, result.subcategory),
           price: result.price_usd || 0, currency: "USD", description: result.description,
           muse_shimmer: result.muse_shimmer, where_to_buy: JSON.stringify(result.where_to_buy || []),
           ingredients: result.ingredients_summary, source_url: url || null,
           scan_method: type, image_url: file_urls?.[0] || null,
-        });
-        enrichProductImage(prod.id, result.brand, result.name, result.shade);
+        };
+        const dup = await checkForDuplicate(normBrand, result.name);
+        if (dup) {
+          setIsAnalyzing(false);
+          setDuplicateProduct(dup);
+          setPendingSave({ entityData, enrichBrand: normBrand, enrichName: result.name, enrichShade: result.shade });
+          setActiveMode("duplicate");
+          return;
+        }
+        const prod = await base44.entities.Product.create(entityData);
+        enrichProductImage(prod.id, normBrand, result.name, result.shade);
+        logScan({ scan_method: type, status: "success", product_id: prod.id, brand: normBrand, name: result.name, shade: result.shade, product_count: 1 });
         setTimeout(() => { onClose(); navigate(`/product/${prod.id}`); }, 500);
       }
-    } catch {
+    } catch (error) {
       clearInterval(interval);
+      console.error('[Pipeline Error]:', error);
+      logScan({ scan_method: type, status: "failed", product_count: 0, error_reason: error?.message || String(error) });
       setScanError("Something went wrong. Please try again.");
       setActiveMode("error");
       setIsAnalyzing(false);
@@ -472,6 +1055,11 @@ if (type === "image") {
                   {progress}%
                 </span>
               </div>
+              {loadingHint && (
+                <p className="font-serif text-xs text-[#1A3C34]/45 italic mt-5 text-center max-w-[260px] leading-relaxed">
+                  {loadingHint}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -500,6 +1088,49 @@ if (type === "image") {
           </motion.div>
         )}
 
+        {/* ===== DUPLICATE ===== */}
+        {activeMode === "duplicate" && duplicateProduct && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center px-8 text-center"
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
+              style={{ background: "#EFE9DC" }}
+            >
+              <span style={{ fontSize: 26, lineHeight: 1, color: "#1B2E2A" }}>✦</span>
+            </div>
+            <h3 className="font-serif text-xl text-[#1B2E2A] mb-2">Already in your collection</h3>
+            <p className="font-serif text-base text-[#4A443E] italic mb-1">{duplicateProduct.brand}</p>
+            <p className="text-sm text-[#4A443E] mb-1">{duplicateProduct.name}</p>
+            {duplicateProduct.shade && (
+              <p className="text-xs text-[#8B7355] italic mb-8">{duplicateProduct.shade}</p>
+            )}
+            {!duplicateProduct.shade && <div className="mb-8" />}
+            <div className="flex flex-col gap-3 w-full max-w-[240px]">
+              <button
+                onClick={() => { onClose(); navigate(`/product/${duplicateProduct.id}`); }}
+                className="w-full py-3.5 bg-[#1A3A30] text-[#FDF7EF] text-xs tracking-[0.25em] uppercase rounded-full font-light"
+              >
+                View in Collection
+              </button>
+              <button
+                onClick={handleSaveAnyway}
+                className="w-full py-3 border border-[#1A3A30]/30 text-[#1A3A30] text-xs tracking-[0.25em] uppercase rounded-full font-light"
+              >
+                Save Anyway
+              </button>
+              <button
+                onClick={() => { setDuplicateProduct(null); setPendingSave(null); setActiveMode(null); }}
+                className="mt-1 text-xs text-[#1A3A30]/40 underline"
+              >
+                Back
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* ===== GALLERY PREVIEW (iridescent flourish, auto-analyses) ===== */}
         {activeMode === "preview" && previewUrl && (
           <motion.div
@@ -519,22 +1150,22 @@ if (type === "image") {
         {/* ===== LINK INPUT ===== */}
         {activeMode === "link" && !isAnalyzing && (
           <div className="flex flex-col items-center px-8 w-full max-w-sm">
-            <h3 className="font-serif text-2xl text-[#1A3A30] text-center mb-1">Paste a link</h3>
-            <p className="text-sm text-[#8B7355] text-center mb-8 italic">to discover its beauty secrets</p>
+            <h3 className="font-serif text-2xl text-[#1A3A30] text-center mb-1">Paste a social link</h3>
+            <p className="text-sm text-[#8B7355] text-center mb-8 italic">Instagram, TikTok, Pinterest, YouTube &amp; more</p>
             <div className="w-full border border-[#1A3A30]/25 rounded-2xl px-4 py-3 flex items-center gap-3 bg-white/60 mb-4">
               <LinkIcon size={18} color="#1A3A30" />
               <input
                 autoFocus
                 value={linkInput}
                 onChange={(e) => setLinkInput(e.target.value)}
-                placeholder="Paste a product URL..."
+                placeholder="Paste a social media link..."
                 className="flex-1 bg-transparent text-sm text-[#1A3A30] outline-none placeholder:text-[#1A3A30]/30 font-light"
                 onKeyDown={(e) => e.key === "Enter" && handleLinkSubmit()}
               />
             </div>
             <p className="text-[11px] text-[#1A3A30]/40 font-light mb-8 text-center italic leading-relaxed">
-              Works with Sephora, LOOKFANTASTIC, brand websites and more<br/>
-              <span className="not-italic">Instagram &amp; TikTok links are not supported</span>
+              Works best with public posts featuring beauty products<br/>
+              <span className="not-italic">Also works with Sephora, brand websites and more</span>
             </p>
             <button
               onClick={handleLinkSubmit}
@@ -661,6 +1292,11 @@ if (type === "image") {
           </div>
         )}
 
+        {/* ===== MANUAL ENTRY ===== */}
+        {activeMode === "manual" && (
+          <ManualProductEntry onClose={() => setActiveMode(null)} />
+        )}
+
         {/* ===== MIRROR — VIRTUAL TRY-ON (coming soon) ===== */}
         {activeMode === "mirror" && (
           <StudioComingSoon onClose={() => setActiveMode(null)} />
@@ -679,7 +1315,8 @@ if (type === "image") {
                   animate={{ opacity: 1, scale: 1, x: pos.x, y: pos.y }}
                   transition={{ delay: 0.08 * i, type: "spring", stiffness: 220, damping: 18 }}
                   onClick={() => {
-                    if      (id === "camera")  cameraInputRef.current?.click();
+                    if      (id === "manual")  { setActiveMode("manual"); }
+                    else if (id === "camera")  cameraInputRef.current?.click();
                     else if (id === "gallery") fileInputRef.current?.click();
                     else if (id === "link")    setActiveMode("link");
                     else if (id === "audio")   { heardRef.current = ""; setHeard(""); setActiveMode("audio"); }

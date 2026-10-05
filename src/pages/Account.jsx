@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Download, AlertTriangle, Check, RefreshCw } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -35,9 +35,13 @@ export default function Account() {
   const [favBrands, setFavBrands]   = useState("");
 
   // Delete modal state
-  const [deleteOpen, setDeleteOpen]   = useState(false);
-  const [deleteInput, setDeleteInput] = useState("");
-  const [deleting, setDeleting]       = useState(false);
+  const [deleteOpen, setDeleteOpen]       = useState(false);
+  const [deleteInput, setDeleteInput]     = useState("");
+  const [deleting, setDeleting]           = useState(false);
+
+  // Email preferences state
+  const [priceEmails, setPriceEmails]     = useState(true);
+  const [savingEmail, setSavingEmail]     = useState(false);
 
   // Catalog re-sync state
   const [resyncing,   setResyncing]   = useState(false);
@@ -54,6 +58,7 @@ export default function Account() {
         setConcerns(sp.concerns         || []);
         setBudget(sp.budget_tier        || "");
         setFavBrands(sp.favorite_brands || "");
+        setPriceEmails(u.price_emails_opted_in !== false);
       } catch {}
     }).catch(() => {});
   }, []);
@@ -95,6 +100,20 @@ export default function Account() {
       setResyncResult({ error: true });
     }
     setResyncing(false);
+  };
+
+  // ── EMAIL PREFERENCES ─────────────────────────────────────────────────────
+  const togglePriceEmails = async () => {
+    if (savingEmail) return;
+    const next = !priceEmails;
+    setPriceEmails(next);
+    setSavingEmail(true);
+    try {
+      await base44.auth.updateMe({ price_emails_opted_in: next });
+    } catch {
+      setPriceEmails(!next);
+    }
+    setSavingEmail(false);
   };
 
   // ── EXPORT ────────────────────────────────────────────────────────────────
@@ -283,10 +302,10 @@ export default function Account() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-[13px] text-[var(--color-text-primary)]">
-                    {resyncing ? "Re-syncing images…" : "Re-sync all missing images"}
+                    {resyncing ? "Finding missing photos…" : "Fill in missing product photos"}
                   </p>
                   <p className="text-[10px] text-[var(--color-text-primary)]/42 mt-0.5 leading-snug">
-                    Instantly re-runs the image fetcher across your whole catalog instead of waiting for the weekly job.
+                    Finds photos only for products that don't have one yet. Won't replace photos that were already found or uploaded.
                   </p>
                 </div>
               </button>
@@ -337,11 +356,63 @@ export default function Account() {
           </section>
 
           {/* ── FOOTER ──────────────────────────────────────────────────────── */}
-          <div className="flex justify-center pt-2 pb-2">
-            <span className="text-[11px] text-primary-35 underline underline-offset-2 cursor-pointer">
-              Read our Privacy Policy
-            </span>
-          </div>
+          {/* ── PRIVACY POLICY ──────────────────────────────────────────────── */}
+          <section className="px-5 pb-6">
+            <h3 className="text-[9px] tracking-[0.28em] uppercase text-[var(--color-accent-gold)] font-light mb-3">Privacy</h3>
+
+            <div className="space-y-4 text-[11px] text-[var(--color-text-primary)]/55 font-light leading-relaxed">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">Information We Collect</p>
+                <p>
+                  We use your IP address to estimate your country and currency, so we can show you relevant retailers and prices in your local currency. This is done automatically and does not involve precise location tracking (such as GPS). We do not share this information with third parties for advertising purposes.
+                </p>
+                <p className="mt-2 text-[var(--color-text-primary)]/38 italic">
+                  Nous utilisons votre adresse IP pour estimer votre pays et votre devise, afin de vous proposer des revendeurs et des prix pertinents dans votre devise locale. Cette estimation se fait automatiquement et n'implique aucun suivi de localisation précise (comme le GPS). Nous ne partageons pas cette information avec des tiers à des fins publicitaires.
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">Email Preferences</p>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="flex-1">
+                    Weekly price-drop emails — a curated digest of price changes on your shopping list.
+                  </p>
+                  <button
+                    onClick={togglePriceEmails}
+                    disabled={savingEmail}
+                    aria-label={priceEmails ? "Unsubscribe from price emails" : "Subscribe to price emails"}
+                    className={`flex-shrink-0 w-10 h-6 rounded-full transition-colors relative ${priceEmails ? "bg-[#043927]" : "bg-[var(--color-border)]"} ${savingEmail ? "opacity-50" : ""}`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${priceEmails ? "left-5" : "left-1"}`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">In-App Notifications</p>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="flex-1">
+                    Price drops, new arrivals, and other in-app alerts — manage which categories you receive.
+                  </p>
+                  <Link
+                    to="/notifications-settings"
+                    className="flex-shrink-0 text-[10px] tracking-[0.14em] uppercase text-[var(--color-accent-gold)] font-light"
+                  >
+                    Manage →
+                  </Link>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">Prices &amp; Retailer Links</p>
+                <p>
+                  Prices are sourced from retailer listings and may not reflect the current price at checkout. Always confirm the final price on the retailer's site before purchasing. Some links may be affiliate links — LuxeBeauty may earn a small commission at no extra cost to you.
+                </p>
+              </div>
+            </div>
+          </section>
 
         </div>
       </div>

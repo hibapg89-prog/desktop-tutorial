@@ -48,6 +48,7 @@ export default function AccessibilitySettings() {
   const [largeTypography,   setLargeTypography]   = useState(prefs.largeTypography   ?? false);
   const [darkMode,          setDarkMode]          = useState(prefs.darkMode          ?? false);
   const [highContrastText,  setHighContrastText]  = useState(prefs.highContrastText  ?? false);
+  const [guidedPath,        setGuidedPath]        = useState(prefs.guidedPath        ?? false);
   // Apply large typography globally when toggled — and persist immediately so
   // AppLayout can restore it on any page load without waiting for Save.
   useEffect(() => {
@@ -107,8 +108,13 @@ export default function AccessibilitySettings() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, highContrastText }));
   }, [highContrastText]);
 
+  useEffect(() => {
+    const current = loadPrefs();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, guidedPath }));
+  }, [guidedPath]);
+
   const handleSave = async () => {
-    const data = { darkMode, calmMode, largeTypography, highContrastText };
+    const data = { darkMode, calmMode, largeTypography, highContrastText, guidedPath };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     try {
       await base44.auth.updateMe({ accessibility_prefs: JSON.stringify(data) });
@@ -234,6 +240,29 @@ export default function AccessibilitySettings() {
                 </p>
               </div>
               <Toggle enabled={darkMode} onToggle={() => setDarkMode(v => !v)} />
+            </div>
+          </div>
+        </div>
+
+        {/* ── GUIDANCE ── */}
+        <div>
+          <p className="text-[10px] tracking-[0.25em] text-primary-40 uppercase font-light mb-3 px-1">
+            Guidance
+          </p>
+          <div className="bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)]">
+            <div className="px-5 py-4 flex items-start justify-between gap-4">
+              <div>
+                <p
+                  className="text-[var(--color-text-primary)] font-light"
+                  style={{ fontSize: largeTypography ? "15px" : "13px" }}
+                >
+                  Guided Path
+                </p>
+                <p className="text-[10px] text-primary-45 font-light mt-0.5 leading-relaxed max-w-[220px]">
+                  Shows a step-by-step hint on the Home screen to help you scan your first product.
+                </p>
+              </div>
+              <Toggle enabled={guidedPath} onToggle={() => setGuidedPath(v => !v)} />
             </div>
           </div>
         </div>

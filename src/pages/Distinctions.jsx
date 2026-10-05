@@ -278,6 +278,7 @@ export default function Distinctions() {
         const myStat = statRecords?.find(s => s.user_id === user.id);
         const adores = myStat?.total_adores || 0;
 
+        const profileComplete = !!(user.onboarding_complete || (user.skin_types && user.intention));
         const data = {
           postCount: postList.length,
           reviewCount: postList.filter(p => !p.post_type || p.post_type === "review").length,
@@ -285,7 +286,7 @@ export default function Distinctions() {
           beforeAfterCount: postList.filter(p => p.post_type === "before_after").length,
           routineCount: postList.filter(p => p.post_type === "routine").length,
           grwmCount: postList.filter(p => p.post_type === "grwm").length,
-          profileComplete: true,
+          profileComplete,
           totalAdores: adores,
           earnedCount: existingKeys.size,
         };
@@ -294,7 +295,7 @@ export default function Distinctions() {
 
         if (!hasAutoAwarded.current) {
           hasAutoAwarded.current = true;
-          const newKeys = computeEarned(postList, existingKeys, adores);
+          const newKeys = computeEarned(postList, existingKeys, adores, profileComplete);
 
           for (const key of newKeys) {
             try {
@@ -409,15 +410,6 @@ export default function Distinctions() {
 
           <div className="absolute left-0 top-0 bottom-0 w-12 opacity-30 pointer-events-none bg-gradient-to-r from-[#f5ead8] to-transparent" />
 
-          {/* Progress ribbon */}
-          <div
-            className="absolute top-4 left-1/2 -translate-x-1/2 px-5 py-1 rounded-full border border-[#C8B06A] backdrop-blur-sm"
-            style={{ background: "var(--color-bg-surface)" }}
-          >
-            <span className="text-[11px] tracking-[0.2em] uppercase font-light font-serif text-[var(--color-text-primary)]">
-              {earnedCount} of 20 earned
-            </span>
-          </div>
 
           {/* Scattered badges */}
           {BADGES.map((badge, i) => {

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Plus, Search, X, Sparkles, MessageCircle, Bookmark, Share2, Flag, Play } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Search, X, Sparkles, Heart, MessageCircle, Bookmark, Share2, Flag, Play, Trash2 } from "lucide-react";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import SwanLogo from "@/components/SwanLogo";
@@ -62,6 +62,7 @@ function TrustBadge({ post }) {
 
 export default function Community() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
@@ -86,17 +87,35 @@ export default function Community() {
     catch { return new Set(); }
   });
   const [reportingPostId, setReportingPostId] = useState(null);
+  const [deletingPostId, setDeletingPostId] = useState(null);
+  const [prefillProduct, setPrefillProduct] = useState(null);
+
+  // Detect a product shared from ScanResults — auto-open the composer
+  useEffect(() => {
+    if (location.state?.prefillProduct) {
+      setPrefillProduct(location.state.prefillProduct);
+      setComposing(true);
+      window.history.replaceState(null, '');
+    }
+  }, [location.state]);
   const [creatorBadges, setCreatorBadges] = useState({});
   const [nudge, setNudge] = useState(null);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [creatorNudge, setCreatorNudge] = useState({});
   const [banners, setBanners] = useState([]);
+  const [showSwapTeaser, setShowSwapTeaser] = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
   const [events, setEvents] = useState([]);
   const [joinedRooms, setJoinedRooms] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem("muse_beauty_rooms") || "[]")); }
     catch { return new Set(); }
   });
+
+  // Pull-to-refresh
+  const touchStartY = useRef(0);
+  const PULL_THRESHOLD = 72;
+  const [pullY, setPullY] = useState(0);
+  const [ptr, setPtr] = useState(false);
 
   const FAMILY_PRIORITY = { influence: 5, experience: 4, rituals: 3, self_connection: 2, foundations: 1 };
 
@@ -263,8 +282,8 @@ export default function Community() {
       createNotification({
         user_id: post.created_by_id,
         type: "adore",
-        title: (user.full_name || user.email || "A Muse Member") + " adored your review",
-        body: post.brand + " " + post.name + (post.shade ? " · " + post.shade : ""),
+        title: (user.full_name || user.email || "A Muse Member") + " adored your musing",
+        body: post.brand ? post.brand + " " + post.name + (post.shade ? " · " + post.shade : "") : (post.review_text || "").slice(0, 80),
         ...(post.image_url ? { image_url: post.image_url } : {}),
         sender_id: user.id,
       });
@@ -306,8 +325,8 @@ export default function Community() {
       createNotification({
         user_id: post.created_by_id,
         type: "collect",
-        title: (user.full_name || user.email || "A Muse Member") + " saved your review",
-        body: post.brand + " " + post.name + (post.shade ? " · " + post.shade : ""),
+        title: (user.full_name || user.email || "A Muse Member") + " saved your musing",
+        body: post.brand ? post.brand + " " + post.name + (post.shade ? " · " + post.shade : "") : (post.review_text || "").slice(0, 80),
         ...(post.image_url ? { image_url: post.image_url } : {}),
         sender_id: user.id,
       });
@@ -324,6 +343,16 @@ export default function Community() {
     }
     try { await navigator.clipboard.writeText(url); } catch {}
     navigate("/messages");
+  };
+
+  const handleDeletePost = async (e, postId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await base44.entities.CommunityPost.delete(postId);
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      setDeletingPostId(null);
+    } catch {}
   };
 
   const presentCats = ["All", ...[...new Set(posts.map(p => p.category).filter(Boolean))]];
@@ -357,9 +386,12 @@ export default function Community() {
     }
 
     if (feedMode === "trending") {
+      const decay = h => 1 / (1 + h / 48);
       return [...base].sort((a, b) => {
-        const scoreA = (a.review_count || 0) * 2 + (adoredIds.has(a.id) ? 3 : 0) + (a.product_id ? 1 : 0);
-        const scoreB = (b.review_count || 0) * 2 + (adoredIds.has(b.id) ? 3 : 0) + (b.product_id ? 1 : 0);
+        const ageA = (Date.now() - new Date(a.created_date).getTime()) / 36e5;
+        const ageB = (Date.now() - new Date(b.created_date).getTime()) / 36e5;
+        const scoreA = ((a.review_count || 0) * 2 + (adoredIds.has(a.id) ? 3 : 0) + (a.product_id ? 1 : 0)) * decay(ageA);
+        const scoreB = ((b.review_count || 0) * 2 + (adoredIds.has(b.id) ? 3 : 0) + (b.product_id ? 1 : 0)) * decay(ageB);
         return scoreB - scoreA;
       });
     }
@@ -370,7 +402,50 @@ export default function Community() {
   const displayPosts = getDisplayPosts();
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)]">
+    <main
+      className="min-h-screen bg-[var(--color-bg)]"
+      onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
+      onTouchMove={e => {
+        if (window.scrollY > 0 || ptr) return;
+        const d = e.touches[0].clientY - touchStartY.current;
+        if (d > 0) setPullY(Math.min(d * 0.45, PULL_THRESHOLD * 1.3));
+      }}
+      onTouchEnd={async () => {
+        if (pullY >= PULL_THRESHOLD) {
+          setPtr(true);
+          await load();
+          setPtr(false);
+          setPullY(0);
+        } else {
+          setPullY(0);
+        }
+      }}
+    >
+      {/* ── Pull-to-refresh Swan indicator ─────────────────────────────── */}
+      <AnimatePresence>
+        {(pullY > 12 || ptr) && (
+          <motion.div
+            className="fixed top-0 inset-x-0 z-40 flex justify-center pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <motion.div
+              className="mt-12 w-10 h-10 rounded-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] flex items-center justify-center shadow-sm"
+              animate={{ scale: ptr ? 1 : Math.min(pullY / PULL_THRESHOLD, 1) }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            >
+              <motion.div
+                animate={ptr ? { rotate: 360 } : {}}
+                transition={ptr ? { duration: 0.9, repeat: Infinity, ease: "linear" } : {}}
+              >
+                <SwanLogo size={20} color="var(--color-accent-gold)" />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* ── Community header — framed banner block ─────────────────────── */}
       <div className="px-5 pt-14 pb-4">
         <div
@@ -380,7 +455,7 @@ export default function Community() {
           {/* Top bar — title + action buttons */}
           <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3" style={{ background: "#F8F3E6" }}>
             <div className="flex-shrink-0">
-              <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">The Circle</p>
+              <p className="text-[0.625rem] tracking-[0.35em] text-primary-40 uppercase font-light">Community</p>
               <h1 className="font-serif text-2xl text-[#1C2E24] font-light mt-0.5 leading-tight flex items-baseline gap-2">
                 Community
                 {posts.length > 0 && (
@@ -391,10 +466,13 @@ export default function Community() {
             <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => setComposingSwap(true)}
-                  className="flex items-center gap-0.5 bg-white border border-[#D3CDBE] text-[#1C2E24] text-[0.6875rem] tracking-[0.1em] font-light px-2.5 py-1.5 rounded-full whitespace-nowrap"
+                  onClick={() => setShowSwapTeaser(true)}
+                  className="relative flex items-center gap-0.5 bg-white border border-[#D3CDBE] text-[#1C2E24]/50 text-[0.6875rem] tracking-[0.1em] font-light px-2.5 py-1.5 rounded-full whitespace-nowrap"
                 >
                   <Plus size={11} /> Swap
+                  <span className="absolute -top-2 -right-1 text-[7px] tracking-[0.06em] uppercase bg-[#C8B06A] text-white px-1 py-0.5 rounded-full font-light leading-none">
+                    soon
+                  </span>
                 </button>
                 <button
                   onClick={() => setComposingPoll(true)}
@@ -407,7 +485,7 @@ export default function Community() {
                   className="flex items-center gap-0.5 text-[#1C2E24] text-[0.6875rem] tracking-[0.1em] font-medium px-2.5 py-1.5 rounded-full whitespace-nowrap"
                   style={{ background: "linear-gradient(135deg, #C4B47B 0%, #DED098 100%)" }}
                 >
-                  <Plus size={11} /> Post
+                  <Plus size={11} /> Musing
                 </button>
               </div>
               <Link
@@ -424,7 +502,7 @@ export default function Community() {
           <div className="relative" style={{ height: "230px" }}>
             <Image
               src={COMMUNITY_BANNER_URL}
-              alt="The Circle — luxury beauty flat-lay"
+              alt="Community — luxury beauty flat-lay"
               fittingType="fill"
               className="w-full h-full"
             />
@@ -676,6 +754,18 @@ export default function Community() {
       )}
 
       <div className="px-5 pb-32">
+        {/* Polls always visible regardless of post count */}
+        {!loading && feedMode !== "following" && polls.length > 0 && (
+          <div className="space-y-3 mb-5">
+            <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
+            {polls.map((poll, i) => (
+              <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                <PollCard poll={poll} user={user} onVoted={load} onDelete={load} />
+              </motion.div>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="swan-float"><SwanLogo size={40} color="var(--color-accent-gold)" /></div>
@@ -684,23 +774,12 @@ export default function Community() {
           <div className="flex flex-col items-center py-20 text-center">
             <SwanLogo size={56} color="var(--color-accent-gold)" className="mb-5" />
             <p className="font-serif text-lg text-primary-40 italic leading-relaxed">
-              No reviews yet — be the first to share a find.
+              No musings yet — be the first to share a find.
             </p>
           </div>
         ) : (
           <>
             <ReviewerLeaderboard posts={posts} />
-
-            {feedMode !== "following" && polls.length > 0 && (
-              <div className="space-y-3 mb-5">
-                <p className="text-[0.625rem] tracking-[0.3em] uppercase text-primary-40 font-light">Active Polls</p>
-                {polls.map((poll, i) => (
-                  <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-                    <PollCard poll={poll} user={user} onVoted={load} />
-                  </motion.div>
-                ))}
-              </div>
-            )}
 
             {feedMode !== "following" && swaps.length > 0 && (
               <div className="space-y-3 mb-5">
@@ -741,7 +820,7 @@ export default function Community() {
               <div className="flex flex-col items-center py-20 text-center">
                 <SwanLogo size={48} color="var(--color-accent-gold)" className="mb-4" />
                 <p className="font-serif text-base text-primary-40 italic leading-relaxed px-4">
-                  Your coterie hasn't posted yet — whisper to a member from any review to connect.
+                  Your coterie hasn't shared yet — whisper to a member from any musing to connect.
                 </p>
               </div>
             )}
@@ -782,7 +861,7 @@ export default function Community() {
                 <div className="flex flex-col items-center py-16 text-center">
                   <SwanLogo size={48} color="var(--color-accent-gold)" className="mb-4" />
                   <p className="font-serif text-base text-primary-40 italic">
-                    {query ? "No reviews match your search" : `Nothing in ${activeCategory} yet`}
+                    {query ? "No musings match your search" : `Nothing in ${activeCategory} yet`}
                   </p>
                 </div>
               )
@@ -830,6 +909,11 @@ export default function Community() {
                                     {(() => { try { return JSON.parse(post.routine_steps).length; } catch { return ""; } })()} steps
                                   </span>
                                 )}
+                              </div>
+                            ) : post.post_type === "thought" ? (
+                              <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#FDF8EE] to-[#F5EDDA]">
+                                <span className="text-[1.5rem] leading-none text-[#C8B06A]/60 font-serif">"</span>
+                                <span className="text-[0.4375rem] tracking-[0.15em] uppercase text-[#C8B06A]/70 font-light">Quick Take</span>
                               </div>
                             ) : post.post_type === "grwm" ? (
                               <>
@@ -960,7 +1044,7 @@ export default function Community() {
                                 transition={{ type: "spring", stiffness: 480, damping: 18 }}
                                 style={{ display: "inline-flex" }}
                               >
-                                <Sparkles size={13} />
+                                <Heart size={13} fill={adoredIds.has(post.id) ? "currentColor" : "none"} />
                               </motion.span>
                               {adoredIds.has(post.id) ? "Adored" : "Adore"}
                               {(post.adore_count || 0) > 0 && (
@@ -1006,6 +1090,22 @@ export default function Community() {
                             >
                               <Flag size={12} aria-hidden={true} />
                             </button>
+                            {post.created_by_id && post.created_by_id === user?.id && (
+                              deletingPostId === post.id ? (
+                                <div className="flex items-center gap-1.5 text-[10px]" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                                  <button onClick={(e) => handleDeletePost(e, post.id)} className="text-[#BC8F8F] underline font-light">Yes</button>
+                                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingPostId(null); }} className="text-primary-40 underline font-light">No</button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingPostId(post.id); }}
+                                  aria-label="Delete post"
+                                  className="flex items-center text-primary-25 hover:text-[#BC8F8F] transition-colors"
+                                >
+                                  <Trash2 size={12} aria-hidden={true} />
+                                </button>
+                              )
+                            )}
                           </div>
                         </div>
                       </Link>
@@ -1018,10 +1118,65 @@ export default function Community() {
         )}
       </div>
 
-      {composing && <CommunityComposer onClose={() => setComposing(false)} onPosted={load} />}
+      {composing && <CommunityComposer onClose={() => { setComposing(false); setPrefillProduct(null); }} onPosted={load} prefillProduct={prefillProduct} />}
       {reportingPostId && <ReportModal postId={reportingPostId} onClose={() => setReportingPostId(null)} />}
       {composingPoll && <PollComposer onClose={() => setComposingPoll(false)} onPosted={load} />}
       {composingSwap && <SwapComposer onClose={() => setComposingSwap(false)} onPosted={load} />}
+
+      {/* Swap Teaser Modal */}
+      <AnimatePresence>
+        {showSwapTeaser && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#043927]/40 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSwapTeaser(false)}
+          >
+            <motion.div
+              className="w-full sm:max-w-sm bg-[var(--color-bg)] rounded-t-3xl sm:rounded-3xl px-7 pt-8 pb-28 text-center"
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: "spring", damping: 26, stiffness: 280 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowSwapTeaser(false)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)]/40"
+              >
+                <X size={14} />
+              </button>
+
+              <div className="w-12 h-12 rounded-full bg-[#C8B06A]/12 flex items-center justify-center mx-auto mb-5">
+                <SwanLogo size={28} color="var(--color-accent-gold)" />
+              </div>
+
+              <p className="text-[0.5625rem] tracking-[0.3em] uppercase text-[#C8B06A] font-light mb-2">Community · Coming Soon</p>
+
+              <h2
+                className="text-[1.75rem] font-light text-[var(--color-text-primary)] leading-tight mb-3"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              >
+                The Swap Circle
+              </h2>
+
+              <div className="w-8 h-px bg-[#C8B06A]/40 mx-auto mb-4" />
+
+              <p className="text-[0.8125rem] font-light text-[var(--color-text-primary)]/65 leading-relaxed mb-2">
+                Your gently-loved finds deserve a second life with someone who will truly cherish them.
+              </p>
+              <p className="text-[0.8125rem] font-light text-[var(--color-text-primary)]/65 leading-relaxed mb-6">
+                List what you're ready to pass along. Discover what your circle is offering. Curate each other's routines.
+              </p>
+
+              <p className="text-[0.6875rem] font-light italic text-[var(--color-text-primary)]/40 leading-relaxed">
+                Invite-only trading between members you trust — opening soon to the inner circle.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

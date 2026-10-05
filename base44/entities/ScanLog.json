@@ -1,0 +1,31 @@
+{
+  "name": "ScanLog",
+  "type": "object",
+  "properties": {
+    "scan_method": {
+      "type": "string",
+      "enum": ["camera", "gallery", "link", "voice"],
+      "title": "How the scan was initiated"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["success", "failed"],
+      "default": "success",
+      "title": "Outcome of the scan attempt"
+    },
+    "product_id": { "type": "string", "title": "Created Product id (success only)" },
+    "brand": { "type": "string", "title": "Identified brand (if any)" },
+    "name": { "type": "string", "title": "Identified product name (if any)" },
+    "shade": { "type": "string", "title": "Identified shade (if any)" },
+    "category": { "type": "string", "title": "Identified category (if any)" },
+    "error_reason": { "type": "string", "title": "Why the scan failed (failed only)" },
+    "product_count": { "type": "number", "default": 1, "title": "Number of products identified in this scan" }
+  },
+  "required": ["scan_method", "status"],
+  "rls": {
+    "read": { "created_by_id": "{{user.id}}" },
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": { "created_by_id": "{{user.id}}" },
+    "delete": { "created_by_id": "{{user.id}}" }
+  }
+}

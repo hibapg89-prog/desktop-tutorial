@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Plus, Bookmark } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import AddEditFromLink from "@/components/AddEditFromLink";
 
-const TABS = ["MAKEUP", "SKINCARE", "HAIR", "WELLNESS"];
+const TABS = ["MAKEUP", "SKINCARE", "HAIR", "WELLNESS", "FAVORITES"];
 
 const SAMPLE_TUTORIALS = [
   // ── MAKEUP ──────────────────────────────────────────────────────────────────
@@ -28,6 +29,8 @@ const SAMPLE_TUTORIALS = [
     duration_minutes: 10,
     image_url: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=500&q=80",
     aspect: "4/5",
+    creator_source: "Monica Bellucci",
+    creator_platform: "Instagram",
   },
   {
     id: "sample-3",
@@ -96,7 +99,7 @@ const SAMPLE_TUTORIALS = [
     category: "Skincare",
     difficulty: "Beginner",
     duration_minutes: 10,
-    image_url: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1643379855889-850035817d24?w=500&q=80",
     aspect: "3/4",
     is_muse_original: true,
   },
@@ -107,7 +110,7 @@ const SAMPLE_TUTORIALS = [
     category: "Hair",
     difficulty: "Beginner",
     duration_minutes: 15,
-    image_url: "https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?w=500&q=80",
     aspect: "4/5",
     is_muse_original: true,
   },
@@ -117,7 +120,7 @@ const SAMPLE_TUTORIALS = [
     category: "Hair",
     difficulty: "Intermediate",
     duration_minutes: 25,
-    image_url: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=500&q=80",
     aspect: "3/4",
     is_muse_original: true,
   },
@@ -138,7 +141,7 @@ const SAMPLE_TUTORIALS = [
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 10,
-    image_url: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1578747763484-51b21a33e4fa?w=500&q=80",
     aspect: "3/4",
     is_muse_original: true,
   },
@@ -148,7 +151,7 @@ const SAMPLE_TUTORIALS = [
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 5,
-    image_url: "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1564512480295-86e479d9b87c?w=500&q=80",
     aspect: "4/5",
     is_muse_original: true,
   },
@@ -158,7 +161,7 @@ const SAMPLE_TUTORIALS = [
     category: "Wellness",
     difficulty: "Beginner",
     duration_minutes: 12,
-    image_url: "https://images.unsplash.com/photo-1519415943484-9fa1873496d4?w=500&q=80",
+    image_url: "https://images.unsplash.com/photo-1556760544-74068565f05c?w=500&q=80",
     aspect: "2/3",
     is_muse_original: true,
   },
@@ -167,9 +170,35 @@ const SAMPLE_TUTORIALS = [
 export default function Tutorials() {
   const [activeTab, setActiveTab] = useState("MAKEUP");
   const [dbTutorials, setDbTutorials] = useState([]);
+  const [showAddLink, setShowAddLink] = useState(false);
+  const [collectedIds, setCollectedIds] = useState([]);
+  const [adoredIds,    setAdoredIds]    = useState([]);
+
+  const loadTutorials = () => {
+    base44.entities.Tutorial.list("-created_date", 50).then((list) => {
+      setDbTutorials(list);
+      // Fire-and-forget: enrich DB tutorials missing an image
+      (Array.isArray(list) ? list : []).filter(t => !t.image_url).forEach(async (t) => {
+        try {
+          const res = await base44.functions.invoke('fetchContentImage', {
+            entity_type: 'Tutorial', entity_id: t.id,
+            title: t.title, category: t.category,
+          });
+          const r = res?.data || res;
+          if (r?.image_url) {
+            setDbTutorials(prev => (Array.isArray(prev) ? prev : []).map(p => p.id === t.id ? { ...p, image_url: r.image_url } : p));
+          }
+        } catch {}
+      });
+    }).catch(() => {});
+  };
 
   useEffect(() => {
-    base44.entities.Tutorial.list("-created_date", 20).then(setDbTutorials).catch(() => {});
+    loadTutorials();
+    base44.auth.me().then((u) => {
+      setCollectedIds(Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : []);
+      setAdoredIds(Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : []);
+    }).catch(() => {});
   }, []);
 
   const allTutorials = [
@@ -177,12 +206,14 @@ export default function Tutorials() {
     ...dbTutorials.map((t) => ({ ...t, id: t.id })),
   ];
 
-  const filtered = allTutorials.filter((t) =>
-    activeTab === "MAKEUP"   ? t.category === "Makeup"   :
-    activeTab === "SKINCARE" ? t.category === "Skincare" :
-    activeTab === "HAIR"     ? t.category === "Hair"     :
-                               t.category === "Wellness"
-  );
+  const filtered = activeTab === "FAVORITES"
+    ? allTutorials.filter((t) => collectedIds.includes(t.id) || adoredIds.includes(t.id))
+    : allTutorials.filter((t) =>
+        activeTab === "MAKEUP"   ? t.category === "Makeup"   :
+        activeTab === "SKINCARE" ? t.category === "Skincare" :
+        activeTab === "HAIR"     ? t.category === "Hair"     :
+                                   t.category === "Wellness"
+      );
 
   const col1 = filtered.filter((_, i) => i % 2 === 0);
   const col2 = filtered.filter((_, i) => i % 2 === 1);
@@ -239,27 +270,76 @@ export default function Tutorials() {
 
       {/* Editorial Masonry */}
       <div className="px-5 pb-28">
+        {activeTab === "FAVORITES" && filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Bookmark size={32} color="var(--color-accent-gold)" strokeWidth={1} className="mb-4 opacity-50" />
+            <p className="font-serif text-lg text-[var(--color-text-primary)]/60 italic mb-2">No favorites yet</p>
+            <p className="text-xs text-primary-40 font-light tracking-wide">
+              Open a tutorial and tap the heart to save it here
+            </p>
+          </div>
+        ) : (
         <div className="flex gap-5 max-w-2xl mx-auto">
           {/* Column 1 */}
           <div className="flex-1 flex flex-col gap-8">
             {col1.map((tutorial, i) => (
-              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2} />
+              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2} collectedIds={collectedIds} adoredIds={adoredIds} />
             ))}
           </div>
           {/* Column 2 — offset for stagger */}
           <div className="flex-1 flex flex-col gap-8 mt-14">
             {col2.map((tutorial, i) => (
-              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2 + 1} />
+              <TutorialCard key={tutorial.id} tutorial={tutorial} index={i * 2 + 1} collectedIds={collectedIds} adoredIds={adoredIds} />
             ))}
           </div>
         </div>
+        )}
       </div>
+
+      {/* Floating Add Edit button */}
+      <button
+        onClick={() => setShowAddLink(true)}
+        className="fixed bottom-40 right-5 z-[60] w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+        style={{ background: "var(--color-accent-gold)", boxShadow: "0 6px 20px rgba(200,176,106,0.35)" }}
+        aria-label="Add Edit from link"
+      >
+        <Plus size={20} color="#043927" strokeWidth={1.8} />
+      </button>
+
+      {/* Add Edit from Link modal */}
+      {showAddLink && (
+        <AddEditFromLink
+          onClose={() => setShowAddLink(false)}
+          onCreated={loadTutorials}
+        />
+      )}
     </div>
   );
 }
 
-function TutorialCard({ tutorial, index }) {
-  const [aspired, setAspired] = useState(false);
+function TutorialCard({ tutorial, index, collectedIds = [], adoredIds = [] }) {
+  const [adored, setAdored] = useState(adoredIds.includes(tutorial.id));
+  const [imgError, setImgError] = useState(false);
+  const isCollected = collectedIds.includes(tutorial.id);
+
+  useEffect(() => {
+    setAdored(adoredIds.includes(tutorial.id));
+  }, [adoredIds, tutorial.id]);
+
+  const toggleAdored = async () => {
+    const newState = !adored;
+    setAdored(newState);
+    try {
+      const u = await base44.auth.me();
+      const ids = Array.isArray(u?.adored_tutorials) ? u.adored_tutorials : [];
+      const updated = newState
+        ? [...new Set([...ids, tutorial.id])]
+        : ids.filter((tid) => tid !== tutorial.id);
+      await base44.auth.updateMe({ adored_tutorials: updated });
+    } catch {
+      setAdored(!newState);
+    }
+  };
 
   return (
     <motion.div
@@ -271,14 +351,21 @@ function TutorialCard({ tutorial, index }) {
         {/* Full-width Photo */}
         <Link to={`/tutorial/${tutorial.id}`} className="block">
           <div
-            className="relative overflow-hidden rounded-sm"
+            className="relative overflow-hidden rounded-sm bg-gradient-to-b from-[#0B3C26] to-[#1a5c3a]"
             style={{ aspectRatio: tutorial.aspect || "3/4" }}
           >
-            <img
-              src={tutorial.image_url}
-              alt={tutorial.title}
-              className="w-full h-full object-cover"
-            />
+            {tutorial.image_url && !imgError ? (
+              <img
+                src={tutorial.image_url}
+                alt={tutorial.title}
+                className="w-full h-full object-cover"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <SwanLogo size={32} color="#C8B06A" />
+              </div>
+            )}
             {/* Subtle bottom gradient for depth */}
             <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/30 to-transparent" />
             {/* Difficulty badge */}
@@ -297,6 +384,12 @@ function TutorialCard({ tutorial, index }) {
                 </span>
               </div>
             )}
+            {/* Favorites badge */}
+            {isCollected && (
+              <div className="absolute bottom-3 right-3">
+                <Bookmark size={14} fill="var(--color-accent-gold)" color="var(--color-accent-gold)" strokeWidth={1.5} />
+              </div>
+            )}
           </div>
 
           {/* Editorial caption block */}
@@ -307,6 +400,11 @@ function TutorialCard({ tutorial, index }) {
             <h2 className="font-serif text-[19px] text-[var(--color-text-primary)] font-light leading-[1.25] tracking-[0.02em]">
               {tutorial.title}
             </h2>
+            {(tutorial.creator_source || tutorial.is_muse_original) && (
+              <p className="text-[9px] text-primary-40 font-light tracking-[0.08em] mt-1.5 italic">
+                by {tutorial.creator_source || "The Muse"}
+              </p>
+            )}
           </div>
         </Link>
 
@@ -316,16 +414,16 @@ function TutorialCard({ tutorial, index }) {
             {tutorial.duration_minutes ? `${tutorial.duration_minutes} min read` : ""}
           </p>
           <button
-            onClick={() => setAspired((v) => !v)}
+            onClick={toggleAdored}
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-              aspired ? "bg-[#C8B06A]/15" : "bg-transparent"
+              adored ? "bg-[#C8B06A]/15" : "bg-transparent"
             }`}
-            aria-label="Aspire"
+            aria-label="Favourite"
           >
             <Heart
               size={13}
-              color={aspired ? "#C8B06A" : "var(--color-text-primary)"}
-              fill={aspired ? "#C8B06A" : "none"}
+              color={adored ? "#C8B06A" : "var(--color-text-primary)"}
+              fill={adored ? "#C8B06A" : "none"}
               strokeWidth={1.5}
             />
           </button>

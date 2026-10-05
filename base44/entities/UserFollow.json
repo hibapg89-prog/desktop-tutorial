@@ -1,0 +1,15 @@
+{
+  "name": "UserFollow",
+  "type": "object",
+  "properties": {
+    "follower_id": { "type": "string", "description": "ID of the user doing the following (admiring)" },
+    "followed_id": { "type": "string", "description": "ID of the user being followed (admired)" }
+  },
+  "required": ["follower_id", "followed_id"],
+  "rls": {
+    "read": {},
+    "create": { "data.follower_id": "{{user.id}}" },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "data.follower_id": "{{user.id}}" }
+  }
+}

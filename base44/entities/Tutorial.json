@@ -1,0 +1,21 @@
+{
+  "name": "Tutorial",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "category": { "type": "string", "enum": ["Makeup", "Skincare", "Hair", "Wellness"] },
+    "difficulty": { "type": "string", "enum": ["Beginner", "Intermediate", "Advanced"] },
+    "duration_minutes": { "type": "number" },
+    "image_url": { "type": "string" },
+    "description": { "type": "string" },
+    "steps": { "type": "array", "items": { "type": "string" } },
+    "materials": { "type": "array", "items": { "type": "string" } },
+    "saves_count": { "type": "number", "default": 0 },
+    "creator_source": { "type": "string" },
+    "creator_platform": { "type": "string" },
+    "is_muse_original": { "type": "boolean", "default": false },
+    "is_collected": { "type": "boolean", "default": false },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["title", "category"]
+}

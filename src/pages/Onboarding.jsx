@@ -68,12 +68,27 @@ export default function Onboarding() {
   const handleFinish = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({
-        skin_types:         skinTypes.join(","),
-        intention:          intentions.join(","),
-        budget_tier:        budget || "prestige",
+      const me = await base44.auth.updateMe({
+        skin_types:          skinTypes.join(","),
+        intention:           intentions.join(","),
+        budget_tier:         budget || "prestige",
         onboarding_complete: true,
       });
+      // Grant "The Awakening" badge now that the profile is complete
+      const userId = me?.id;
+      if (userId) {
+        try {
+          const existing = await base44.entities.UserBadge.filter({ user_id: userId });
+          const alreadyEarned = existing.some(b => b.badge_key === "the_awakening");
+          if (!alreadyEarned) {
+            await base44.entities.UserBadge.create({
+              user_id: userId,
+              badge_key: "the_awakening",
+              earned_at: new Date().toISOString(),
+            });
+          }
+        } catch {}
+      }
     } catch {}
     navigate("/home");
   };
@@ -116,6 +131,15 @@ export default function Onboarding() {
         transition={{ delay: 1.1, duration: 0.6 }}
         className="w-12 h-px bg-[var(--color-accent-gold)] mx-auto mt-4"
       />
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5, duration: 0.7 }}
+        className="text-[9px] text-[var(--color-text-muted)] font-light mt-8 max-w-[240px] leading-relaxed text-center"
+      >
+        We use your general location to show local prices and retailers. No GPS — just your IP. See our Privacy Policy in Account settings.
+      </motion.p>
     </div>
   );
 

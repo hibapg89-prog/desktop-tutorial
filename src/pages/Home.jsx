@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link, useOutletContext } from "react-router-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, Star } from "lucide-react";
 import SwanLogo from "@/components/SwanLogo";
@@ -11,6 +12,7 @@ import AtelierBanner from "@/components/AtelierBanner";
 import { formatPrice } from "@/utils/locale";
 
 export default function Home() {
+  const { openScan } = useOutletContext() ?? {};
   const navigate = useNavigate();
   const [shimmerProducts, setShimmerProducts] = useState([]);
   const [recentPosts,     setRecentPosts]     = useState([]);
@@ -28,6 +30,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[var(--color-bg)]">
       {/* ── Atelier Banner ──────────────────────────────────────── */}
+      <AtelierBanner onScan={openScan} />
       <AtelierBanner onScan={() => navigate("/scan-results")} />
 
       {/* ── Muse Shimmer strip ──────────────────────────────────── */}

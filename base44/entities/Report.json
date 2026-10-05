@@ -1,0 +1,17 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "post_id": { "type": "string" },
+    "reason": { "type": "string" },
+    "detail": { "type": "string" },
+    "status": { "type": "string", "default": "pending" }
+  },
+  "required": ["post_id", "reason"],
+  "rls": {
+    "create": { "created_by_id": "{{user.id}}" },
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

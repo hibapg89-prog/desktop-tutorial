@@ -1,0 +1,16 @@
+{
+  "name": "UserBadge",
+  "type": "object",
+  "properties": {
+    "user_id": { "type": "string" },
+    "badge_key": { "type": "string" },
+    "earned_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["user_id", "badge_key"],
+  "rls": {
+    "read": {},
+    "create": { "created_by_id": "{{user.id}}" },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

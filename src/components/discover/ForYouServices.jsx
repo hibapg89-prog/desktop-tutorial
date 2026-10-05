@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { getUserPreferences } from "@/lib/userPreferences";
+import SwanLogo from "@/components/SwanLogo";
 
 export default function ForYouServices() {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [imgErrors, setImgErrors] = useState(new Set());
 
   useEffect(() => {
     (async () => {
@@ -21,7 +23,22 @@ export default function ForYouServices() {
         }
         const all = await base44.entities.VenueService.list("-rating", 20);
         const matched = all.filter((v) => serviceTypes.includes(v.type));
-        setVenues(matched.slice(0, 4));
+        const picks = matched.slice(0, 4);
+        setVenues(picks);
+
+        // Fire-and-forget: fetch Unsplash images for venues missing one
+        picks.filter(v => !v.image_url).forEach(async (v) => {
+          try {
+            const res = await base44.functions.invoke('fetchContentImage', {
+              entity_type: 'VenueService', entity_id: v.id,
+              type: v.type, city: v.city,
+            });
+            const r = res?.data || res;
+            if (r?.image_url) {
+              setVenues(prev => prev.map(p => p.id === v.id ? { ...p, image_url: r.image_url } : p));
+            }
+          } catch {}
+        });
       } catch {
         setVenues([]);
       } finally {
@@ -51,9 +68,16 @@ export default function ForYouServices() {
             className="flex-shrink-0 w-44"
           >
             <Link to="/map" className="block rounded-2xl overflow-hidden bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
-              <div className="h-24 bg-[var(--color-bg-elevated)] relative">
-                {v.image_url && (
-                  <img src={v.image_url} alt={v.name} className="w-full h-full object-cover" />
+              <div className="h-24 bg-[var(--color-bg-elevated)] relative flex items-center justify-center">
+                {v.image_url && !imgErrors.has(v.id) ? (
+                  <img
+                    src={v.image_url}
+                    alt={v.name}
+                    className="w-full h-full object-cover absolute inset-0"
+                    onError={() => setImgErrors(prev => new Set(prev).add(v.id))}
+                  />
+                ) : (
+                  <SwanLogo size={24} color="#043927" />
                 )}
                 {v.is_muse_partner && (
                   <span className="absolute top-2 left-2 text-[8px] tracking-[0.15em] uppercase bg-[#043927] text-[#FDF5E6] px-2 py-0.5 rounded-full">Muse Partner</span>

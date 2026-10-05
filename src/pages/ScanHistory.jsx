@@ -1,21 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Camera, Image as ImageIcon, Link as LinkIcon, Mic, CheckCircle2, XCircle, ChevronRight, ArrowLeft, History } from "lucide-react";
+import { Camera, Image as ImageIcon, Link as LinkIcon, Mic, Search, CheckCircle2, XCircle, ChevronRight, ArrowLeft, History } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 
 const METHOD_ICON = {
-  camera:  Camera,
-  gallery: ImageIcon,
-  link:    LinkIcon,
-  voice:   Mic,
+  camera:   Camera,
+  gallery:  ImageIcon,
+  link:     LinkIcon,
+  voice:    Mic,
+  curator:  Search,
 };
 
 const METHOD_LABEL = {
-  camera:  "Camera",
-  gallery: "Gallery",
-  link:    "Link",
-  voice:   "Voice",
+  camera:   "Camera",
+  gallery:  "Gallery",
+  link:     "Link",
+  voice:    "Voice",
+  curator:  "Local Curator",
 };
 
 function timeAgo(iso) {
@@ -29,6 +31,27 @@ function timeAgo(iso) {
   const day = Math.floor(hr / 24);
   if (day < 7) return `${day}d ago`;
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function friendlyError(reason) {
+  if (!reason) return "The Muse couldn't identify a product";
+  const r = reason.toLowerCase();
+  if (r.includes("oembed") || r.includes("backend") || r.includes("web search") || r.includes("all failed") || r === "social_all_failed") {
+    return "This link couldn't be read — try saving the image and scanning from Gallery";
+  }
+  if (r.includes("private") || r.includes("require a follow")) {
+    return "This post is private or requires a follow to view";
+  }
+  if (r.includes("no text caption") || r.includes("no caption")) {
+    return "No product details found in this post";
+  }
+  if (r.includes("not configured") || r.includes("apify")) {
+    return "Social link scanning is temporarily unavailable";
+  }
+  if (r.includes("network") || r.includes("fetch") || r.includes("timeout")) {
+    return "Connection timed out — please try again";
+  }
+  return "The Muse couldn't identify a product";
 }
 
 function fullTimestamp(iso) {
@@ -157,11 +180,43 @@ export default function ScanHistory() {
                           </span>
                         </div>
                         <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light truncate mt-0.5">
-                          {log.error_reason || "The Muse couldn't identify a product"}
+                          {friendlyError(log.error_reason)}
                         </p>
                         <p className="text-[0.625rem] text-primary-35 font-light mt-0.5">{fullTimestamp(log.created_date)}</p>
                       </div>
                     </div>
+                  ) : log.scan_method === "curator" ? (
+                    // Curated artisan alternative — gold-tinted row
+                    <Link
+                      to={log.product_id ? `/product/${log.product_id}` : "#"}
+                      className="flex items-center gap-3 rounded-2xl p-3.5 transition-colors"
+                      style={{
+                        background: "rgba(200,176,106,0.07)",
+                        border: "1px solid rgba(200,176,106,0.30)",
+                      }}
+                    >
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: "rgba(200,176,106,0.15)" }}
+                      >
+                        <Icon size={16} color="var(--color-accent-gold)" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <Search size={10} color="var(--color-accent-gold)" strokeWidth={2} />
+                          <span className="text-[0.5625rem] tracking-[0.15em] uppercase font-light" style={{ color: "var(--color-accent-gold)" }}>
+                            Local Curator · Artisan Pick
+                          </span>
+                        </div>
+                        <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light truncate mt-0.5">
+                          {log.brand ? `${log.brand} — ${log.name || "Product"}` : (log.name || "Artisan alternative")}
+                        </p>
+                        <p className="text-[0.625rem] text-primary-35 font-light mt-0.5">
+                          {fullTimestamp(log.created_date)} · {timeAgo(log.created_date)}
+                        </p>
+                      </div>
+                      <ChevronRight size={16} color="var(--color-accent-gold)" className="opacity-40 flex-shrink-0" />
+                    </Link>
                   ) : (
                     // Successful scan — links to the product
                     <Link

@@ -38,6 +38,7 @@ import CircleRooms from '@/pages/CircleRooms';
 import CircleRoom from '@/pages/CircleRoom';
 import ScanResults from '@/pages/ScanResults';
 import ScanHistory from '@/pages/ScanHistory';
+import Unsubscribe from '@/pages/Unsubscribe';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -67,6 +68,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
           <Route path="/home" element={<Home />} />

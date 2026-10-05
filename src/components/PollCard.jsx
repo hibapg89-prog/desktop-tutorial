@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { BarChart3, Check } from "lucide-react";
+import { BarChart3, Check, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 const OPTION_COLORS = ["#BC8F8F", "#C8B06A", "#6B9E6B", "#8F8FAA", "#A89B6B", "#7A9BA8"];
 
-export default function PollCard({ poll, user, onVoted }) {
+export default function PollCard({ poll, user, onVoted, onDelete }) {
   const [voting, setVoting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const voterIds = poll.voter_ids || [];
   const hasVoted = user ? voterIds.includes(user.id) : false;
   const isAuthor = user && poll.created_by_id === user.id;
@@ -26,12 +28,53 @@ export default function PollCard({ poll, user, onVoted }) {
     }
   };
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await base44.entities.Poll.delete(poll.id);
+      onDelete?.();
+    } catch {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
+
   return (
     <div className="bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
       <div className="p-4">
-        <div className="flex items-center gap-2 mb-1">
-          <BarChart3 size={13} color="#C8B06A" />
-          <span className="text-[9px] tracking-[0.2em] uppercase text-[#C8B06A] font-light">Poll</span>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <BarChart3 size={13} color="#C8B06A" />
+            <span className="text-[9px] tracking-[0.2em] uppercase text-[#C8B06A] font-light">Poll</span>
+          </div>
+          {isAuthor && !confirmDelete && (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              aria-label="Delete poll"
+              className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)] font-light hover:text-[#BC8F8F] transition-colors"
+            >
+              <Trash2 size={11} />
+            </button>
+          )}
+          {isAuthor && confirmDelete && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-[var(--color-text-muted)] font-light">Remove poll?</span>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-[10px] text-[#BC8F8F] font-light disabled:opacity-50"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                className="text-[10px] text-[var(--color-text-muted)] font-light disabled:opacity-50"
+              >
+                No
+              </button>
+            </div>
+          )}
         </div>
         <p className="font-serif text-lg text-[var(--color-text-primary)] font-light leading-snug mb-1">{poll.question}</p>
         <p className="text-[10px] text-[var(--color-text-muted)] font-light mb-3">by {poll.author_name || "A Muse Member"} · {totalVotes} vote{totalVotes !== 1 ? "s" : ""}</p>
@@ -41,7 +84,6 @@ export default function PollCard({ poll, user, onVoted }) {
             const votes = opt.votes || 0;
             const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
             const color = OPTION_COLORS[i % OPTION_COLORS.length];
-            const myChoice = hasVoted && user && (poll.voter_ids || []).includes(user.id);
 
             if (!showResults) {
               return (

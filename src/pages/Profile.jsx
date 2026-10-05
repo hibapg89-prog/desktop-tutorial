@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { applyTheme } from "@/lib/theme";
 import {
   Settings, X, ChevronRight, Droplets, Feather,
-  Sun, LogOut, Check, Eye, EyeOff, MessageCircle,
+  Sun, LogOut, Check, Eye, EyeOff, MessageCircle, Camera, Pencil,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import SwanLogo from "@/components/SwanLogo";
@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import BadgePin from "@/components/BadgePin";
 import { BADGES } from "@/utils/badgeDefinitions";
 import { computeTier } from "@/utils/trustTier";
+import ShadePaletteSection from "@/components/ShadePaletteSection";
 
 const BEAUTY_ROOM_META = {
   skin_rituals: { label: "Skin Rituals",    glyph: "✦", color: "#C8A96E", archetype: "The Alchemist"  },
@@ -56,6 +57,7 @@ function buildAdnAttrs(user) {
 }
 
 
+
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 function glowShadow(mode) {
   if (mode === "GHOST") return "none";
@@ -69,6 +71,7 @@ function AdnIcon({ type, size = 16 }) {
   if (type === "feather")  return <Feather  {...p} />;
   return <Sun {...p} />;
 }
+
 
 
 // ── GLOW INDICATOR ─────────────────────────────────────────────────────────────
@@ -117,6 +120,7 @@ export default function Profile() {
   const [user, setUser]                 = useState(null);
   const [glowMode, setGlowMode]         = useState("PUBLIC");
   const [privacy, setPrivacy]           = useState("PUBLIC");
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode,         setDarkMode] = useState(() => {
     try {
@@ -142,15 +146,25 @@ export default function Profile() {
   const [myEditProducts, setMyEditProducts] = useState([]);
   const [myRooms,        setMyRooms]        = useState([]);
   const [myBeautyRooms,  setMyBeautyRooms]  = useState([]);
+  const [username,        setUsername]        = useState("");
+  const [bio,             setBio]             = useState("");
+  const [editingBio,      setEditingBio]      = useState(false);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     (async () => {
       const u = await base44.auth.me().catch(() => null);
       setUser(u);
       if (u) {
+        if (u.glow_mode)   setGlowMode(u.glow_mode);
+        if (u.privacy_tier) setPrivacy(u.privacy_tier);
+        if (u.username) setUsername(u.username);
+        if (u.bio) setBio(u.bio);
         try {
           const msgs = await base44.entities.Message.filter({ recipient_id: u.id, read: false });
-          setUnreadCount(msgs.length);
+          setUnreadCount(Array.isArray(msgs) ? msgs.length : 0);
         } catch {}
         try {
           const ub = await base44.entities.UserBadge.filter({ user_id: u.id });
@@ -175,8 +189,7 @@ export default function Profile() {
           setAdoredCount(Array.isArray(stats) && stats[0] ? (stats[0].total_adores || 0) : 0);
         } catch {}
         try {
-          const tutorials = await base44.entities.Tutorial.filter({ is_collected: true, created_by_id: u.id });
-          setRituelsCount(Array.isArray(tutorials) ? tutorials.length : 0);
+          setRituelsCount((u?.collected_tutorials ?? []).length);
         } catch {}
         try {
           const allProducts = await base44.entities.Product.list("-updated_date", 200);
@@ -204,6 +217,39 @@ export default function Profile() {
       localStorage.setItem("muse_accessibility", JSON.stringify(prefs));
     } catch {}
   }, [darkMode]);
+
+  const savePrivacy = async (newGlow, newPrivacy) => {
+    setSavingPrivacy(true);
+    try {
+      await base44.auth.updateMe({ glow_mode: newGlow, privacy_tier: newPrivacy });
+    } catch {}
+    setSavingPrivacy(false);
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      await base44.auth.updateMe({ profile_photo_url: file_url });
+      setUser(prev => ({ ...prev, profile_photo_url: file_url }));
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+    }
+    setUploadingAvatar(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const saveUsername = async (raw) => {
+    const clean = raw.trim().replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+    setUsername(clean);
+    try { await base44.auth.updateMe({ username: clean }); } catch {}
+  };
+
+  const saveBio = async (newVal) => {
+    try { await base44.auth.updateMe({ bio: newVal }); } catch {}
+  };
 
   const sortedBadges = [...BADGES].sort((a, b) => {
     const aE = earnedKeys.has(a.key) ? 0 : 1;
@@ -244,7 +290,7 @@ export default function Profile() {
   };
 
   const adnAttrs = buildAdnAttrs(user);
-  const privateWall = !isAtelier && (glowMode === "GHOST" || privacy === "PRIVATE_MUSE");
+  const privateWall = !isAtelier && (glowMode === "GHOST" || privacy === "PRIVATE_MUSE" || privacy === "COTERIE_ONLY");
   const visitorHidden = !isAtelier && glowMode === "GHOST";
 
   return (
@@ -305,31 +351,88 @@ export default function Profile() {
 
                 {/* Centered avatar */}
                 <div className="flex flex-col items-center text-center">
-                  <div
-                    className="rounded-full mb-4 flex items-center justify-center overflow-hidden w-[112px] h-[112px] border-2 border-[#C8B06A]"
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="rounded-full mb-3 flex items-center justify-center overflow-hidden w-[112px] h-[112px] border-2 border-[#C8B06A] relative group flex-shrink-0"
                     style={{
                       background: "linear-gradient(135deg, #F5EDD8 0%, #EDE3CC 100%)",
                       boxShadow: glowShadow(glowMode),
                     }}
                   >
                     {user?.profile_photo_url ? (
-                      <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                     ) : (
                       <SwanLogo size={46} color="var(--color-accent-gold)" />
                     )}
-                  </div>
-                  <h1 className="text-[var(--color-text-primary)] font-light tracking-wide mb-1 font-serif text-[1.875rem]">
+                    <div className="absolute inset-0 bg-black/35 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                      <Camera size={18} color="#fff" strokeWidth={1.5} />
+                      <span className="text-white text-[0.45rem] mt-0.5 tracking-wider uppercase">Upload</span>
+                    </div>
+                    {uploadingAvatar && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                        <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </button>
+                  <h1 className="text-[var(--color-text-primary)] font-light tracking-wide mb-0.5 font-serif text-[1.875rem]">
                     {user?.full_name || "The Seeker"}
                   </h1>
+                  {/* @username */}
+                  {editingUsername ? (
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-[0.5625rem] text-primary-40 font-light">@</span>
+                      <input
+                        autoFocus
+                        className="text-[0.5625rem] text-primary-40 font-light tracking-wider bg-transparent border-b border-[#C8B06A]/40 outline-none w-28 text-center"
+                        value={username}
+                        onChange={e => setUsername(e.target.value)}
+                        onBlur={() => { setEditingUsername(false); saveUsername(username); }}
+                        onKeyDown={e => { if (e.key === "Enter") { e.currentTarget.blur(); } }}
+                        maxLength={30}
+                        placeholder="yourusername"
+                      />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setEditingUsername(true)}
+                      className="flex items-center gap-1 mb-1 group/usr"
+                    >
+                      <span className="text-[0.5625rem] text-primary-40 font-light tracking-wider">
+                        {username ? `@${username}` : <span className="opacity-40">Set username</span>}
+                      </span>
+                      <Pencil size={8} className="opacity-0 group-hover/usr:opacity-40 transition-opacity" color="var(--color-accent-gold)" />
+                    </button>
+                  )}
                   <span
                     className="px-2.5 py-0.5 text-[0.5rem] tracking-[0.22em] uppercase font-light rounded-full mb-2"
                     style={{ color: tier.color, border: `1px solid ${tier.border}`, background: tier.bg }}
                   >
                     {tier.label}
                   </span>
-                  <p className="text-[0.6875rem] text-primary-40 font-light italic leading-relaxed max-w-[220px]">
-                    Creating a sanctuary for beauty curation.
-                  </p>
+                  {/* About Me / bio */}
+                  {editingBio ? (
+                    <textarea
+                      autoFocus
+                      className="w-full max-w-[220px] text-[0.6875rem] text-primary-40 font-light italic leading-relaxed text-center bg-transparent border-b border-[#C8B06A]/40 outline-none resize-none"
+                      value={bio}
+                      onChange={e => setBio(e.target.value)}
+                      onBlur={() => { setEditingBio(false); saveBio(bio); }}
+                      rows={2}
+                      maxLength={160}
+                      placeholder="Add your About Me..."
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setEditingBio(true)}
+                      className="flex items-center gap-1 group/bio max-w-[240px] justify-center"
+                    >
+                      <p className="text-[0.6875rem] text-primary-40 font-light italic leading-relaxed text-center">
+                        {bio || <span className="opacity-40">Add About Me...</span>}
+                      </p>
+                      <Pencil size={8} className="flex-shrink-0 opacity-0 group-hover/bio:opacity-40 transition-opacity" color="var(--color-accent-gold)" />
+                    </button>
+                  )}
                 </div>
               </>
             ) : (
@@ -344,18 +447,29 @@ export default function Profile() {
                   }}
                 >
                   {user?.profile_photo_url ? (
-                    <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                   ) : (
                     <SwanLogo size={38} color="var(--color-accent-gold)" />
                   )}
                 </div>
                 <div className="flex-1 pt-1">
-                  <h1 className="text-[var(--color-text-primary)] font-light tracking-wide leading-tight mb-1 font-serif text-[1.75rem]">
+                  <h1 className="text-[var(--color-text-primary)] font-light tracking-wide leading-tight mb-0.5 font-serif text-[1.75rem]">
                     {user?.full_name || "The Seeker"}
                   </h1>
-                  <p className="text-[0.625rem] text-primary-40 font-light italic leading-relaxed mb-2">
-                    Creating a sanctuary for beauty curation.
-                  </p>
+                  {username && (
+                    <p className="text-[0.5625rem] text-primary-40 font-light tracking-wider mb-0.5">
+                      @{username}
+                    </p>
+                  )}
+                  {bio ? (
+                    <p className="text-[0.625rem] text-primary-40 font-light italic leading-relaxed mb-2">
+                      {bio}
+                    </p>
+                  ) : (
+                    <p className="text-[0.625rem] text-primary-40 font-light italic leading-relaxed mb-2">
+                      Creating a sanctuary for beauty curation.
+                    </p>
+                  )}
                   <span
                     className="px-2 py-0.5 text-[0.5rem] tracking-[0.2em] uppercase font-light rounded-full"
                     style={{ color: tier.color, border: `1px solid ${tier.border}`, background: tier.bg }}
@@ -523,6 +637,15 @@ export default function Profile() {
             <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
           )}
 
+          {/* ── SECTION 3.6: SHADE PALETTES ──────────────────────────────────── */}
+          {!visitorHidden && (
+            <ShadePaletteSection isAtelier={isAtelier} />
+          )}
+
+          {!visitorHidden && (
+            <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
+          )}
+
           {/* ── SECTION 4: MY EDIT ────────────────────────────────────────────── */}
           {!visitorHidden && (
             <div className="px-5">
@@ -664,7 +787,7 @@ export default function Profile() {
           {/* ── DIVIDER ───────────────────────────────────────────────────────── */}
           <div className="mx-5 my-5 h-px bg-gradient-to-r from-transparent via-[#C8B06A]/35 to-transparent" />
 
-          {/* ── SECTION 6: BEAUTY ROOMS (community themed rooms) ─────────────── */}
+          {/* ── SECTION 6: BEAUTY CIRCLES ─────────────────────────────────────── */}
           <div className="px-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[1rem] text-[var(--color-text-primary)] font-light font-serif">
@@ -704,6 +827,8 @@ export default function Profile() {
               ) : null
             )}
           </div>
+
+
 
           {/* ── SIGN OUT (Atelier only — plain footer) ────────────────────────── */}
           {isAtelier && (
@@ -745,7 +870,7 @@ export default function Profile() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="settings-panel-title"
-              className="fixed right-0 top-0 h-full z-50 flex flex-col w-[min(88vw,360px)] bg-[var(--color-bg)] border-l border-[#C8B06A]/[0.22]"
+              className="fixed right-0 top-0 h-dvh z-50 flex flex-col w-[min(88vw,360px)] bg-[var(--color-bg)] border-l border-[#C8B06A]/[0.22]"
             >
               <div className="flex items-center justify-between px-6 pt-14 pb-5 border-b border-[#C8B06A]/15">
                 <h3 id="settings-panel-title" className="text-xl text-[var(--color-text-primary)] font-light font-serif">
@@ -764,7 +889,62 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 pt-6 pb-28 space-y-8">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-6 pt-6 pb-28 space-y-8">
+
+                {/* Profile Identity */}
+                <div>
+                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
+                    Profile
+                  </p>
+                  <div className="space-y-3">
+                    {/* Avatar upload button */}
+                    <button
+                      onClick={() => { setSettingsOpen(false); setTimeout(() => fileInputRef.current?.click(), 200); }}
+                      disabled={uploadingAvatar}
+                      className="w-full rounded-xl px-4 py-3 flex items-center gap-3 border transition-all disabled:opacity-50"
+                      style={{ borderColor: "var(--color-border)", background: "var(--color-bg-surface)" }}
+                    >
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-[#C8B06A]/40 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #F5EDD8 0%, #EDE3CC 100%)" }}>
+                        {user?.profile_photo_url
+                          ? <img src={user.profile_photo_url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                          : <SwanLogo size={18} color="var(--color-accent-gold)" />}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{uploadingAvatar ? "Uploading..." : "Change Profile Photo"}</p>
+                        <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">Tap to upload from camera roll</p>
+                      </div>
+                    </button>
+                    {/* Username */}
+                    <div className="rounded-xl px-4 py-3 border" style={{ borderColor: "var(--color-border)", background: "var(--color-bg-surface)" }}>
+                      <p className="text-[0.5625rem] text-primary-40 font-light uppercase tracking-wider mb-1.5">Username</p>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[0.75rem] text-primary-40 font-light">@</span>
+                        <input
+                          className="flex-1 text-[0.75rem] text-[var(--color-text-primary)] font-light bg-transparent outline-none border-b border-[#C8B06A]/30 pb-0.5"
+                          value={username}
+                          onChange={e => setUsername(e.target.value)}
+                          onBlur={() => saveUsername(username)}
+                          placeholder="yourusername"
+                          maxLength={30}
+                        />
+                      </div>
+                    </div>
+                    {/* Bio */}
+                    <div className="rounded-xl px-4 py-3 border" style={{ borderColor: "var(--color-border)", background: "var(--color-bg-surface)" }}>
+                      <p className="text-[0.5625rem] text-primary-40 font-light uppercase tracking-wider mb-1.5">About Me</p>
+                      <textarea
+                        className="w-full text-[0.75rem] text-[var(--color-text-primary)] font-light bg-transparent outline-none resize-none leading-relaxed"
+                        value={bio}
+                        onChange={e => setBio(e.target.value)}
+                        onBlur={() => saveBio(bio)}
+                        placeholder="A few words about your beauty philosophy..."
+                        maxLength={160}
+                        rows={3}
+                      />
+                      <p className="text-[0.4375rem] text-primary-30 font-light text-right">{bio.length}/160</p>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Appearance — top so it's always visible */}
                 <div>
@@ -795,71 +975,85 @@ export default function Profile() {
                   </button>
                 </div>
 
-                {/* Glow Mode — not yet enforced, locked until backend ships */}
+                {/* Glow Mode */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light">
-                      Glow Mode
-                    </p>
-                    <span className="text-[0.5rem] tracking-[0.15em] uppercase font-light text-[#C8B06A] border border-[#C8B06A]/40 rounded-full px-2 py-0.5">
-                      Coming Soon
-                    </span>
-                  </div>
-                  <div className="space-y-2 opacity-40 pointer-events-none select-none">
+                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
+                    Glow Mode
+                  </p>
+                  <div className="space-y-2">
                     {[
                       { mode: "PUBLIC", label: "Public Glow",  desc: "Everything visible to visitors" },
                       { mode: "SOFT",   label: "Soft Glow",    desc: "Partial visibility — intimate but present" },
                       { mode: "GHOST",  label: "Ghost Glow",   desc: "Minimal presence. Just the halo." },
-                    ].map(({ mode, label, desc }) => (
-                      <button
-                        key={mode}
-                        tabIndex={-1}
-                        className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left"
-                        style={{
-                          borderColor: "var(--color-border)",
-                          background: "var(--color-bg-surface)",
-                        }}
-                      >
-                        <div>
-                          <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
-                          <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
-                        </div>
-                      </button>
-                    ))}
+                    ].map(({ mode, label, desc }) => {
+                      const active = glowMode === mode;
+                      return (
+                        <button
+                          key={mode}
+                          disabled={savingPrivacy}
+                          onClick={() => {
+                            setGlowMode(mode);
+                            savePrivacy(mode, privacy);
+                          }}
+                          className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left disabled:opacity-50"
+                          style={{
+                            borderColor: active ? "#C8B06A" : "var(--color-border)",
+                            background: active ? "rgba(200,176,106,0.08)" : "var(--color-bg-surface)",
+                          }}
+                        >
+                          <div>
+                            <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
+                            <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
+                          </div>
+                          {active && (
+                            <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#C8B06A" }}>
+                              <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Privacy Tier — not yet enforced, locked until backend ships */}
+                {/* Privacy Tier */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light">
-                      Privacy Tier
-                    </p>
-                    <span className="text-[0.5rem] tracking-[0.15em] uppercase font-light text-[#C8B06A] border border-[#C8B06A]/40 rounded-full px-2 py-0.5">
-                      Coming Soon
-                    </span>
-                  </div>
-                  <div className="space-y-2 opacity-40 pointer-events-none select-none">
+                  <p className="text-[0.5625rem] tracking-[0.22em] text-primary-45 uppercase font-light mb-3">
+                    Privacy Tier
+                  </p>
+                  <div className="space-y-2">
                     {[
-                      { tier: "PUBLIC",        label: "Public",        desc: "Any visitor may view your profile" },
-                      { tier: "CIRCLE_ONLY",   label: "Circle Only",   desc: "Visible to your Beauty Room members only" },
-                      { tier: "PRIVATE_MUSE",  label: "Private Muse",  desc: "Your sanctuary is yours alone" },
-                    ].map(({ tier, label, desc }) => (
-                      <button
-                        key={tier}
-                        tabIndex={-1}
-                        className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left"
-                        style={{
-                          borderColor: "var(--color-border)",
-                          background: "var(--color-bg-surface)",
-                        }}
-                      >
-                        <div>
-                          <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
-                          <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
-                        </div>
-                      </button>
-                    ))}
+                      { tier: "PUBLIC",       label: "Public",       desc: "Any visitor may view your profile" },
+                      { tier: "COTERIE_ONLY", label: "Coterie Only", desc: "Visible only to those you follow" },
+                      { tier: "PRIVATE_MUSE", label: "Private Muse", desc: "Your sanctuary is yours alone" },
+                    ].map(({ tier, label, desc }) => {
+                      const active = privacy === tier;
+                      return (
+                        <button
+                          key={tier}
+                          disabled={savingPrivacy}
+                          onClick={() => {
+                            setPrivacy(tier);
+                            savePrivacy(glowMode, tier);
+                          }}
+                          className="w-full rounded-xl px-4 py-3 flex items-center justify-between border transition-all text-left disabled:opacity-50"
+                          style={{
+                            borderColor: active ? "#C8B06A" : "var(--color-border)",
+                            background: active ? "rgba(200,176,106,0.08)" : "var(--color-bg-surface)",
+                          }}
+                        >
+                          <div>
+                            <p className="text-[0.75rem] text-[var(--color-text-primary)] font-light">{label}</p>
+                            <p className="text-[0.5625rem] text-primary-40 font-light mt-0.5">{desc}</p>
+                          </div>
+                          {active && (
+                            <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#C8B06A" }}>
+                              <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -869,6 +1063,7 @@ export default function Profile() {
                   { label: "Notifications",         to: "/notifications-settings" },
                   { label: "Account & Beauty Data",  to: "/account" },
                   { label: "Accessibility",          to: "/accessibility" },
+                  { label: "Scan History",           to: "/scan-history" },
                 ].map(({ label, to }) => (
                   <Link
                     key={label}
@@ -887,6 +1082,15 @@ export default function Profile() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Hidden file input for avatar upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAvatarUpload}
+      />
 
       {/* ── FOLLOW LIST MODAL ───────────────────────────────────────────────── */}
       <AnimatePresence>

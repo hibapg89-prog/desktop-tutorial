@@ -28,8 +28,8 @@ export default function ProductImageControls({
   const fileRef = useRef(null);
   const { toast } = useToast();
 
-  const dim = size === "xs" ? 16 : 20;
-  const iconSize = size === "xs" ? 10 : 11;
+  const dim = size === "xs" ? 24 : 28;
+  const iconSize = size === "xs" ? 11 : 13;
 
   const stop = (e) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -57,11 +57,12 @@ export default function ProductImageControls({
           title: "No image found",
           description: "The Muse couldn't find a photo — try uploading your own.",
           variant: "destructive",
+          duration: 3000,
         });
       }
     } catch {
       onUpdated?.({ ...product, image_status: "missing" });
-      toast({ title: "Refresh failed", variant: "destructive" });
+      toast({ title: "Refresh failed", variant: "destructive", duration: 5000 });
     }
     setRefreshing(false);
   };

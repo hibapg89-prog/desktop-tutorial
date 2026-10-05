@@ -19,7 +19,7 @@ function getGreeting() {
   return "GOOD EVENING";
 }
 
-export default function AtelierBanner({ onScan }) {
+export default function AtelierBanner({ onScan, guidedPath, onDismissGuide }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -96,12 +96,58 @@ export default function AtelierBanner({ onScan }) {
           ))}
         </div>
 
+        {/* Guided Path tooltip */}
+        {guidedPath && (
+          <div
+            className="absolute flex items-center gap-2 px-3.5 py-2.5 rounded-xl"
+            style={{
+              top: "53%",
+              left: "5%",
+              right: "5%",
+              zIndex: 20,
+              background: "rgba(4,57,39,0.94)",
+              border: "1px solid rgba(200,176,106,0.5)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <p
+              className="flex-1 text-[0.75rem] font-light leading-snug"
+              style={{ color: "#C8B06A" }}
+            >
+              Start here — scan your first product.
+            </p>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDismissGuide?.(); }}
+              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(200,176,106,0.2)" }}
+              aria-label="Dismiss guide"
+            >
+              <svg width="7" height="7" viewBox="0 0 7 7" fill="none">
+                <path d="M1 1l5 5M6 1L1 6" stroke="#C8B06A" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <div
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2"
+              style={{
+                width: 0, height: 0,
+                borderLeft: "7px solid transparent",
+                borderRight: "7px solid transparent",
+                borderTop: "7px solid rgba(4,57,39,0.94)",
+              }}
+            />
+          </div>
+        )}
+
         {/* Scan & Discover CTA — invisible overlay over the dark green velvet card */}
         <button
           type="button"
-          onClick={onScan}
+          onClick={() => { onDismissGuide?.(); onScan(); }}
           aria-label="Scan & Discover – Identify any beauty product"
           className="absolute rounded-2xl"
+          style={{
+            top: "56%", left: "4%", right: "4%", bottom: "6%",
+            ...(guidedPath ? { boxShadow: "0 0 0 2.5px #C8B06A, 0 0 14px rgba(200,176,106,0.35)" } : {}),
+          }}
           style={{ top: "63%", left: "3%", right: "3%", bottom: "3%" }}
         />
       </div>

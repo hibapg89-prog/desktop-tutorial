@@ -1,0 +1,22 @@
+{
+  "name": "VenueService",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "type": { "type": "string", "enum": ["Spa", "Salon", "Hairdresser", "Beauty Clinic", "Nail Bar", "Wellness"] },
+    "address": { "type": "string" },
+    "city": { "type": "string" },
+    "country": { "type": "string" },
+    "established_year": { "type": "string" },
+    "image_url": { "type": "string" },
+    "rating": { "type": "number" },
+    "price_tier": { "type": "string", "enum": ["€", "€€", "€€€"] },
+    "description": { "type": "string" },
+    "is_muse_partner": { "type": "boolean", "default": false },
+    "is_patron_exclusive": { "type": "boolean", "default": false },
+    "services": { "type": "array", "items": { "type": "string" } },
+    "latitude": { "type": "number" },
+    "longitude": { "type": "number" }
+  },
+  "required": ["name", "type", "city"]
+}

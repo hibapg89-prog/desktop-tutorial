@@ -1,0 +1,48 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": { "type": "string", "description": "The role of the user in the app", "enum": ["admin", "user"] },
+    "glow_mode": {
+      "type": "string",
+      "description": "Controls how much of the profile is visible to visitors",
+      "enum": ["PUBLIC", "SOFT", "GHOST"],
+      "default": "PUBLIC"
+    },
+    "privacy_tier": {
+      "type": "string",
+      "description": "Controls who can access the user's profile at all",
+      "enum": ["PUBLIC", "COTERIE_ONLY", "PRIVATE_MUSE"],
+      "default": "PUBLIC"
+    },
+    "profile_photo_url": {
+      "type": "string",
+      "description": "URL of the user's uploaded profile photo"
+    },
+    "username": {
+      "type": "string",
+      "description": "Unique @handle for the user, used for mentions"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Short About Me text shown on the user's profile (max 160 chars)"
+    },
+    "country_code": {
+      "type": "string",
+      "description": "ISO 3166-1 alpha-2 country code detected from IP on first login (e.g. US, FR, GB)"
+    },
+    "currency_code": {
+      "type": "string",
+      "description": "Local currency code detected alongside country (e.g. USD, EUR, GBP) — used for price display"
+    },
+    "price_emails_opted_in": {
+      "type": "boolean",
+      "description": "Whether the user has opted in to weekly price-drop emails (default true; set to false on unsubscribe)"
+    },
+    "notification_prefs": {
+      "type": "string",
+      "description": "JSON string of per-category in-app notification preferences. Parsed keys: museDuMatin, nouveautes, rappelsRituel, offresPrivees, productAlerts, communityUpdates, messages, ingredientAlerts (all boolean, default true unless otherwise noted)"
+    }
+  },
+  "required": ["role"]
+}
