@@ -49,7 +49,7 @@ echo '<base44-result>' | jq -r '.content' > /tmp/MyFile.jsx
 - Text: `#0B3C26`
 - Accent: `#C8B06A`
 - Headings: Cormorant Garamond
-- Body: Inter / DM Sanshttps://github.com/hibapg89-prog/desktop-tutorial/pull/6/conflict?name=luxebeauty%252FCLAUDE.md&base_oid=13c12d5bb374d3a0f88d479421939866ee340277&head_oid=43c994c2d3617f947bcb5adf1933e21dabe46bb5
+- Body: Inter / DM Sans
 - Scan CTA / Sort tab / Save / Compare: `bg-[#043927]`
 - Shop Now: `bg-[#003629]`
 - No purple, no emojis in UI, real photos only, English-only copy
@@ -63,6 +63,41 @@ echo '<base44-result>' | jq -r '.content' > /tmp/MyFile.jsx
 | `src/pages/ScanResults.jsx` | Scan results display |
 | `src/pages/Home.jsx` | Home page |
 | `base44/functions/extractSocialContent/entry.ts` | Apify-backed social scraper (last-resort tier) |
+| `src/pages/HelpSupport.jsx` | Help & Support page — FAQ accordion, feedback form, contact, community link |
+| `src/pages/Profile.jsx` | Public profile — "My Edit" section shows only `featured: true` products |
+
+## Featured / Privacy Model
+
+Products have a `featured` boolean field (default `false`). **Inaction is safe** — products are private until the owner explicitly stars them.
+
+### PRIVATE_CATS
+```js
+const PRIVATE_CATS = ["Intimate Care", "Men's"];
+```
+Products in these categories are **always private**, no toggle shown, never appear on a public profile.
+
+### Vanity star toggle (grid card only)
+- Visible only in `activeTab === "vanity"` and NOT in bulk mode and NOT for `PRIVATE_CATS`
+- Gold star (`#C8B06A`) when featured; faint outline when not
+- Calls `Product.update(id, { featured })` via Base44 entity API
+
+### "My Edit" section in Profile.jsx
+```js
+const PRIVATE_CATS = ["Intimate Care", "Men's"];
+const vanity = allProducts.filter(
+  p => p.in_vanity && p.featured && p.created_by_id === u.id && !PRIVATE_CATS.includes(p.category)
+);
+```
+Empty state: "Star products in your Vanity to feature them here."
+
+## Help & Support Page
+
+Route: `/help` — `src/pages/HelpSupport.jsx`
+
+- 6-item FAQ accordion (returns policy, scan accuracy, wishlist, account deletion, contact, privacy)
+- Feedback form (subject drop-down + message textarea, submits via `base44.functions`)
+- Contact row and community link
+- Accessible from: Profile → Settings → Help & Support
 
 ## Vercel CI
 
