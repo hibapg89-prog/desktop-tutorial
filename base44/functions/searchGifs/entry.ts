@@ -12,7 +12,7 @@ export default async function(req) {
     const q     = url.searchParams.get("q")?.trim() || "beauty makeup";
     const limit = Math.min(Number(url.searchParams.get("limit") || "12"), 30);
 
-    const key = Deno.env.get("GIPHY_API_KEY");
+    const key = Deno.env.get("GIPHY_API_KEY") || Deno.env.get("Giphy_API_key");
     if (!key) {
       return Response.json({ error: "GIPHY_API_KEY secret not set" }, { status: 503 });
     }
