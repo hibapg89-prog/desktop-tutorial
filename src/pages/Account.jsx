@@ -414,6 +414,13 @@ export default function Account() {
               </div>
 
               <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">Your Beauty Data &amp; Account Deletion</p>
+                <p>
+                  Skin depth and undertone (optional). If you add them, we store them in your profile only. When you delete your account, we delete your profile and everything you created in The Muse: posts, messages, saved items and settings. Images you uploaded are not removed automatically.
+                </p>
+              </div>
+
+              <div>
                 <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">Prices &amp; Retailer Links</p>
                 <p>
                   Prices are sourced from retailer listings and may not reflect the current price at checkout. Always confirm the final price on the retailer's site before purchasing. Some links may be affiliate links — LuxeBeauty may earn a small commission at no extra cost to you.
