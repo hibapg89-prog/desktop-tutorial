@@ -38,6 +38,7 @@ export default function Account() {
   const [deleteOpen, setDeleteOpen]       = useState(false);
   const [deleteInput, setDeleteInput]     = useState("");
   const [deleting, setDeleting]           = useState(false);
+  const [deleteError, setDeleteError]     = useState("");
 
   // Email preferences state
   const [priceEmails, setPriceEmails]     = useState(true);
@@ -143,12 +144,19 @@ export default function Account() {
   const handleDelete = async () => {
     if (deleteInput !== "DELETE" || deleting) return;
     setDeleting(true);
+    setDeleteError("");
     try {
-      if (typeof base44.auth.deleteAccount === "function") {
-        await base44.auth.deleteAccount();
+      const res = await base44.functions.invoke("deleteAccount", {});
+      if (res?.ok === true) {
+        base44.auth.logout("/");
+      } else {
+        setDeleteError("We couldn't finish deleting your account. Please try again or contact us.");
+        setDeleting(false);
       }
-    } catch {}
-    base44.auth.logout("/");
+    } catch {
+      setDeleteError("We couldn't finish deleting your account. Please try again or contact us.");
+      setDeleting(false);
+    }
   };
 
   const canDelete = deleteInput === "DELETE";
@@ -406,6 +414,13 @@ export default function Account() {
               </div>
 
               <div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">Your Beauty Data &amp; Account Deletion</p>
+                <p>
+                  Skin depth and undertone (optional). If you add them, we store them in your profile only. When you delete your account, we delete your profile and everything you created in The Muse: posts, messages, saved items and settings. Images you uploaded are not removed automatically.
+                </p>
+              </div>
+
+              <div>
                 <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-primary)]/40 mb-1.5">Prices &amp; Retailer Links</p>
                 <p>
                   Prices are sourced from retailer listings and may not reflect the current price at checkout. Always confirm the final price on the retailer's site before purchasing. Some links may be affiliate links — LuxeBeauty may earn a small commission at no extra cost to you.
@@ -428,7 +443,7 @@ export default function Account() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 bg-black/38 backdrop-blur-[5px]"
-              onClick={() => { setDeleteOpen(false); setDeleteInput(""); }}
+              onClick={() => { setDeleteOpen(false); setDeleteInput(""); setDeleteError(""); }}
             />
 
             {/* Modal */}
@@ -477,6 +492,11 @@ export default function Account() {
               </div>
 
               {/* Actions */}
+              {deleteError && (
+                <p className="text-[11px] text-[#BC8F8F] text-center leading-relaxed mb-3">
+                  {deleteError}
+                </p>
+              )}
               <div className="space-y-2">
                 <button
                   onClick={handleDelete}
@@ -487,7 +507,7 @@ export default function Account() {
                 </button>
 
                 <button
-                  onClick={() => { setDeleteOpen(false); setDeleteInput(""); }}
+                  onClick={() => { setDeleteOpen(false); setDeleteInput(""); setDeleteError(""); }}
                   className="w-full py-3 text-[11px] tracking-[0.12em] uppercase text-[var(--color-text-primary)] bg-transparent"
                 >
                   Cancel
