@@ -38,6 +38,7 @@ export default function Account() {
   const [deleteOpen, setDeleteOpen]       = useState(false);
   const [deleteInput, setDeleteInput]     = useState("");
   const [deleting, setDeleting]           = useState(false);
+  const [deleteError, setDeleteError]     = useState("");
 
   // Email preferences state
   const [priceEmails, setPriceEmails]     = useState(true);
@@ -143,12 +144,19 @@ export default function Account() {
   const handleDelete = async () => {
     if (deleteInput !== "DELETE" || deleting) return;
     setDeleting(true);
+    setDeleteError("");
     try {
-      if (typeof base44.auth.deleteAccount === "function") {
-        await base44.auth.deleteAccount();
+      const res = await base44.functions.invoke("deleteAccount", {});
+      if (res?.ok === true) {
+        base44.auth.logout("/");
+      } else {
+        setDeleteError("We couldn't finish deleting your account. Please try again or contact us.");
+        setDeleting(false);
       }
-    } catch {}
-    base44.auth.logout("/");
+    } catch {
+      setDeleteError("We couldn't finish deleting your account. Please try again or contact us.");
+      setDeleting(false);
+    }
   };
 
   const canDelete = deleteInput === "DELETE";
@@ -428,7 +436,7 @@ export default function Account() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 bg-black/38 backdrop-blur-[5px]"
-              onClick={() => { setDeleteOpen(false); setDeleteInput(""); }}
+              onClick={() => { setDeleteOpen(false); setDeleteInput(""); setDeleteError(""); }}
             />
 
             {/* Modal */}
@@ -477,6 +485,11 @@ export default function Account() {
               </div>
 
               {/* Actions */}
+              {deleteError && (
+                <p className="text-[11px] text-[#BC8F8F] text-center leading-relaxed mb-3">
+                  {deleteError}
+                </p>
+              )}
               <div className="space-y-2">
                 <button
                   onClick={handleDelete}
@@ -487,7 +500,7 @@ export default function Account() {
                 </button>
 
                 <button
-                  onClick={() => { setDeleteOpen(false); setDeleteInput(""); }}
+                  onClick={() => { setDeleteOpen(false); setDeleteInput(""); setDeleteError(""); }}
                   className="w-full py-3 text-[11px] tracking-[0.12em] uppercase text-[var(--color-text-primary)] bg-transparent"
                 >
                   Cancel
