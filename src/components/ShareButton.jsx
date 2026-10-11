@@ -80,8 +80,8 @@ export default function ShareButton({ product, title, text, url, size = 14, clas
         className={`flex items-center justify-center rounded-full transition-colors ${className}`}
       >
         {copied
-          ? <Check size={size} color="#043927" />
-          : <Share2 size={size} color="#043927" />}
+          ? <Check size={size} color="var(--color-text-muted)" />
+          : <Share2 size={size} color="var(--color-text-muted)" />}
       </button>
 
       <AnimatePresence>
@@ -92,7 +92,7 @@ export default function ShareButton({ product, title, text, url, size = 14, clas
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-[65]"
               style={{ background: "rgba(4,57,39,0.18)", backdropFilter: "blur(3px)" }}
               onClick={(e) => { e.stopPropagation(); setShowSheet(false); }}
             />
@@ -103,7 +103,7 @@ export default function ShareButton({ product, title, text, url, size = 14, clas
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg)] rounded-t-3xl"
+              className="fixed bottom-0 left-0 right-0 z-[70] bg-[var(--color-bg)] rounded-t-3xl"
               style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 20px)" }}
               onClick={e => e.stopPropagation()}
             >

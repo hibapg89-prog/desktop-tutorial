@@ -285,7 +285,7 @@ export default function ForYouProducts() {
               {/* Compact engagement bar */}
               <div className="px-2.5 pb-2.5 flex items-center gap-1.5">
                 <button
-                  onClick={() => toggleAdore(i)}
+                  onClick={(e) => { e.stopPropagation(); toggleAdore(i); }}
                   aria-label={adored ? "Un-adore" : "Adore"}
                   className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
                     adored ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
@@ -294,7 +294,7 @@ export default function ForYouProducts() {
                   <Heart size={11} strokeWidth={1.5} color={adored ? "white" : "var(--color-text-muted)"} fill={adored ? "white" : "none"} />
                 </button>
                 <button
-                  onClick={() => collectToList(p, i)}
+                  onClick={(e) => { e.stopPropagation(); collectToList(p, i); }}
                   disabled={collected}
                   aria-label={collected ? "Collected" : "Collect"}
                   className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
