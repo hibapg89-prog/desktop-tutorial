@@ -442,6 +442,7 @@ export default function CommunityComposer({ onClose, onPosted, prefillProduct })
           review_text: reviewText.trim(),
           rating,
           tags: JSON.stringify(extractTags(reviewText)),
+          verified_purchase: reviewSource === "vanity",
         });
       } else if (postType === "swatch") {
         await base44.entities.CommunityPost.create({
