@@ -36,6 +36,7 @@ import Account from '@/pages/Account';
 import Distinctions from '@/pages/Distinctions';
 import CircleRooms from '@/pages/CircleRooms';
 import CircleRoom from '@/pages/CircleRoom';
+import BeautyRoom from '@/pages/BeautyRoom';
 import ScanResults from '@/pages/ScanResults';
 import ScanHistory from '@/pages/ScanHistory';
 import Unsubscribe from '@/pages/Unsubscribe';
@@ -97,6 +98,7 @@ const AuthenticatedApp = () => {
           <Route path="/distinctions" element={<Distinctions />} />
           <Route path="/circle-rooms" element={<CircleRooms />} />
           <Route path="/circle-rooms/:id" element={<CircleRoom />} />
+          <Route path="/beauty-room/:key" element={<BeautyRoom />} />
           <Route path="/scan-results" element={<ScanResults />} />
           <Route path="/scan-history" element={<ScanHistory />} />
         </Route>

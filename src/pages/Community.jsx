@@ -621,7 +621,7 @@ export default function Community() {
             return (
               <div
                 key={c.key}
-                onClick={() => setActiveCircle(isActive ? null : c.key)}
+                onClick={() => navigate('/beauty-room/' + c.key)}
                 className="flex-shrink-0 w-[144px] rounded-[1.75rem] transition-all cursor-pointer relative overflow-hidden"
                 style={cardStyle}
               >
