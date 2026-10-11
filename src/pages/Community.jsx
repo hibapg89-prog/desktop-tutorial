@@ -403,7 +403,7 @@ export default function Community() {
 
   return (
     <main
-      className="min-h-screen bg-[var(--color-bg)]"
+      className="min-h-screen bg-[var(--color-bg)] overflow-x-hidden"
       onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
       onTouchMove={e => {
         if (window.scrollY > 0 || ptr) return;
