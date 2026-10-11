@@ -318,12 +318,16 @@ export default function Tutorials() {
 
 function TutorialCard({ tutorial, index, collectedIds = [], adoredIds = [] }) {
   const [adored, setAdored] = useState(adoredIds.includes(tutorial.id));
+  const [collected, setCollected] = useState(collectedIds.includes(tutorial.id));
   const [imgError, setImgError] = useState(false);
-  const isCollected = collectedIds.includes(tutorial.id);
 
   useEffect(() => {
     setAdored(adoredIds.includes(tutorial.id));
   }, [adoredIds, tutorial.id]);
+
+  useEffect(() => {
+    setCollected(collectedIds.includes(tutorial.id));
+  }, [collectedIds, tutorial.id]);
 
   const toggleAdored = async () => {
     const newState = !adored;
@@ -337,6 +341,21 @@ function TutorialCard({ tutorial, index, collectedIds = [], adoredIds = [] }) {
       await base44.auth.updateMe({ adored_tutorials: updated });
     } catch {
       setAdored(!newState);
+    }
+  };
+
+  const toggleCollected = async () => {
+    const newState = !collected;
+    setCollected(newState);
+    try {
+      const u = await base44.auth.me();
+      const ids = Array.isArray(u?.collected_tutorials) ? u.collected_tutorials : [];
+      const updated = newState
+        ? [...new Set([...ids, tutorial.id])]
+        : ids.filter((tid) => tid !== tutorial.id);
+      await base44.auth.updateMe({ collected_tutorials: updated });
+    } catch {
+      setCollected(!newState);
     }
   };
 
@@ -383,12 +402,6 @@ function TutorialCard({ tutorial, index, collectedIds = [], adoredIds = [] }) {
                 </span>
               </div>
             )}
-            {/* Favorites badge */}
-            {isCollected && (
-              <div className="absolute bottom-3 right-3">
-                <Bookmark size={14} fill="var(--color-accent-gold)" color="var(--color-accent-gold)" strokeWidth={1.5} />
-              </div>
-            )}
           </div>
 
           {/* Editorial caption block */}
@@ -407,25 +420,41 @@ function TutorialCard({ tutorial, index, collectedIds = [], adoredIds = [] }) {
           </div>
         </Link>
 
-        {/* Footer: time + aspire heart */}
+        {/* Footer: time + save + heart */}
         <div className="pb-5 pt-2 flex items-center justify-between border-b border-[#C8B06A]/25">
           <p className="text-[9px] text-primary-45 font-light tracking-[0.18em] uppercase">
             {tutorial.duration_minutes ? `${tutorial.duration_minutes} min read` : ""}
           </p>
-          <button
-            onClick={toggleAdored}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-              adored ? "bg-[#C8B06A]/15" : "bg-transparent"
-            }`}
-            aria-label="Favourite"
-          >
-            <Heart
-              size={13}
-              color={adored ? "#C8B06A" : "var(--color-text-primary)"}
-              fill={adored ? "#C8B06A" : "none"}
-              strokeWidth={1.5}
-            />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggleCollected}
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                collected ? "bg-[#C8B06A]/15" : "bg-transparent"
+              }`}
+              aria-label="Save"
+            >
+              <Bookmark
+                size={13}
+                color={collected ? "#C8B06A" : "var(--color-text-primary)"}
+                fill={collected ? "#C8B06A" : "none"}
+                strokeWidth={1.5}
+              />
+            </button>
+            <button
+              onClick={toggleAdored}
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                adored ? "bg-[#C8B06A]/15" : "bg-transparent"
+              }`}
+              aria-label="Favourite"
+            >
+              <Heart
+                size={13}
+                color={adored ? "#C8B06A" : "var(--color-text-primary)"}
+                fill={adored ? "#C8B06A" : "none"}
+                strokeWidth={1.5}
+              />
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
