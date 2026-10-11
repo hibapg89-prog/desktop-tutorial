@@ -233,7 +233,7 @@ export default function CategoryDetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end"
+            className="fixed inset-0 z-[60] flex items-end"
             onClick={() => setSortOpen(false)}
           >
             <div className="absolute inset-0 bg-black/25" />
@@ -272,7 +272,7 @@ export default function CategoryDetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end"
+            className="fixed inset-0 z-[60] flex items-end"
             onClick={() => setFilterOpen(false)}
           >
             <div className="absolute inset-0 bg-black/25" />

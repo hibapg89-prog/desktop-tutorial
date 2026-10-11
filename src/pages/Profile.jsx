@@ -1099,7 +1099,7 @@ export default function Profile() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 flex items-end"
+            className="fixed inset-0 z-[60] bg-black/40 flex items-end"
             onClick={() => setFollowListModal(null)}
           >
             <motion.div

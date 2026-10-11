@@ -940,7 +940,7 @@ export default function Vanity() {
 
       {/* Bulk action bar */}
       {bulkMode && (
-        <div className="fixed bottom-16 left-0 right-0 z-30 bg-[var(--color-bg)]/95 backdrop-blur border-t border-[var(--color-border)] px-4 py-3">
+        <div className="fixed bottom-24 left-0 right-0 z-30 bg-[var(--color-bg)]/95 backdrop-blur border-t border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-2 max-w-lg mx-auto">
             <span className="text-xs text-primary-60 font-light">{selected.size} selected</span>
             <div className="flex-1" />
