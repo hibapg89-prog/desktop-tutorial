@@ -289,30 +289,66 @@ function VanityCanvas({ products }) {
 function PanelProduct({ product, targetRef, onMove }) {
   const inRect = (rect, point) =>
     point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
+  const [isDragging, setIsDragging] = useState(false);
+  const [trails, setTrails] = useState([]);
+  const trailIdRef = useRef(0);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const spawnTrail = () => {
+    const id = trailIdRef.current++;
+    setTrails(prev => [...prev.slice(-6), { id, x: x.get(), y: y.get() }]);
+    setTimeout(() => setTrails(prev => prev.filter(t => t.id !== id)), 500);
+  };
 
   return (
-    <motion.div
-      drag
-      dragMomentum={false}
-      dragSnapToOrigin
-      whileDrag={{ scale: 1.14, zIndex: 60, filter: "drop-shadow(0 12px 28px rgba(4,57,39,0.25))" }}
-      onDragEnd={(_, info) => {
-        if (targetRef.current && inRect(targetRef.current.getBoundingClientRect(), info.point)) {
-          onMove(product);
-        }
-      }}
-      className="cursor-grab active:cursor-grabbing"
-      style={{ touchAction: "none" }}
-    >
-      {product.image_url ? (
-        <img src={product.image_url} alt={product.name} draggable={false} className="w-full aspect-square object-cover rounded-xl shadow-sm" />
-      ) : (
-        <div className="w-full aspect-square rounded-xl bg-[var(--color-bg-elevated)] flex items-center justify-center border border-[var(--color-border)]">
-          <SwanLogo size={14} color="var(--color-text-primary)" />
-        </div>
-      )}
-      <p className="text-[0.4375rem] text-primary-45 font-light truncate mt-0.5 text-center leading-none">{product.brand}</p>
-    </motion.div>
+    <div style={{ position: "relative" }}>
+      {isDragging && trails.map((t, i) => (
+        <motion.div
+          key={t.id}
+          initial={{ opacity: 0.7, scale: 0.9 }}
+          animate={{ opacity: 0, scale: 0.3 }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          style={{
+            position: "fixed",
+            left: t.x - 6,
+            top: t.y - 6,
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(200,176,106,0.9) 0%, rgba(255,249,232,0.6) 60%, transparent 100%)",
+            pointerEvents: "none",
+            zIndex: 999,
+          }}
+        />
+      ))}
+      <motion.div
+        drag
+        dragMomentum={false}
+        dragSnapToOrigin
+        style={{ x, y, touchAction: "none" }}
+        whileDrag={{ scale: 1.18, zIndex: 60, filter: "drop-shadow(0 16px 32px rgba(4,57,39,0.28))" }}
+        onDragStart={() => setIsDragging(true)}
+        onDrag={() => spawnTrail()}
+        onDragEnd={(_, info) => {
+          setIsDragging(false);
+          setTrails([]);
+          if (targetRef.current && inRect(targetRef.current.getBoundingClientRect(), info.point)) {
+            onMove(product);
+          }
+        }}
+        className="cursor-grab active:cursor-grabbing"
+      >
+        {product.image_url ? (
+          <img src={product.image_url} alt={product.name} draggable={false} className="w-full aspect-square object-cover rounded-xl shadow-sm" />
+        ) : (
+          <div className="w-full aspect-square rounded-xl bg-[var(--color-bg-elevated)] flex items-center justify-center border border-[var(--color-border)]">
+            <SwanLogo size={14} color="var(--color-text-primary)" />
+          </div>
+        )}
+        <p className="text-[0.4375rem] text-primary-45 font-light truncate mt-0.5 text-center leading-none">{product.brand}</p>
+      </motion.div>
+    </div>
   );
 }
 
@@ -335,7 +371,7 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
             {vanityProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10">
                 <SwanLogo size={28} color="var(--color-accent-gold)" />
-                <p className="text-[0.5rem] text-primary-30 font-light mt-2 text-center italic">Drag products here</p>
+                <p className="text-[0.5rem] text-primary-30 font-light mt-2 text-center italic">Products you own appear here</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2">
@@ -358,7 +394,7 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
             {wishlistProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10">
                 <SwanLogo size={28} color="var(--color-accent-gold)" />
-                <p className="text-[0.5rem] text-primary-30 font-light mt-2 text-center italic">Drag products here</p>
+                <p className="text-[0.5rem] text-primary-30 font-light mt-2 text-center italic">Your future treasures</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2">
@@ -385,7 +421,7 @@ function VanityOrganize({ vanityProducts, wishlistProducts, onMoveToWishlist, on
 export default function Vanity() {
   const [activeTab, setActiveTab] = useState("vanity");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState("split");
   const [vanityProducts, setVanityProducts] = useState([]);
   const [wishlistProducts, setWishlistProducts] = useState([]);
   const [loading, setLoading] = useState(true);

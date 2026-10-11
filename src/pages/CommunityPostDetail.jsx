@@ -601,7 +601,24 @@ export default function CommunityPostDetail() {
                 className="bg-[var(--color-bg-surface)] rounded-2xl border border-[var(--color-border)] p-3.5"
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs text-[var(--color-text-primary)] font-light">{r.author_name || "A Muse Member"}</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs text-[var(--color-text-primary)] font-light">{r.author_name || "A Muse Member"}</span>
+                    {r.verified_purchase && (
+                      <>
+                        <style>{`
+                          @property --vp-a { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+                          @keyframes vp-spin { to { --vp-a: 360deg; } }
+                          .verified-badge-glow { animation: vp-spin 2.4s linear infinite; background: conic-gradient(from var(--vp-a), #C8B06A, #FFF9E8 20%, #C8B06A 40%, #0B3C26 60%, #C8B06A 80%, #FFF9E8, #C8B06A); padding: 1px; border-radius: 999px; }
+                          .verified-badge-inner { background: var(--color-bg-card, #1a1a1a); border-radius: 999px; padding: 1px 6px; }
+                        `}</style>
+                        <span className="verified-badge-glow">
+                          <span className="verified-badge-inner inline-flex items-center gap-0.5 text-[0.5rem] tracking-[0.08em] font-light" style={{ color: "#C8B06A" }}>
+                            ✦ Verified Purchase
+                          </span>
+                        </span>
+                      </>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <StarRating value={r.rating || 0} readOnly size={11} />
                     {r.created_by_id && r.created_by_id === user?.id && editingReviewId !== r.id && deletingReviewId !== r.id && (
