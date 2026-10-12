@@ -141,6 +141,8 @@ export default function Profile() {
   const [admireLoading, setAdmireLoading]         = useState(false);
   const [admireError, setAdmireError]             = useState(false);
   const [followListModal, setFollowListModal]     = useState(null);
+  const [admiratricesData, setAdmiratricesData]   = useState({});
+  const [coterieData, setCoterieData]             = useState({});
   const [adoredCount,    setAdoredCount]    = useState(0);
   const [adoredIds,      setAdoredIds]      = useState([]);
   const [adoredModal,    setAdoredModal]    = useState(false);
@@ -329,6 +331,24 @@ export default function Profile() {
       } catch (e) {
         console.error("[Profile] Adored load failed:", e);
       }
+    }
+  };
+
+  const handleOpenFollowList = async (type) => {
+    setFollowListModal(type);
+    const list     = type === "admiratrices" ? admiratricesList : coterieList;
+    const dataMap  = type === "admiratrices" ? admiratricesData : coterieData;
+    const setData  = type === "admiratrices" ? setAdmiratricesData : setCoterieData;
+    const idField  = type === "admiratrices" ? "follower_id" : "followed_id";
+    const ids = list.map(f => f[idField]).filter(Boolean);
+    if (ids.length === 0 || Object.keys(dataMap).length > 0) return;
+    try {
+      const users = await base44.entities.User.list();
+      const map = {};
+      (Array.isArray(users) ? users : []).forEach(u => { map[u.id] = u; });
+      setData(map);
+    } catch (e) {
+      console.error("[Profile] Follow list user data load failed:", e);
     }
   };
 
@@ -638,12 +658,12 @@ export default function Profile() {
                         {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
                       </button>
                       <span className="text-primary-25 mx-2">·</span>
-                      <button onClick={() => setFollowListModal("admiratrices")} className="hover:opacity-70 transition-opacity">
+                      <button onClick={() => handleOpenFollowList("admiratrices")} className="hover:opacity-70 transition-opacity">
                         <span className="font-normal">{admiratricesCount}</span>
                         {" "}<span className="text-[var(--color-accent-gold)]">Admiratrices</span>
                       </button>
                       <span className="text-primary-25 mx-2">·</span>
-                      <button onClick={() => setFollowListModal("coterie")} className="hover:opacity-70 transition-opacity">
+                      <button onClick={() => handleOpenFollowList("coterie")} className="hover:opacity-70 transition-opacity">
                         <span className="font-normal">{coterieCount}</span>
                         {" "}<span className="text-[var(--color-accent-gold)]">Coterie</span>
                       </button>
@@ -655,12 +675,12 @@ export default function Profile() {
                         {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
                       </button>
                       <span className="text-primary-25 mx-2">·</span>
-                      <button onClick={() => setFollowListModal("admiratrices")} className="hover:opacity-70 transition-opacity">
+                      <button onClick={() => handleOpenFollowList("admiratrices")} className="hover:opacity-70 transition-opacity">
                         <span className="font-normal">{admiratricesCount}</span>
                         {" "}<span className="text-[var(--color-accent-gold)]">Admiratrices</span>
                       </button>
                       <span className="text-primary-25 mx-2">·</span>
-                      <button onClick={() => setFollowListModal("coterie")} className="hover:opacity-70 transition-opacity">
+                      <button onClick={() => handleOpenFollowList("coterie")} className="hover:opacity-70 transition-opacity">
                         <span className="font-normal">{coterieCount}</span>
                         {" "}<span className="text-[var(--color-accent-gold)]">Coterie</span>
                       </button>
@@ -1174,16 +1194,26 @@ export default function Profile() {
                 </p>
               ) : (
                 <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-                  {(followListModal === "admiratrices" ? admiratricesList : coterieList).map((f, i) => (
-                    <div key={f.id || i} className="flex items-center gap-3 py-2 border-b border-[var(--color-border)]">
-                      <div className="w-9 h-9 rounded-full bg-[#F5EDD8] border border-[#C8B06A]/25 flex items-center justify-center flex-shrink-0">
-                        <SwanLogo size={16} color="var(--color-accent-gold)" />
+                  {(followListModal === "admiratrices" ? admiratricesList : coterieList).map((f, i) => {
+                    const idField = followListModal === "admiratrices" ? "follower_id" : "followed_id";
+                    const dataMap = followListModal === "admiratrices" ? admiratricesData : coterieData;
+                    const u = dataMap[f[idField]];
+                    const displayName = u ? (u.full_name || u.username || "Muse Member") : "Muse Member";
+                    const photoUrl = u?.profile_photo_url || null;
+                    return (
+                      <div key={f.id || i} className="flex items-center gap-3 py-2 border-b border-[var(--color-border)]">
+                        <div className="w-9 h-9 rounded-full bg-[#F5EDD8] border border-[#C8B06A]/25 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {photoUrl
+                            ? <img src={photoUrl} alt={displayName} className="w-full h-full object-cover rounded-full" />
+                            : <SwanLogo size={16} color="var(--color-accent-gold)" />
+                          }
+                        </div>
+                        <p className="text-[0.8125rem] font-light text-[var(--color-text-primary)]">
+                          {displayName}
+                        </p>
                       </div>
-                      <p className="text-[0.8125rem] font-light text-[var(--color-text-primary)]">
-                        Muse Member
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </motion.div>
