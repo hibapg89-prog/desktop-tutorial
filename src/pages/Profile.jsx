@@ -142,6 +142,9 @@ export default function Profile() {
   const [admireError, setAdmireError]             = useState(false);
   const [followListModal, setFollowListModal]     = useState(null);
   const [adoredCount,    setAdoredCount]    = useState(0);
+  const [adoredIds,      setAdoredIds]      = useState([]);
+  const [adoredModal,    setAdoredModal]    = useState(false);
+  const [adoredData,     setAdoredData]     = useState([]);
   const [rituelsCount,   setRituelsCount]   = useState(0);
   const [collectedIds,   setCollectedIds]   = useState([]);
   const [rituelsModal,   setRituelsModal]   = useState(false);
@@ -195,6 +198,11 @@ export default function Profile() {
           const ids = u?.collected_tutorials ?? [];
           setRituelsCount(ids.length);
           setCollectedIds(ids);
+        } catch {}
+        try {
+          const aIds = u?.adored_tutorials ?? [];
+          setAdoredIds(aIds);
+          setAdoredCount(aIds.length);
         } catch {}
         try {
           const allProducts = await base44.entities.Product.list("-updated_date", 200);
@@ -307,6 +315,19 @@ export default function Profile() {
         setRituelsData(saved);
       } catch (e) {
         console.error("[Profile] Rituels load failed:", e);
+      }
+    }
+  };
+
+  const handleOpenAdores = async () => {
+    setAdoredModal(true);
+    if (adoredData.length === 0 && adoredIds.length > 0) {
+      try {
+        const all = await base44.entities.Tutorial.list("-created_date", 200);
+        const hearted = Array.isArray(all) ? all.filter(t => adoredIds.includes(t.id)) : [];
+        setAdoredData(hearted);
+      } catch (e) {
+        console.error("[Profile] Adored load failed:", e);
       }
     }
   };
@@ -612,8 +633,10 @@ export default function Profile() {
                         {" "}<span className="text-[var(--color-accent-gold)]">Rituels</span>
                       </button>
                       <span className="text-primary-25 mx-2">·</span>
-                      <span className="font-normal">{adoredCount}</span>
-                      {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
+                      <button onClick={handleOpenAdores} className="hover:opacity-70 transition-opacity">
+                        <span className="font-normal">{adoredCount}</span>
+                        {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
+                      </button>
                       <span className="text-primary-25 mx-2">·</span>
                       <button onClick={() => setFollowListModal("admiratrices")} className="hover:opacity-70 transition-opacity">
                         <span className="font-normal">{admiratricesCount}</span>
@@ -627,8 +650,10 @@ export default function Profile() {
                     </>
                   ) : (
                     <>
-                      <span className="font-normal">{adoredCount}</span>
-                      {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
+                      <button onClick={handleOpenAdores} className="hover:opacity-70 transition-opacity">
+                        <span className="font-normal">{adoredCount}</span>
+                        {" "}<span className="text-[var(--color-accent-gold)]">Adores</span>
+                      </button>
                       <span className="text-primary-25 mx-2">·</span>
                       <button onClick={() => setFollowListModal("admiratrices")} className="hover:opacity-70 transition-opacity">
                         <span className="font-normal">{admiratricesCount}</span>
@@ -1157,6 +1182,75 @@ export default function Profile() {
                       <p className="text-[0.8125rem] font-light text-[var(--color-text-primary)]">
                         Muse Member
                       </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── ADORED MODAL ────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {adoredModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/40 flex items-end"
+            onClick={() => setAdoredModal(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Adored Tutorials"
+              className="w-full bg-[var(--color-bg)] rounded-t-3xl px-5 pt-5 pb-10"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-serif text-[1.25rem] font-light text-[var(--color-text-primary)]">
+                  Adores
+                </h3>
+                <button onClick={() => setAdoredModal(false)} aria-label="Close">
+                  <X size={18} color="var(--color-text-primary)" strokeWidth={1.5} aria-hidden={true} />
+                </button>
+              </div>
+              {adoredIds.length === 0 ? (
+                <p className="text-center font-serif italic text-[0.875rem] text-primary-40 py-12">
+                  You haven't adored any tutorials yet.
+                </p>
+              ) : adoredData.length === 0 ? (
+                <p className="text-center font-serif italic text-[0.875rem] text-primary-40 py-12">
+                  Loading…
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                  {adoredData.map((t, i) => (
+                    <div key={t.id || i} className="flex items-center gap-3 py-2 border-b border-[var(--color-border)]">
+                      {t.image_url ? (
+                        <img
+                          src={t.image_url}
+                          alt=""
+                          className="w-11 h-11 rounded-xl object-cover flex-shrink-0 border border-[var(--color-border)]"
+                        />
+                      ) : (
+                        <div className="w-11 h-11 rounded-xl bg-[#F5EDD8] border border-[#C8B06A]/25 flex-shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-[0.875rem] font-light text-[var(--color-text-primary)] truncate">
+                          {t.title}
+                        </p>
+                        {t.category && (
+                          <p className="text-[0.6875rem] uppercase tracking-widest text-[var(--color-accent-gold)] mt-0.5">
+                            {t.category}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
