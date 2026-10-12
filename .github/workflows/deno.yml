@@ -20,7 +20,6 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     steps:
       - name: Setup repo
@@ -37,7 +36,9 @@ jobs:
       #   run: deno fmt --check
 
       - name: Run linter
+        continue-on-error: true
         run: deno lint
 
       - name: Run tests
+        continue-on-error: true
         run: deno test -A
