@@ -621,7 +621,7 @@ export default function Community() {
             return (
               <div
                 key={c.key}
-                onClick={() => setActiveCircle(isActive ? null : c.key)}
+                onClick={() => navigate('/beauty-room/' + c.key)}
                 className="flex-shrink-0 w-[144px] rounded-[1.75rem] transition-all cursor-pointer relative overflow-hidden"
                 style={cardStyle}
               >
@@ -1151,7 +1151,7 @@ export default function Community() {
       <AnimatePresence>
         {showSwapTeaser && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#043927]/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-[#043927]/40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

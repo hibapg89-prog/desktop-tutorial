@@ -111,7 +111,7 @@ function RoomCard({ room, onPress }) {
 
 function ComingSoonModal({ onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center">
       <div
         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
         onClick={onClose}
@@ -206,6 +206,66 @@ export default function CircleRooms() {
           />
         </div>
       </div>
+
+      {/* Phase 1 — Curated Beauty Rooms */}
+      {(() => {
+        const BEAUTY_ROOMS = [
+          { key: "skin_rituals", label: "Skin Rituals",    glyph: "✦", color: "#C8A96E" },
+          { key: "bold_colour",  label: "Bold Colour",     glyph: "◆", color: "#BC4A6A" },
+          { key: "clean_beauty", label: "Clean Beauty",    glyph: "◉", color: "#3D7A5A" },
+          { key: "vintage_glam", label: "Vintage Glamour", glyph: "◈", color: "#7A4E7A" },
+          { key: "natural_glow", label: "Natural Glow",    glyph: "◇", color: "#C47B3A" },
+          { key: "minimalist",   label: "Minimalist",      glyph: "○", color: "#043927" },
+        ];
+        const ARCHETYPES = {
+          skin_rituals: "The Alchemist",
+          bold_colour:  "The Icon",
+          clean_beauty: "The Purist",
+          vintage_glam: "The Archivist",
+          natural_glow: "The Oracle",
+          minimalist:   "The Engineer",
+        };
+        return (
+          <div className="px-5 pt-2 pb-4">
+            <p className="text-[0.5625rem] tracking-[0.25em] uppercase font-light text-[#8A7A60] mb-3">
+              Beauty Rooms
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {BEAUTY_ROOMS.map(room => (
+                <button
+                  key={room.key}
+                  onClick={() => navigate(`/beauty-room/${room.key}`)}
+                  className="relative rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform"
+                  style={{
+                    background: `linear-gradient(135deg, ${room.color}22 0%, ${room.color}0A 100%)`,
+                    border: `1px solid ${room.color}40`,
+                    minHeight: "88px",
+                    padding: "14px 16px",
+                  }}
+                >
+                  <span
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[2.5rem] opacity-[0.08] leading-none select-none"
+                    style={{ color: room.color }}
+                  >
+                    {room.glyph}
+                  </span>
+                  <p className="text-[0.5625rem] tracking-[0.2em] uppercase font-light mb-1" style={{ color: room.color }}>
+                    {room.glyph}
+                  </p>
+                  <p className="text-[0.8125rem] font-light leading-snug text-[#1C2E24]" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                    {ARCHETYPES[room.key]}
+                  </p>
+                  <p className="text-[0.625rem] font-light text-[#6A7A6E] mt-0.5">{room.label}</p>
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 mb-1 h-px bg-[#C8B06A]/15" />
+            <p className="text-[0.5625rem] tracking-[0.25em] uppercase font-light text-[#8A7A60] mt-3 mb-3">
+              Private Rooms
+            </p>
+          </div>
+        );
+      })()}
 
       {/* List */}
       <div className="px-5 pb-32 space-y-3">

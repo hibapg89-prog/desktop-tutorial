@@ -91,6 +91,18 @@ export default function ForYouProducts() {
 
         setPicks(initialPicks);
 
+        // Restore adored state from user profile
+        const adoredProducts = Array.isArray(me?.adored_products) ? me.adored_products : [];
+        if (adoredProducts.length > 0) {
+          const adoredSet = new Set(
+            initialPicks.reduce((acc, p, i) => {
+              if (adoredProducts.includes(`${p.brand} ${p.name}`)) acc.push(i);
+              return acc;
+            }, [])
+          );
+          setAdoredIdx(adoredSet);
+        }
+
         // Fire-and-forget: validate and resolve product images server-side.
         // Replaces hallucinated LLM URLs with real ones (or null so the
         // gradient fallback inside ProductImage shows cleanly).
@@ -161,12 +173,29 @@ export default function ForYouProducts() {
     }
   };
 
-  const toggleAdore = (i) => {
+  const toggleAdore = async (i) => {
+    const p = picks[i];
+    const key = `${p.brand} ${p.name}`;
+    const newAdored = !adoredIdx.has(i);
     setAdoredIdx(prev => {
       const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
+      newAdored ? next.add(i) : next.delete(i);
       return next;
     });
+    try {
+      const u = await base44.auth.me();
+      const current = Array.isArray(u?.adored_products) ? u.adored_products : [];
+      const updated = newAdored
+        ? [...new Set([...current, key])]
+        : current.filter(k => k !== key);
+      await base44.auth.updateMe({ adored_products: updated });
+    } catch {
+      setAdoredIdx(prev => {
+        const next = new Set(prev);
+        newAdored ? next.delete(i) : next.add(i);
+        return next;
+      });
+    }
   };
 
   if (loading) {
@@ -256,7 +285,7 @@ export default function ForYouProducts() {
               {/* Compact engagement bar */}
               <div className="px-2.5 pb-2.5 flex items-center gap-1.5">
                 <button
-                  onClick={() => toggleAdore(i)}
+                  onClick={(e) => { e.stopPropagation(); toggleAdore(i); }}
                   aria-label={adored ? "Un-adore" : "Adore"}
                   className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
                     adored ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
@@ -265,7 +294,7 @@ export default function ForYouProducts() {
                   <Heart size={11} strokeWidth={1.5} color={adored ? "white" : "var(--color-text-muted)"} fill={adored ? "white" : "none"} />
                 </button>
                 <button
-                  onClick={() => collectToList(p, i)}
+                  onClick={(e) => { e.stopPropagation(); collectToList(p, i); }}
                   disabled={collected}
                   aria-label={collected ? "Collected" : "Collect"}
                   className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${

@@ -187,7 +187,7 @@ export default function ForYouTutorials() {
                   {/* Compact engagement bar */}
                   <div className="px-2.5 pb-2.5 pt-1 flex items-center gap-1.5 mt-auto">
                     <button
-                      onClick={() => toggleAdore(t.id)}
+                      onClick={(e) => { e.stopPropagation(); toggleAdore(t.id); }}
                       aria-label={adoredIds.has(t.id) ? "Un-adore" : "Adore"}
                       className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
                         adoredIds.has(t.id) ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
@@ -196,7 +196,7 @@ export default function ForYouTutorials() {
                       <Heart size={11} strokeWidth={1.5} color={adoredIds.has(t.id) ? "white" : "var(--color-text-muted)"} fill={adoredIds.has(t.id) ? "white" : "none"} />
                     </button>
                     <button
-                      onClick={() => toggleCollect(t.id)}
+                      onClick={(e) => { e.stopPropagation(); toggleCollect(t.id); }}
                       aria-label={collectedIds.has(t.id) ? "Un-collect" : "Collect"}
                       className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
                         collectedIds.has(t.id) ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"
@@ -205,7 +205,7 @@ export default function ForYouTutorials() {
                       <Bookmark size={11} strokeWidth={1.5} color={collectedIds.has(t.id) ? "white" : "var(--color-text-muted)"} fill={collectedIds.has(t.id) ? "white" : "none"} />
                     </button>
                     <button
-                      onClick={() => handlePassAlong(t)}
+                      onClick={(e) => { e.stopPropagation(); handlePassAlong(t); }}
                       aria-label="Pass Along"
                       className={`flex-1 py-2 rounded-xl flex items-center justify-center border transition-all ${
                         passedAlongId === t.id ? "bg-[#C8B06A] border-[#C8B06A]" : "border-[var(--color-border)]"

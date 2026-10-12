@@ -456,7 +456,7 @@ export default function LocalCurator() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 z-40"
+              className="fixed inset-0 bg-black/40 z-[59]"
               onClick={() => setDecideOpen(false)}
             />
             <motion.div
@@ -464,7 +464,7 @@ export default function LocalCurator() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg)] rounded-t-3xl px-5 pt-5 overflow-y-auto max-h-[88vh]"
+              className="fixed bottom-0 left-0 right-0 z-[60] bg-[var(--color-bg)] rounded-t-3xl px-5 pt-5 overflow-y-auto max-h-[88vh]"
               style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 16px) + 96px)" }}
             >
               {/* Handle */}
