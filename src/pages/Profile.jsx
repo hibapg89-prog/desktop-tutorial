@@ -1290,6 +1290,75 @@ export default function Profile() {
         )}
       </AnimatePresence>
 
+      {/* ── ADORED MODAL ────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {adoredModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/40 flex items-end"
+            onClick={() => setAdoredModal(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Adored Tutorials"
+              className="w-full bg-[var(--color-bg)] rounded-t-3xl px-5 pt-5 pb-10"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-serif text-[1.25rem] font-light text-[var(--color-text-primary)]">
+                  Adores
+                </h3>
+                <button onClick={() => setAdoredModal(false)} aria-label="Close">
+                  <X size={18} color="var(--color-text-primary)" strokeWidth={1.5} aria-hidden={true} />
+                </button>
+              </div>
+              {adoredIds.length === 0 ? (
+                <p className="text-center font-serif italic text-[0.875rem] text-primary-40 py-12">
+                  You haven't adored any tutorials yet.
+                </p>
+              ) : adoredData.length === 0 ? (
+                <p className="text-center font-serif italic text-[0.875rem] text-primary-40 py-12">
+                  Loading…
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                  {adoredData.map((t, i) => (
+                    <div key={t.id || i} className="flex items-center gap-3 py-2 border-b border-[var(--color-border)]">
+                      {t.image_url ? (
+                        <img
+                          src={t.image_url}
+                          alt=""
+                          className="w-11 h-11 rounded-xl object-cover flex-shrink-0 border border-[var(--color-border)]"
+                        />
+                      ) : (
+                        <div className="w-11 h-11 rounded-xl bg-[#F5EDD8] border border-[#C8B06A]/25 flex-shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-[0.875rem] font-light text-[var(--color-text-primary)] truncate">
+                          {t.title}
+                        </p>
+                        {t.category && (
+                          <p className="text-[0.6875rem] uppercase tracking-widest text-[var(--color-accent-gold)] mt-0.5">
+                            {t.category}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── RITUELS MODAL ───────────────────────────────────────────────────── */}
       <AnimatePresence>
         {rituelsModal && (
