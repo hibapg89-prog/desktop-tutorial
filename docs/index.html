@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>La Muse</title>
+  <meta name="description" content="La Muse — A private sanctuary for luxury beauty. Curated rituals, intimate circles, and the art of refinement." />
+  <meta property="og:title" content="La Muse" />
+  <meta property="og:description" content="A private sanctuary for luxury beauty." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream:   #FFF9E8;
+      --parchment: #EFE9DC;
+      --forest:  #0B3C26;
+      --deep-forest: #043927;
+      --gold:    #C8B06A;
+      --gold-light: #D9C484;
+      --charcoal: #1A1A1A;
+      --muted:   #6B6255;
+      color-scheme: light;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--cream);
+      color: var(--charcoal);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ─── NAV ─────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2.5rem;
+      background: rgba(255, 249, 232, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(200, 176, 106, 0.18);
+    }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: var(--forest);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--forest); }
+
+    .nav-cta {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cream);
+      background: var(--forest);
+      padding: 0.6rem 1.4rem;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .nav-cta:hover { background: var(--deep-forest); }
+
+    /* ─── HERO ────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: var(--deep-forest);
+      position: relative;
+      overflow: hidden;
+      padding: 8rem 2rem 6rem;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(200, 176, 106, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 80% at 20% 80%, rgba(200, 176, 106, 0.05) 0%, transparent 60%);
+    }
+
+    .hero-inner {
+      position: relative;
+      max-width: 680px;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.2rem, 8vw, 6rem);
+      font-weight: 300;
+      line-height: 1.05;
+      color: var(--cream);
+      letter-spacing: 0.04em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .hero-subtitle {
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      color: rgba(255, 249, 232, 0.6);
+      margin-bottom: 3rem;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--deep-forest);
+      background: var(--gold);
+      padding: 0.9rem 2.2rem;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--gold-light);
+    }
+
+    .btn-secondary {
+      display: inline-block;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cream);
+      border: 1px solid rgba(200, 176, 106, 0.4);
+      padding: 0.9rem 2.2rem;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+
+    /* ─── DIVIDER ─────────────────────────────────────────── */
+    .ornament {
+      text-align: center;
+      color: var(--gold);
+      opacity: 0.5;
+      font-size: 1.2rem;
+      letter-spacing: 0.5em;
+      margin: 0.5rem 0;
+    }
+
+    /* ─── INTRO ───────────────────────────────────────────── */
+    .intro {
+      padding: 7rem 2rem;
+      text-align: center;
+      background: var(--cream);
+    }
+
+    .section-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 1.2rem;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--forest);
+      max-width: 580px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .section-body {
+      font-size: 0.85rem;
+      color: var(--muted);
+      max-width: 540px;
+      margin: 0 auto;
+      letter-spacing: 0.02em;
+    }
+
+    /* ─── FEATURES ────────────────────────────────────────── */
+    .features {
+      padding: 5rem 2rem 7rem;
+      background: var(--parchment);
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2.5rem;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      padding: 2.5rem 2rem;
+      border: 1px solid rgba(200, 176, 106, 0.22);
+      background: var(--cream);
+    }
+
+    .feature-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem;
+      color: var(--gold);
+      opacity: 0.5;
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+
+    .feature-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      font-weight: 500;
+      color: var(--forest);
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.04em;
+    }
+
+    .feature-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    /* ─── PILLARS ─────────────────────────────────────────── */
+    .pillars {
+      padding: 7rem 2rem;
+      background: var(--forest);
+      text-align: center;
+    }
+
+    .pillars .section-title { color: var(--cream); }
+    .pillars .section-body  { color: rgba(255,249,232,0.55); }
+    .pillars .section-label { color: var(--gold-light); }
+
+    .pillars-list {
+      display: flex;
+      gap: 3rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 4rem;
+    }
+
+    .pillar {
+      max-width: 200px;
+    }
+
+    .pillar-line {
+      width: 1px;
+      height: 40px;
+      background: var(--gold);
+      opacity: 0.4;
+      margin: 0 auto 1.2rem;
+    }
+
+    .pillar-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: var(--cream);
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+    }
+
+    .pillar-desc {
+      font-size: 0.72rem;
+      color: rgba(255,249,232,0.5);
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── CTA BAND ────────────────────────────────────────── */
+    .cta-band {
+      padding: 6rem 2rem;
+      text-align: center;
+      background: var(--cream);
+      border-top: 1px solid rgba(200,176,106,0.18);
+      border-bottom: 1px solid rgba(200,176,106,0.18);
+    }
+
+    .cta-band .section-title {
+      margin-bottom: 1rem;
+    }
+
+    .cta-band .section-body {
+      margin-bottom: 2.5rem;
+    }
+
+    /* ─── FOOTER ──────────────────────────────────────────── */
+    footer {
+      background: var(--deep-forest);
+      padding: 3.5rem 2.5rem 2rem;
+    }
+
+    .footer-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid rgba(200,176,106,0.12);
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      color: var(--cream);
+      letter-spacing: 0.12em;
+    }
+
+    .footer-tagline {
+      font-size: 0.7rem;
+      color: rgba(255,249,232,0.4);
+      letter-spacing: 0.08em;
+      margin-top: 0.3rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,249,232,0.5);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--gold-light); }
+
+    .footer-copy {
+      font-size: 0.65rem;
+      color: rgba(255,249,232,0.28);
+      letter-spacing: 0.06em;
+      text-align: center;
+    }
+
+    /* ─── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.25rem; }
+      .nav-links { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="nav-logo">La Muse</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="terms.html">Terms</a></li>
+    </ul>
+    <a href="#" class="nav-cta">Request Access</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="hero-eyebrow">A Private Sanctuary for Luxury Beauty</p>
+      <h1 class="hero-title">La Muse —<br /><em>The Art of</em><br />Refinement</h1>
+      <p class="hero-subtitle">Where curated beauty rituals meet intimate community. A space built for those who regard beauty as a philosophy.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary">Request Access</a>
+        <a href="#about" class="btn-secondary">Discover</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTRO -->
+  <section class="intro" id="about">
+    <span class="section-label">The Philosophy</span>
+    <h2 class="section-title">Beauty as a practice, not a purchase</h2>
+    <div class="ornament">&#8212;</div>
+    <p class="section-body">La Muse is a curated platform for those who approach beauty with intention. We bring together creators, collectors, and connoisseurs in a private space defined by depth, discretion, and the pursuit of refinement.</p>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="features-header">
+      <span class="section-label">The Experience</span>
+      <h2 class="section-title">Everything in its right place</h2>
+    </div>
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <div class="feature-num">01</div>
+        <div class="feature-name">Ateliers</div>
+        <p class="feature-desc">Follow the creators whose vision resonates with yours. Ateliers are the curated spaces where beauty expertise lives.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-num">02</div>
+        <div class="feature-name">Rituels</div>
+        <p class="feature-desc">Beauty routines elevated to rituals. Discover, save, and build the practices that define your personal philosophy of care.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-num">03</div>
+        <div class="feature-name">Murmures</div>
+        <p class="feature-desc">Whispered recommendations. Intimate dispatches from those whose taste you trust, shared only within your circle.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-num">04</div>
+        <div class="feature-name">Coterie</div>
+        <p class="feature-desc">Your inner circle. The curated set of voices and perspectives that shapes how you see beauty.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-num">05</div>
+        <div class="feature-name">Adorés</div>
+        <p class="feature-desc">A private collection of the formulas, rituals, and discoveries you hold most dear — always at hand.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-num">06</div>
+        <div class="feature-name">Admiratrices</div>
+        <p class="feature-desc">Those who follow your eye. Build your community of kindred aesthetes who trust your curation.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PILLARS -->
+  <section class="pillars">
+    <span class="section-label">Our Commitments</span>
+    <h2 class="section-title">Built on three foundations</h2>
+    <p class="section-body">Everything at La Muse is designed around your privacy, your taste, and your time.</p>
+    <div class="pillars-list">
+      <div class="pillar">
+        <div class="pillar-line"></div>
+        <div class="pillar-title">Discretion</div>
+        <p class="pillar-desc">Your data stays yours. We never sell or share your information.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-line"></div>
+        <div class="pillar-title">Curation</div>
+        <p class="pillar-desc">Quality over volume. Every feature is built with intentionality.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-line"></div>
+        <div class="pillar-title">Community</div>
+        <p class="pillar-desc">A private space for a discerning community — not a broadcast platform.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-band">
+    <span class="section-label">Join the Circle</span>
+    <h2 class="section-title">The beauty of refinement awaits</h2>
+    <p class="section-body">La Muse is available on invitation. Request access to be among the first to experience the platform.</p>
+    <a href="#" class="btn-primary">Request Access</a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">La Muse</div>
+        <div class="footer-tagline">A private sanctuary for luxury beauty</div>
+      </div>
+      <ul class="footer-links">
+        <li><a href="privacy.html">Privacy Policy</a></li>
+        <li><a href="terms.html">Terms of Service</a></li>
+        <li><a href="mailto:contact@lamuse.app">Contact</a></li>
+      </ul>
+    </div>
+    <p class="footer-copy">&copy; 2026 La Muse. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
