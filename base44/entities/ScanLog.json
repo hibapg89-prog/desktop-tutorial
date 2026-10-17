@@ -4,7 +4,7 @@
   "properties": {
     "scan_method": {
       "type": "string",
-      "enum": ["camera", "gallery", "link", "voice"],
+      "enum": ["camera", "gallery", "link", "voice", "muse"],
       "title": "How the scan was initiated"
     },
     "status": {
