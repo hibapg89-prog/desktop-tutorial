@@ -40,6 +40,8 @@ import BeautyRoom from '@/pages/BeautyRoom';
 import ScanResults from '@/pages/ScanResults';
 import ScanHistory from '@/pages/ScanHistory';
 import Unsubscribe from '@/pages/Unsubscribe';
+import Legal from '@/pages/Legal';
+import CookieBanner from '@/components/CookieBanner';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -70,6 +72,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Landing />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/unsubscribe" element={<Unsubscribe />} />
+      <Route path="/legal" element={<Legal />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
           <Route path="/home" element={<Home />} />
@@ -117,6 +120,7 @@ function App() {
         <Router>
           <ScrollToTop />
           <AuthenticatedApp />
+          <CookieBanner />
         </Router>
         <Toaster />
       </QueryClientProvider>
