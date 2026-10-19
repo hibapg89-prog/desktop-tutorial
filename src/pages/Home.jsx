@@ -17,8 +17,8 @@ export default function Home() {
   const [recentPosts,     setRecentPosts]     = useState([]);
 
   useEffect(() => {
-    base44.entities.Product.filter({ muse_shimmer: true })
-      .then(setShimmerProducts)
+    base44.functions.invoke("getCuratedProducts")
+      .then((res) => { const d = res?.data || res; setShimmerProducts(Array.isArray(d) ? d : []); })
       .catch(() => {});
 
     base44.entities.CommunityPost.list("-created_date", 3)
