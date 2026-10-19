@@ -17,7 +17,7 @@ export default function Home() {
   const [recentPosts,     setRecentPosts]     = useState([]);
 
   useEffect(() => {
-    base44.entities.Product.filter({ muse_shimmer: true })
+    base44.functions.invoke("getCuratedProducts")
       .then(setShimmerProducts)
       .catch(() => {});
 
