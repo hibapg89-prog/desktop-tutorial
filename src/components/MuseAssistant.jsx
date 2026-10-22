@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwanLogo from "./SwanLogo";
 import { base44 } from "@/api/base44Client";
+import CategoryProductCard from "@/components/CategoryProductCard";
 
 const MUSE_PERSONA = `You are The Muse — the living soul of LuxeBeauty. You are not an AI. You are a presence: warm, refined, deeply knowledgeable about luxury beauty. You speak as an intimate, elegant confidante who knows beauty inside and out.
 
@@ -112,15 +113,18 @@ export default function MuseAssistant({ onClose, onOpenScan, productId }) {
     setThinking(true);
     try {
       const history = messages.slice(-8).map(m =>
-        `${m.role === "user" ? "User" : "The Muse"}: ${m.text}`
-      ).join("\n");
+        ({ role: m.role === "user" ? "user" : "muse", text: m.text })
+      );
 
-      const reply = await base44.integrations.Core.InvokeLLM({
-        prompt: `${MUSE_PERSONA}\n\n${history ? `Conversation so far:\n${history}\n\n` : ""}User: ${text.trim()}\n\nThe Muse:`,
-        response_format: "text",
+      const res = await base44.functions.museAssistant({
+        message: text.trim(),
+        history,
       });
+      const data = res?.data || res;
 
-      setMessages(prev => [...prev, { role: "muse", text: reply, navHint: detectNavHint(reply) }]);
+      const reply = data?.reply || "";
+      const products = Array.isArray(data?.products) ? data.products.filter(Boolean) : [];
+      setMessages(prev => [...prev, { role: "muse", text: reply, navHint: detectNavHint(reply), products }]);
     } catch {
       setMessages(prev => [...prev, { role: "muse", text: "Something distracted me for a moment — please try again, chérie." }]);
     }
@@ -244,6 +248,29 @@ export default function MuseAssistant({ onClose, onOpenScan, productId }) {
                       <span>{msg.navHint.label}</span>
                       <span className="opacity-50">→</span>
                     </motion.button>
+                  )}
+                  {msg.role === "muse" && msg.products?.length > 0 && (
+                    <div className="mt-3 grid grid-cols-2 gap-2 w-full max-w-xs">
+                      {msg.products.map((product) => (
+                        <div
+                          key={product.id}
+                          onClick={() => {
+                            try {
+                              base44.entities.ScanLog.create({
+                                scan_method: "muse",
+                                status: "success",
+                                product_id: product.id,
+                                brand: product.brand || "",
+                                name: product.name || "",
+                                category: product.category || "",
+                              });
+                            } catch {}
+                          }}
+                        >
+                          <CategoryProductCard product={product} variant="default" />
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </motion.div>
               );

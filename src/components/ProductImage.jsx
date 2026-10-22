@@ -69,6 +69,7 @@ export default function ProductImage({ product, className, fittingType = "fill",
     if (!primary && !fallback) {
       return <CategoryGradient product={product} className="w-full h-full" alt={alt} />;
     }
+    const derivedAlt = alt || [product?.brand, product?.name].filter(Boolean).join(" ") || "";
     // Only fallback exists
     if (!primary && fallback) {
       return (
@@ -76,7 +77,7 @@ export default function ProductImage({ product, className, fittingType = "fill",
           src={fallback}
           fittingType={fittingType}
           className="w-full h-full"
-          alt={alt || product?.name}
+          alt={derivedAlt}
           {...props}
         />
       );
@@ -88,7 +89,7 @@ export default function ProductImage({ product, className, fittingType = "fill",
         fallbackSrc={fallback}
         fittingType={fittingType}
         className="w-full h-full"
-        alt={alt || product?.name}
+        alt={derivedAlt}
         {...props}
       />
     );

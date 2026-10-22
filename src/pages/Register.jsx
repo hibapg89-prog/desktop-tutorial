@@ -18,12 +18,22 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+    if (!termsAccepted) {
+      setError("Please accept the Terms & Privacy Policy to continue");
+      return;
+    }
+    if (!ageConfirmed) {
+      setError("Please confirm you are 16 or older to continue");
       return;
     }
     setLoading(true);
@@ -212,7 +222,34 @@ export default function Register() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <div className="space-y-3 pt-1">
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded border flex-shrink-0 cursor-pointer accent-[#0B3C26]"
+            />
+            <span className="text-xs font-light leading-relaxed" style={{ color: "#3a3530" }}>
+              I accept the{" "}
+              <Link to="/legal" target="_blank" className="underline underline-offset-2 transition-colors" style={{ color: "#0B3C26" }}>
+                Terms &amp; Privacy Policy
+              </Link>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={ageConfirmed}
+              onChange={(e) => setAgeConfirmed(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded border flex-shrink-0 cursor-pointer accent-[#0B3C26]"
+            />
+            <span className="text-xs font-light leading-relaxed" style={{ color: "#3a3530" }}>
+              I confirm I am 16 or older
+            </span>
+          </label>
+        </div>
+        <Button type="submit" className="w-full h-12 font-medium" disabled={loading || !termsAccepted || !ageConfirmed}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

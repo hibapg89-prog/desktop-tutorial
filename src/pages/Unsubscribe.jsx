@@ -6,16 +6,17 @@ import SwanLogo from "@/components/SwanLogo";
 export default function Unsubscribe() {
   const [params] = useSearchParams();
   const uid = params.get("uid");
+  const sig = params.get("sig");
 
   const [status, setStatus] = useState("loading"); // loading | success | error | missing
 
   useEffect(() => {
-    if (!uid) {
+    if (!uid || !sig) {
       setStatus("missing");
       return;
     }
 
-    base44.functions.invoke("unsubscribeEmail", { uid })
+    base44.functions.invoke("unsubscribeEmail", { uid, sig })
       .then(() => setStatus("success"))
       .catch(() => setStatus("error"));
   }, [uid]);
