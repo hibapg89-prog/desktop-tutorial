@@ -18,7 +18,7 @@ export default function Home() {
 
   useEffect(() => {
     base44.functions.invoke("getCuratedProducts")
-      .then(setShimmerProducts)
+      .then((res) => { const d = res?.data || res; setShimmerProducts(Array.isArray(d) ? d : []); })
       .catch(() => {});
 
     base44.entities.CommunityPost.list("-created_date", 3)

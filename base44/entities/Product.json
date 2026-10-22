@@ -42,19 +42,7 @@
     "watch_retailer": {"type": "string", "title": "The retailer that price came from"},
     "watch_size": {"type": "string", "title": "The size the listing stated, so only like is compared with like"},
     "watch_url": {"type": "string", "title": "The listing itself, so any drop can be checked"},
-    "where_to_buy": {"type": "string"},
-    "retailer_links": {
-      "type": "array",
-      "description": "Geo-targeted retailer URLs for Shop Now. Each entry: { country: 'US', retailer: 'Sephora', url: 'https://...' }",
-      "items": {
-        "type": "object",
-        "properties": {
-          "country": {"type": "string", "description": "ISO 3166-1 alpha-2 code (US, FR, GB, …)"},
-          "retailer": {"type": "string", "description": "Display name, e.g. Sephora, Ulta, Lookfantastic"},
-          "url": {"type": "string", "description": "Direct product page or affiliate link"}
-        }
-      }
-    }
+    "where_to_buy": {"type": "string"}
   },
   "required": ["brand", "name", "category"],
   "rls": {
