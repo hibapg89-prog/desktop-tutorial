@@ -66,3 +66,16 @@ These are permanent decisions. Do NOT reverse them without explicit user confirm
 **Decision:** The Vercel preview URL cannot be used to test Base44 features (entities, InvokeLLM).
 **Reason:** `base44.entities.*` and `base44.integrations.*` require a session token from Base44's OAuth flow, which only runs on app.base44.com. On Vercel preview, all base44 calls fail silently.
 **Consequence:** Always test Base44 features on app.base44.com after syncing changes from git.
+
+## ADR-014: No Invented Venue Photos
+**Decision (2026-10-27):** Venue images must never be AI-generated or fetched from Unsplash as a fallback. The `venuePhoto(venue)` utility (`src/lib/venuePhoto.js`) suppresses any `image_url` that contains `"generated_image"`. When no real photo exists, the UI renders a brand-palette gradient placeholder.
+**Reason:** Showing an AI-invented photo of a real venue is misleading. Users would book based on a fabricated image.
+**Consequence:** `fetchContentImage` returns `{ success: false, image_url: null }` for VenueService type — no generation, no Unsplash fallback. All map components use `venuePhoto()` before rendering.
+
+## ADR-015: Add-Venue is Admin-Only
+**Decision (2026-10-27):** The `/add-venue` route and the "+" link on the Services Map are restricted to users with `role === "admin"`. Non-admins see "Venue suggestions open soon."
+**Reason:** Venue data quality must be curated before opening public submissions.
+
+## ADR-016: Venue Booking Wording
+**Decision (2026-10-27):** All UI copy uses "Plan a visit" / "Save my visit" / "Planned". The DB value `status: "booked"` is intentionally unchanged (no data migration). A disclaimer "This is your own plan. The venue is not contacted." is shown on the confirmation.
+**Reason:** Clarifies that saving a visit is a personal note, not a reservation sent to the venue.
